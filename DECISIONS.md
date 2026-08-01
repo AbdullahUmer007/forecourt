@@ -30,3 +30,15 @@ Format: `date · decision · rationale · reversible?`
 **2026-08-01 · Crawler ethics fixed: identified user agent with a contact URL, robots.txt respected, rate-limited to ~1 request/700ms, public pages only, no personal data stored, removal requests honoured immediately.** We are selling compliance; we behave accordingly. Not reversible.
 
 **2026-08-01 · Kennington's real public data used for the demo build, marked "Demo — unsolicited".** Agreed with Abdullah. No contact made, no private data used, public sources only.
+
+**2026-08-01 · `users` is global, not tenant-scoped.** One person may work for two dealers and an external accountant may serve several, so the tenant boundary is the membership rather than the user. `users` gets a membership-scoped RLS policy instead of a `tenant_id`. Reversible with effort; would require rewriting every membership lookup.
+
+**2026-08-01 · `domains.hostname` is globally unique — the one deliberate exception to tenant-scoped uniqueness.** A hostname can only ever resolve to a single tenant, and an unknown or unverified host must 404 rather than fall through to a default. Not reversible: the alternative is a routing ambiguity.
+
+**2026-08-01 · `site_scope` RLS policies are RESTRICTIVE, permanently.** Postgres combines multiple permissive policies with OR, so a permissive `site_scope` returned true whenever `scope_all_sites` was set and OR'd away `tenant_isolation` entirely on every table carrying a `site_id`. This leaked `user_sites` and the whole `audit_events` trail across tenants. Found by the hardened isolation suite. Not reversible — reverting reintroduces a cross-tenant data leak.
+
+**2026-08-01 · The isolation suite asserts SQLSTATE 42501 on rejected cross-tenant INSERTs, and asserts rival data exists before testing against it.** A test that fails on NOT NULL rather than on the policy would pass with RLS switched off; a test with no rival rows passes vacuously. Both were true before this change. Not reversible.
+
+**2026-08-01 · Each tenant is seeded its own copy of the nine system roles rather than sharing platform-level rows.** Lets a dealer rename and adjust roles without affecting anyone else. Costs nine rows per tenant, which is nothing. Reversible.
+
+**2026-08-01 · The compliance profile is enforced in three places** — TypeScript validation for the good error message, database CHECK constraints for the guarantee, and the go-live checklist for operational readiness. Deliberate duplication: the database is the guarantee, the code is the explanation. Reversible but inadvisable.

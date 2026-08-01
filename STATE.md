@@ -13,9 +13,9 @@
 
 | | |
 |---|---|
-| **Current module** | M2 — Tenancy & identity (`ready`, not started) |
-| **Last shipped** | M0 Audit tool · M1 Foundation |
-| **Backlog complete** | 2 of 21 modules (10%) |
+| **Current module** | M3 — Vehicle core (`ready`, not started) |
+| **Last shipped** | M2 Tenancy & identity (1 Aug 2026, overnight) |
+| **Backlog complete** | 3 of 21 modules (14%) |
 | **Repository** | **`github.com/AbdullahUmer007/forecourt`** (private, `main`, 48 files, pushed 2026-08-01) |
 | **Blocking issue** | Repo exists, but the Claude GitHub App does not yet have access to it — autonomous sessions can't clone or push. See "Needs Abdullah" #1. |
 | **Next milestone** | End of M8 — Kennington's stock live, passing all 16 audit checks, compliant payment on every car |
@@ -28,8 +28,8 @@
 |---|---|---|---|
 | M0 | Dealer Site Audit tool | ✅ done | 16 checks, fixture mode, Kennington fixture scores 16/100. Web front end still to build. |
 | M1 | Foundation | ✅ done | Workspace, tokens, domain (11 tests green), db/RLS, isolation suite, skills committed |
-| M2 | Tenancy & identity | 🟢 ready | Next up |
-| M3 | Vehicle core | ⬜ todo | Blocked by M2 |
+| M2 | Tenancy & identity | ✅ done | 13 tables, 9 roles, permissions with derived-value protection, provisioning + go-live checklist. **Fixed a cross-tenant leak in the M1 RLS generator** — see reports/session-2026-08-01-m2.md |
+| M3 | Vehicle core | 🟢 ready | Next up. Note: registration must be `UNIQUE (tenant_id, registration)` — a global unique would leak the existence of a rival's stock |
 | M4 | Vehicle data & provenance | ⬜ todo | Blocked by M3. **Needs a data provider contract — long lead time, start now** |
 | M5 | Media pipeline | ⬜ todo | Blocked by M3 |
 | M6 | Public website engine | ⬜ todo | Acquisition-critical |
@@ -78,8 +78,8 @@
 
 | | Now | 90-day target |
 |---|---|---|
-| Modules complete | 2 / 21 | 9 (M0–M8) |
-| Domain tests passing | 11 | — |
+| Modules complete | 3 / 21 | 9 (M0–M8) |
+| Tests passing | 129 (61 domain + 68 isolation) | — |
 | Dealer sites audited | 1 (Kennington, via fixture) | 500 |
 | Design partners | 0 | 8 |
 | Paying dealers | 0 | first in sight |
@@ -93,3 +93,4 @@
 |---|---|---|
 | 2026-08-01 | Setup | Strategy docs 01–07, three skills, design brief, M0 audit tool (16 checks, tested), M1 foundation (11 tests green), build plan, manager charter, scheduled tasks created |
 | 2026-08-01 | Repo | `github.com/AbdullahUmer007/forecourt` created and pushed — 48 files, 74 objects, `main`. Claude GitHub App access still to be granted. |
+| 2026-08-01 | M2 build | Tenancy, identity, roles, permissions, provisioning. 129 tests green. Found and fixed a cross-tenant leak: permissive `site_scope` policies were OR-ing away tenant isolation on every table with a `site_id`. |
