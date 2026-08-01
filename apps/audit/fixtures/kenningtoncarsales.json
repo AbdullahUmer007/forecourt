@@ -1,0 +1,141 @@
+{
+  "input": "www.kenningtoncarsales.co.uk",
+  "origin": "https://www.kenningtoncarsales.co.uk",
+  "host": "www.kenningtoncarsales.co.uk",
+  "robots": "# robots.txt for DealersSite\nUser-agent: *\nDisallow: /StockData/\nSitemap: https://dev.kenningtoncarsales.co.uk/sitemap.xml\n",
+  "disallow": [
+    "/StockData/"
+  ],
+  "sitemap": {
+    "source": "https://www.kenningtoncarsales.co.uk/sitemap.xml",
+    "urls": [
+      "https://www.kenningtoncarsales.co.uk/",
+      "https://www.kenningtoncarsales.co.uk/about-us",
+      "https://www.kenningtoncarsales.co.uk/available-stock",
+      "https://www.kenningtoncarsales.co.uk/contact",
+      "https://www.kenningtoncarsales.co.uk/reviews",
+      "https://www.kenningtoncarsales.co.uk/sell-your-car",
+      "https://www.kenningtoncarsales.co.uk/finance",
+      "https://www.kenningtoncarsales.co.uk/warranty",
+      "https://www.kenningtoncarsales.co.uk/paint-protection",
+      "https://www.kenningtoncarsales.co.uk/underbody-protection",
+      "https://www.kenningtoncarsales.co.uk/service-plans",
+      "https://www.kenningtoncarsales.co.uk/tyre-protection",
+      "https://www.kenningtoncarsales.co.uk/sd-protection",
+      "https://www.kenningtoncarsales.co.uk/sv-protection",
+      "https://www.kenningtoncarsales.co.uk/after-sales",
+      "https://www.kenningtoncarsales.co.uk/privacy-policy",
+      "https://www.kenningtoncarsales.co.uk/terms-and-conditions",
+      "https://www.kenningtoncarsales.co.uk/fair-pricing-and-customer-value",
+      "https://www.kenningtoncarsales.co.uk/initial-finance-disclosure",
+      "https://www.kenningtoncarsales.co.uk/vulnerable-customer-policy",
+      "https://www.kenningtoncarsales.co.uk/complaints-procedure",
+      "https://www.kenningtoncarsales.co.uk/status-disclosure",
+      "https://www.kenningtoncarsales.co.uk/commission-disclosure",
+      "https://www.kenningtoncarsales.co.uk/disclosure-signed",
+      "https://www.kenningtoncarsales.co.uk/blog",
+      "https://www.kenningtoncarsales.co.uk/careers",
+      "https://www.kenningtoncarsales.co.uk/faq"
+    ]
+  },
+  "home": {
+    "url": "https://www.kenningtoncarsales.co.uk/",
+    "status": 200,
+    "title": "Affordable Used Cars Near You | Reliable Car Dealership",
+    "description": "Quality used cars in Milton Keynes. Finance available, warranty included.",
+    "jsonLdTypes": [],
+    "html": "<html><head><title>Affordable Used Cars Near You | Reliable Car Dealership</title></head><body>\n    <a href=\"https://www.kenningtoncarsales.co.uk/available-stock\">Available Stock</a>\n    <a href=\"https://www.kenningtoncarsales.co.uk/finance\">Finance</a>\n    <a href=\"https://www.kenningtoncarsales.co.uk/privacy-policy\">Privacy Policy</a>\n    <a href=\"https://www.kenningtoncarsales.co.uk/theme21/Kennington-PDF/KENNINGTON.Initial.Finance.Disclousre.IDD.pdf\">Initial Finance Disclosure</a>\n    <a href=\"https://www.kenningtoncarsales.co.uk/theme21/Kennington-PDF/KENNINGTON.Complaint.Procedure.Policy.pdf\">Complaints Procedure</a>\n    <a href=\"https://www.kenningtoncarsales.co.uk/theme21/Kennington-PDF/KENNINGTON.Commission.Disclosure.pdf\">Commission Disclosure</a>\n    <a href=\"tel:07477070105\">Call us</a>\n    <a href=\"https://wa.me/447477070105\">WhatsApp</a>\n    <img src=\"/assets/hero.webp\"><img src=\"/assets/finance-logos.webp\"><img src=\"/assets/car1.jpg\">\n  </body></html>",
+    "text": "Browse All 123 Cars 123+ cars in store Advantage Finance Blue Motor Finance CarMoney Close Brothers DSG Finance First Response Mallard MotoNovo Zopa 4.8 stars 252 reviews AA Approved Dealer Sales Mon-Sat 10:00-18:00 Sun 11:00-16:00 Warranty Paint Protection Service Plans"
+  },
+  "vehiclePages": [
+    {
+      "url": "https://www.kenningtoncarsales.co.uk/get-car-details?stockId=50111",
+      "status": 200,
+      "title": "Affordable Used Cars Near You | Reliable Car Dealership",
+      "description": "",
+      "jsonLdTypes": [],
+      "html": "<html><head><title>Affordable Used Cars Near You | Reliable Car Dealership</title></head><body>This Vehicle is Sold Out Status: Unavailable This vehicle has recently found a new owner. Thank you for visiting our site.</body></html>",
+      "text": "This Vehicle is Sold Out Status: Unavailable This vehicle has recently found a new owner. Thank you for visiting our site."
+    },
+    {
+      "url": "https://www.kenningtoncarsales.co.uk/get-car-details?stockId=51858",
+      "status": 200,
+      "title": "Affordable Used Cars Near You | Reliable Car Dealership",
+      "description": "",
+      "jsonLdTypes": [],
+      "html": "<html><head><title>Affordable Used Cars Near You | Reliable Car Dealership</title></head><body>This Vehicle is Sold Out Status: Unavailable This vehicle has recently found a new owner. Thank you for visiting our site.</body></html>",
+      "text": "This Vehicle is Sold Out Status: Unavailable This vehicle has recently found a new owner. Thank you for visiting our site."
+    },
+    {
+      "url": "https://www.kenningtoncarsales.co.uk/get-car-details?stockId=41274",
+      "status": 200,
+      "title": "Affordable Used Cars Near You | Reliable Car Dealership",
+      "description": "",
+      "jsonLdTypes": [],
+      "html": "<html><head><title>Affordable Used Cars Near You | Reliable Car Dealership</title></head><body>This Vehicle is Sold Out Status: Unavailable This vehicle has recently found a new owner. Thank you for visiting our site.</body></html>",
+      "text": "This Vehicle is Sold Out Status: Unavailable This vehicle has recently found a new owner. Thank you for visiting our site."
+    },
+    {
+      "url": "https://www.kenningtoncarsales.co.uk/get-car-details?stockId=86415",
+      "status": 200,
+      "title": "Affordable Used Cars Near You | Reliable Car Dealership",
+      "description": "",
+      "jsonLdTypes": [],
+      "html": "<html><head><title>Affordable Used Cars Near You | Reliable Car Dealership</title></head><body>This Vehicle is Sold Out Status: Unavailable This vehicle has recently found a new owner. Thank you for visiting our site.</body></html>",
+      "text": "This Vehicle is Sold Out Status: Unavailable This vehicle has recently found a new owner. Thank you for visiting our site."
+    }
+  ],
+  "financePage": {
+    "url": "https://www.kenningtoncarsales.co.uk/finance",
+    "status": 200,
+    "title": "Car Finance | Kennington Car Sales",
+    "description": "",
+    "jsonLdTypes": [],
+    "html": "<html><head><title>Car Finance | Kennington Car Sales</title></head><body>Hire Purchase fixed monthly payments over 3 to 5 years. Personal Contract Purchase lower monthly payments by deferring a portion of the car value. Conditional Sale. Speak to our team about your options.</body></html>",
+    "text": "Hire Purchase fixed monthly payments over 3 to 5 years. Personal Contract Purchase lower monthly payments by deferring a portion of the car value. Conditional Sale. Speak to our team about your options."
+  },
+  "legalPages": [],
+  "legalLinks": [
+    {
+      "href": "https://www.kenningtoncarsales.co.uk/privacy-policy",
+      "text": "Privacy Policy"
+    },
+    {
+      "href": "https://www.kenningtoncarsales.co.uk/theme21/Kennington-PDF/KENNINGTON.Initial.Finance.Disclousre.IDD.pdf",
+      "text": "Initial Finance Disclosure"
+    },
+    {
+      "href": "https://www.kenningtoncarsales.co.uk/theme21/Kennington-PDF/KENNINGTON.Complaint.Procedure.Policy.pdf",
+      "text": "Complaints Procedure"
+    },
+    {
+      "href": "https://www.kenningtoncarsales.co.uk/theme21/Kennington-PDF/KENNINGTON.Commission.Disclosure.pdf",
+      "text": "Commission Disclosure"
+    }
+  ],
+  "checkedLinks": [
+    {
+      "url": "https://www.kenningtoncarsales.co.uk/available-stock",
+      "status": 200
+    },
+    {
+      "url": "https://www.kenningtoncarsales.co.uk/finance",
+      "status": 200
+    },
+    {
+      "url": "https://www.kenningtoncarsales.co.uk/used/audi/milton-keynes/",
+      "status": 404
+    },
+    {
+      "url": "https://www.kenningtoncarsales.co.uk/used/bmw/1-series/",
+      "status": 404
+    },
+    {
+      "url": "https://www.kenningtoncarsales.co.uk/used/land-rover/luton/",
+      "status": 404
+    }
+  ],
+  "estimatedStockCount": 123,
+  "isCreditBroker": true,
+  "auditedAt": "2026-08-01T00:00:00.000Z"
+}
