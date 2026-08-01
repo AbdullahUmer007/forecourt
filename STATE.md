@@ -16,7 +16,8 @@
 | **Current module** | M2 — Tenancy & identity (`ready`, not started) |
 | **Last shipped** | M0 Audit tool · M1 Foundation |
 | **Backlog complete** | 2 of 21 modules (10%) |
-| **Blocking issue** | **No git remote.** Code cannot persist between sessions. See "Needs Abdullah" below. |
+| **Repository** | **`github.com/AbdullahUmer007/forecourt`** (private, `main`, 48 files, pushed 2026-08-01) |
+| **Blocking issue** | Repo exists, but the Claude GitHub App does not yet have access to it — autonomous sessions can't clone or push. See "Needs Abdullah" #1. |
 | **Next milestone** | End of M8 — Kennington's stock live, passing all 16 audit checks, compliant payment on every car |
 
 ---
@@ -51,7 +52,7 @@
 
 ## Needs Abdullah (ranked)
 
-1. **A private GitHub repository, with access.** Until this exists, code does not survive between sessions and modules cannot build on each other. Highest-value unblock by a wide margin.
+1. **Grant the Claude GitHub App access to `AbdullahUmer007/forecourt`.** The repo now exists and is populated — this is the remaining half. Without it an autonomous session can read the specs but cannot clone, branch, or open a pull request, so each run delivers a patch by hand instead. Path: github.com/settings/installations → **Installed GitHub Apps** tab → Claude → Configure → Repository access. If Claude is not in that tab it is authorised but not installed, and the install has to be triggered from the Claude desktop app's connector settings.
 2. **Compliance advisers on retainer** — a motor-trade FCA compliance consultant and a VAT specialist, ~£1.5–3k/month. M8, M11 and M12 cannot go live without them.
 3. **Start the data provider conversations** — cap hpi / HPI Check (same parent, negotiate together), an aggregator for launch speed, Auto Trader technology partner status. All sales-gated, months of lead time, and they gate M4 and M16.
 4. **Confirm the Kennington numbers** before any pitch: units per month, current finance penetration, average commission, what they actually pay today.
@@ -64,7 +65,8 @@
 
 | Risk | Status |
 |---|---|
-| No git remote → no code continuity | **Live.** Mitigated by delivering archives, but it's friction on every session. |
+| Claude GitHub App lacks repo access → no autonomous clone/push | **Live but reduced.** Repo exists and is populated; sessions can still deliver patches. Grant is the fix. |
+| Git credentials on the founder's machine default to a different GitHub account (`naumansharifwork`) | The `forecourt` remote URL now pins `AbdullahUmer007@`, so pushes from `/d/Projects/dealer/forecourt` are correctly attributed. Other repos on that machine are unaffected and may still push under the cached account. |
 | FCA motor finance redress scheme partially suspended (Upper Tribunal, ~1–2 July 2026; hearing expected Dec 2026–Feb 2027) | Monitoring monthly. All scheme parameters held as data, not code. |
 | FCA CP26/15 may change the CONC 3.5.3R representative example and the 51% threshold | Monitoring. `<FinancePromotion>` field list must be configurable, not fixed. |
 | Competitor could fix the SEO and finance gaps | Structural for them (URL routing, sitemaps, schema, a compliant finance component across 22 themes). Lead measured in months. Keep moving to compliance depth. |
@@ -90,3 +92,4 @@
 | Date | Session | Outcome |
 |---|---|---|
 | 2026-08-01 | Setup | Strategy docs 01–07, three skills, design brief, M0 audit tool (16 checks, tested), M1 foundation (11 tests green), build plan, manager charter, scheduled tasks created |
+| 2026-08-01 | Repo | `github.com/AbdullahUmer007/forecourt` created and pushed — 48 files, 74 objects, `main`. Claude GitHub App access still to be granted. |

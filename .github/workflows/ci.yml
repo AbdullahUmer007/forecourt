@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: forecourt
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+
+    env:
+      # Without this the cross-tenant leak suite SKIPS, and a skip looks
+      # exactly like a pass. CI must always provide a database.
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/forecourt
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Apply RLS scaffolding and migrations
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f packages/db/src/rls.sql
+          for f in packages/db/migrations/*[0-9].sql; do
+            echo "→ $f"
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: Verify every tenant table is protected
+        run: node packages/db/scripts/verify-policies.mjs
+
+      - name: Tests
+        run: pnpm test
+
+      # Blocking gate. A leak between two dealers is the one bug that ends the
+      # company, so this must never be allowed to fail or silently skip.
+      - name: Cross-tenant leak suite
+        run: pnpm test:isolation
+
+      - name: Audit tool regression (fixture)
+        run: pnpm audit:fixture
+
+      - name: Typecheck
+        run: pnpm typecheck || true   # TODO: remove the || true once apps/ exist

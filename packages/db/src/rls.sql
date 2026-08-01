@@ -70,10 +70,14 @@ BEGIN
     FROM pg_class c
     JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE n.nspname = 'public'
-      AND c.relkind = 'r'
+      -- 'p' matters: a partitioned parent is not relkind 'r', and skipping it
+      -- would leave the whole audit trail unprotected.
+      AND c.relkind IN ('r', 'p')
       AND EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = c.relname AND column_name = 'tenant_id'
+        SELECT 1 FROM information_schema.columns col
+        WHERE col.table_schema = 'public'
+          AND col.table_name = c.relname
+          AND col.column_name = 'tenant_id'
       )
   LOOP
     -- FORCE matters: without it the table owner bypasses every policy.
@@ -88,14 +92,27 @@ BEGIN
     $p$, t.relname);
 
     SELECT EXISTS (
-      SELECT 1 FROM information_schema.columns
-      WHERE table_schema = 'public' AND table_name = t.relname AND column_name = 'site_id'
+      SELECT 1 FROM information_schema.columns col
+      WHERE col.table_schema = 'public'
+        AND col.table_name = t.relname
+        AND col.column_name = 'site_id'
     ) INTO has_site;
 
     IF has_site THEN
       EXECUTE format('DROP POLICY IF EXISTS site_scope ON %I', t.relname);
+      -- AS RESTRICTIVE is load-bearing, not stylistic.
+      --
+      -- Postgres combines multiple PERMISSIVE policies with OR. A permissive
+      -- site_scope returns true whenever scope_all_sites is set, which would
+      -- OR away tenant_isolation entirely and leak every tenant's rows on any
+      -- table carrying a site_id. RESTRICTIVE makes it AND with the tenant
+      -- policy, which is the intended meaning: "your tenant AND your sites".
+      --
+      -- Regression-tested by tests/isolation/cross-tenant.test.ts — the
+      -- site_id tables (user_sites, audit_events) are what catch this.
       EXECUTE format($p$
         CREATE POLICY site_scope ON %I
+          AS RESTRICTIVE
           USING (
             coalesce(current_setting('app.scope_all_sites', true)::boolean, true)
             OR site_id IS NULL
@@ -111,6 +128,49 @@ BEGIN
 
     table_name := t.relname; action := 'policies applied'; RETURN NEXT;
   END LOOP;
+
+  -- ------------------------------------------------------------------
+  -- Two tables carry no tenant_id and would otherwise be left wide open.
+  -- ------------------------------------------------------------------
+
+  -- `tenants`: the boundary column is `id`, not `tenant_id`. Without this a
+  -- user of tenant A could read tenant B's legal name, VAT number and FRN.
+  IF to_regclass('public.tenants') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE tenants ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'ALTER TABLE tenants FORCE  ROW LEVEL SECURITY';
+    EXECUTE 'DROP POLICY IF EXISTS tenant_isolation ON tenants';
+    EXECUTE $p$
+      CREATE POLICY tenant_isolation ON tenants
+        USING      (id = current_setting('app.tenant_id', true)::uuid)
+        WITH CHECK (id = current_setting('app.tenant_id', true)::uuid)
+    $p$;
+    EXECUTE 'GRANT SELECT, UPDATE ON tenants TO app_user';
+    table_name := 'tenants'; action := 'policies applied (id-scoped)'; RETURN NEXT;
+  END IF;
+
+  -- `users` is deliberately global — one person may work for two dealers, and
+  -- an external accountant may serve several. But a user must only be visible
+  -- to a tenant they actually belong to, or the table becomes a directory of
+  -- every dealer's staff.
+  IF to_regclass('public.users') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE users ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'ALTER TABLE users FORCE  ROW LEVEL SECURITY';
+    EXECUTE 'DROP POLICY IF EXISTS membership_visibility ON users';
+    EXECUTE $p$
+      CREATE POLICY membership_visibility ON users
+        USING (
+          id = current_setting('app.user_id', true)::uuid
+          OR EXISTS (
+            SELECT 1 FROM tenant_memberships m
+            WHERE m.user_id = users.id
+              AND m.tenant_id = current_setting('app.tenant_id', true)::uuid
+              AND m.deleted_at IS NULL
+          )
+        )
+    $p$;
+    EXECUTE 'GRANT SELECT, UPDATE ON users TO app_user';
+    table_name := 'users'; action := 'policies applied (membership-scoped)'; RETURN NEXT;
+  END IF;
 END $$;
 
 -- --------------------------------------------------- append-only enforcement
