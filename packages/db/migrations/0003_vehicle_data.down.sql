@@ -1,0 +1,6 @@
+BEGIN;
+DROP TABLE IF EXISTS provider_usage_daily CASCADE;
+DROP TABLE IF EXISTS mot_records CASCADE;
+DROP TABLE IF EXISTS vehicle_lookups CASCADE;
+DROP TYPE IF EXISTS data_provider;
+COMMIT;

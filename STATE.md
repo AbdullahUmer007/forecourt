@@ -13,9 +13,9 @@
 
 | | |
 |---|---|
-| **Current module** | M4 — Vehicle data & provenance (`blocked` — needs a data provider contract) |
-| **Last shipped** | M3 Vehicle core (2 Aug 2026) |
-| **Backlog complete** | 4 of 21 modules (19%) |
+| **Current module** | M5 — Media pipeline (`ready`) |
+| **Last shipped** | M4a/b Vehicle data — free providers (2 Aug 2026) |
+| **Backlog complete** | 4.5 of 21 modules (21%) |
 | **Repository** | **`github.com/AbdullahUmer007/forecourt`** (private, `main`, 48 files, pushed 2026-08-01) |
 | **Blocking issue** | None. GitHub push access is **permanently unavailable** on this plan — see "Delivery method" below. Sessions deliver `git bundle` files; Abdullah pulls and pushes. This is settled, not a workaround. |
 | **Next milestone** | End of M8 — Kennington's stock live, passing all 16 audit checks, compliant payment on every car |
@@ -30,7 +30,7 @@
 | M1 | Foundation | ✅ done | Workspace, tokens, domain (11 tests green), db/RLS, isolation suite, skills committed |
 | M2 | Tenancy & identity | ✅ done | 13 tables, 9 roles, permissions with derived-value protection, provisioning + go-live checklist. **Fixed a cross-tenant leak in the M1 RLS generator** — see reports/session-2026-08-01-m2.md |
 | M3 | Vehicle core | ✅ done | 4 tables, 15-state lifecycle with go-live gating, days metrics, advert strength. Registration is `UNIQUE (tenant_id, registration)` — verified two dealers can hold the same plate. Corrected `delivered` from terminal: a CRA rejection must be able to return it. |
-| M4 | Vehicle data & provenance | 🟡 blocked | M3 done, but **needs a data provider contract**. The schema columns and go-live gates are already in place waiting for it. Consider building M5/M6 first. |
+| M4 | Vehicle data & provenance | 🟨 half done | **Free half BUILT**: adapter framework (cache, cost metering, circuit breaker, idempotency, raw-response storage, fixture replay), DVLA VES + DVSA MOT adapters, registration handling, mileage anomaly detection, 3 tables. **Paid half still blocked**: valuation (cap hpi) and provenance (HPI Check) need contracts — the interface and columns are ready for them. |
 | M5 | Media pipeline | 🟢 ready | Unblocked by M3. Good next candidate while M4 waits on contracts. |
 | M6 | Public website engine | ⬜ todo | Acquisition-critical |
 | M7 | Public inventory experience | ⬜ todo | Acquisition-critical |
@@ -100,8 +100,8 @@ Investigated exhaustively on 1–2 Aug 2026 and closed:
 
 | | Now | 90-day target |
 |---|---|---|
-| Modules complete | 4 / 21 | 9 (M0–M8) |
-| Tests passing | 175 (98 domain + 77 isolation) | — |
+| Modules complete | 4.5 / 21 | 9 (M0–M8) |
+| Tests passing | 214 (98 domain + 30 adapters + 86 isolation) | — |
 | Dealer sites audited | 1 (Kennington, via fixture) | 500 |
 | Design partners | 0 | 8 |
 | Paying dealers | 0 | first in sight |
@@ -118,3 +118,4 @@ Investigated exhaustively on 1–2 Aug 2026 and closed:
 | 2026-08-01 | M2 build | Tenancy, identity, roles, permissions, provisioning. 129 tests green. Found and fixed a cross-tenant leak: permissive `site_scope` policies were OR-ing away tenant isolation on every table with a `site_id`. |
 | 2026-08-02 | CI fix | Three CI bugs: pnpm version conflict, a migration glob matching nothing, and `verify-policies.mjs` skipping partitioned parents and the tenants/users tables. |
 | 2026-08-02 | M3 build | Vehicle core — 4 tables, lifecycle state machine with go-live gating, days metrics, advert strength. 175 tests green, 18 tables protected. |
+| 2026-08-02 | M4a/b build | Adapter framework + DVLA VES and DVSA MOT (both free, no contract needed). Mileage anomaly detection now populates the field M3's go-live gate reads. 214 tests green, 21 tables protected. |

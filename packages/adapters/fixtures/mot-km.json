@@ -1,0 +1,11 @@
+{
+  "registration": "KM11IMP",
+  "motTests": [
+    { "completedDate": "2026-03-01", "testResult": "PASSED", "expiryDate": "2027-02-28",
+      "odometerValue": 100000, "odometerUnit": "km", "odometerResultType": "READ",
+      "motTestNumber": "800000000001", "defects": [] },
+    { "completedDate": "2025-03-01", "testResult": "PASSED", "expiryDate": "2026-02-28",
+      "odometerValue": 5000, "odometerUnit": "mi", "odometerResultType": "READ",
+      "motTestNumber": "800000000000", "defects": [] }
+  ]
+}

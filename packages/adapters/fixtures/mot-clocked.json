@@ -1,0 +1,14 @@
+{
+  "registration": "CL05KED",
+  "motTests": [
+    { "completedDate": "2026-01-20", "testResult": "PASSED", "expiryDate": "2027-01-19",
+      "odometerValue": 62000, "odometerUnit": "mi", "odometerResultType": "READ",
+      "motTestNumber": "900000000003", "defects": [] },
+    { "completedDate": "2025-01-15", "testResult": "PASSED", "expiryDate": "2026-01-14",
+      "odometerValue": 48000, "odometerUnit": "mi", "odometerResultType": "READ",
+      "motTestNumber": "900000000002", "defects": [] },
+    { "completedDate": "2024-01-10", "testResult": "PASSED", "expiryDate": "2025-01-09",
+      "odometerValue": 91000, "odometerUnit": "mi", "odometerResultType": "READ",
+      "motTestNumber": "900000000001", "defects": [] }
+  ]
+}

@@ -81,7 +81,11 @@ const TENANT_TABLES = [
   'vehicle_status_history',
   'vehicle_prices',
   'vehicle_costs',
-  // M4+ — created by later migrations; each skips until its table exists
+  // M4 — vehicle data
+  'vehicle_lookups',
+  'mot_records',
+  'provider_usage_daily',
+  // M5+ — created by later migrations; each skips until its table exists
   'contacts',
   'leads',
   'deals',
@@ -106,7 +110,10 @@ const SPECIAL_TABLES = {
 } as const;
 
 /** Append-only tables reject UPDATE via a trigger before RLS is reached. */
-const APPEND_ONLY = new Set<string>(['audit_events', 'deal_evidence', 'stock_book_entries', 'invoices', 'contact_consents']);
+const APPEND_ONLY = new Set<string>([
+  'audit_events', 'deal_evidence', 'stock_book_entries', 'invoices', 'contact_consents',
+  'vehicle_status_history', 'vehicle_prices', 'vehicle_lookups',
+]);
 
 /**
  * A minimally valid row per table, referencing tenant B's own child records.
@@ -168,6 +175,18 @@ const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   vehicle_costs: {
     columns: 'tenant_id, vehicle_id, category, description',
     values: `'${TENANT_B}', '${B_VEHICLE}', 'valet', 'Smuggled cost'`,
+  },
+  vehicle_lookups: {
+    columns: 'tenant_id, registration, provider, lookup_type',
+    values: `'${TENANT_B}', 'SM99GLD', 'dvla_ves', 'vehicle'`,
+  },
+  mot_records: {
+    columns: 'tenant_id, vehicle_id, test_date, result',
+    values: `'${TENANT_B}', '${B_VEHICLE}', '2026-01-01', 'PASSED'`,
+  },
+  provider_usage_daily: {
+    columns: 'tenant_id, usage_date, provider, lookup_type',
+    values: `'${TENANT_B}', '2026-08-02', 'dvla_ves', 'vehicle'`,
   },
 };
 
@@ -253,6 +272,22 @@ async function seedRivalData(): Promise<void> {
 
       INSERT INTO vehicle_costs (tenant_id, vehicle_id, category, description) VALUES
         ('${A}','${A_VEHICLE}','valet','Valet A'), ('${B}','${B_VEHICLE}','valet','Valet B');
+    `);
+  }
+
+  // M4 tables.
+  if (await tableExists('vehicle_lookups')) {
+    await sql.unsafe(`
+      INSERT INTO vehicle_lookups (tenant_id, registration, provider, lookup_type) VALUES
+        ('${A}','AA11AAA','dvla_ves','vehicle'), ('${B}','BB11BBB','dvla_ves','vehicle');
+
+      INSERT INTO mot_records (tenant_id, vehicle_id, test_date, result, odometer_miles) VALUES
+        ('${A}','${A_VEHICLE}','2026-02-14','PASSED',38940),
+        ('${B}','${B_VEHICLE}','2026-02-14','PASSED',38940);
+
+      INSERT INTO provider_usage_daily (tenant_id, usage_date, provider, lookup_type, call_count) VALUES
+        ('${A}','2026-08-02','dvla_ves','vehicle',1),
+        ('${B}','2026-08-02','dvla_ves','vehicle',1);
     `);
   }
 }

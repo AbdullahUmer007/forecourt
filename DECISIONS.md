@@ -50,3 +50,11 @@ Format: `date · decision · rationale · reversible?`
 **2026-08-02 · Days-to-sell is measured from Live, not from purchase.** Time before Live is `daysToLive` and belongs to the prep team. Blending them blames the sales team for time the car spent in the workshop, and a dealer who spots that stops trusting the whole dashboard. Reversible but inadvisable.
 
 **2026-08-02 · Go-live blockers are returned as a list with per-blocker `overridable` flags, not a boolean.** The dealer needs to see exactly what to fix. An incomplete VAT stock book, a missing price and an unacknowledged mileage anomaly are non-overridable; a missing provenance check is overridable with a recorded reason and a named authoriser. Reversible.
+
+**2026-08-02 · M4 was split into a free half and a paid half, and the free half was built immediately.** DVLA VES and DVSA MOT History are free and self-serve; only valuation (cap hpi) and provenance (HPI Check) need commercial contracts. Labelling the whole module "blocked on contracts" was wrong and would have idled work for weeks. The free half also populates `vehicles.highest_mot_mileage`, which M3's go-live gate already reads — that gate was guarding against data nothing produced. Reversible: the paid adapters slot into the same interface.
+
+**2026-08-02 · Adapters are tested against recorded fixtures, never a live provider.** No contract, no network, no flakiness, and provider behaviour (retries, circuit breaking, partial failure) becomes deterministic. A nightly job should later compare live responses against fixture shape and alert on drift — these APIs change without notice. Reversible.
+
+**2026-08-02 · A combined vehicle lookup returns partial data rather than failing.** If MOT history is down we still return the DVLA record, with the failed source NAMED in a `degraded` array. A buyer standing in an auction hall would rather have half the car than an error. Reversible.
+
+**2026-08-02 · Mileage anomaly detection reports EVERY reading below the running highest, not just the first.** Reporting only the first makes a clocked car look like a single clerical error. Caught by my own test expecting one anomaly where the data honestly contained two. Not reversible without weakening a fraud signal.

@@ -1,0 +1,46 @@
+{
+  "registration": "WN22HNL",
+  "make": "TESLA",
+  "model": "MODEL X",
+  "firstUsedDate": "2022-03-14",
+  "fuelType": "Electric",
+  "primaryColour": "White",
+  "motTests": [
+    {
+      "completedDate": "2026-02-14",
+      "testResult": "PASSED",
+      "expiryDate": "2027-02-17",
+      "odometerValue": 38940,
+      "odometerUnit": "mi",
+      "odometerResultType": "READ",
+      "motTestNumber": "445566778899",
+      "defects": [
+        { "text": "Nearside front tyre worn close to the legal limit", "type": "ADVISORY", "dangerous": false },
+        { "text": "Offside rear brake disc worn but not excessively", "type": "ADVISORY", "dangerous": false }
+      ]
+    },
+    {
+      "completedDate": "2025-02-10",
+      "testResult": "FAILED",
+      "expiryDate": null,
+      "odometerValue": 25110,
+      "odometerUnit": "mi",
+      "odometerResultType": "READ",
+      "motTestNumber": "112233445566",
+      "defects": [
+        { "text": "Offside front suspension arm ball joint dust cover damaged", "type": "MAJOR", "dangerous": false },
+        { "text": "Windscreen wiper does not clear the screen effectively", "type": "ADVISORY", "dangerous": false }
+      ]
+    },
+    {
+      "completedDate": "2025-02-12",
+      "testResult": "PASSED",
+      "expiryDate": "2026-02-11",
+      "odometerValue": 25110,
+      "odometerUnit": "mi",
+      "odometerResultType": "READ",
+      "motTestNumber": "112233445567",
+      "defects": []
+    }
+  ]
+}

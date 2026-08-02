@@ -1,0 +1,20 @@
+{
+  "registrationNumber": "WN22HNL",
+  "make": "TESLA",
+  "colour": "WHITE",
+  "fuelType": "ELECTRICITY",
+  "engineCapacity": null,
+  "co2Emissions": 0,
+  "euroStatus": null,
+  "yearOfManufacture": 2022,
+  "monthOfFirstRegistration": "2022-03",
+  "taxStatus": "Taxed",
+  "taxDueDate": "2027-03-01",
+  "motStatus": "Valid",
+  "motExpiryDate": "2027-02-17",
+  "wheelplan": "2 AXLE RIGID BODY",
+  "revenueWeight": 2900,
+  "dateOfLastV5CIssued": "2024-06-11",
+  "markedForExport": false,
+  "typeApproval": "M1"
+}
