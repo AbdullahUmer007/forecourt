@@ -3,3 +3,4 @@ export * from './vat.js';
 export * from './clocks.js';
 export * from './permissions.js';
 export * from './provisioning.js';
+export * from './vehicle-lifecycle.js';

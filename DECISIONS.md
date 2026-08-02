@@ -42,3 +42,11 @@ Format: `date · decision · rationale · reversible?`
 **2026-08-01 · Each tenant is seeded its own copy of the nine system roles rather than sharing platform-level rows.** Lets a dealer rename and adjust roles without affecting anyone else. Costs nine rows per tenant, which is nothing. Reversible.
 
 **2026-08-01 · The compliance profile is enforced in three places** — TypeScript validation for the good error message, database CHECK constraints for the guarantee, and the go-live checklist for operational readiness. Deliberate duplication: the database is the guarantee, the code is the explanation. Reversible but inadvisable.
+
+**2026-08-02 · Vehicle registration is `UNIQUE (tenant_id, registration)`, never global.** A global unique index would let one dealer discover another's stock: enter a registration, get a constraint violation, and you have learned a competitor holds that car. Verified behaviourally — two tenants can both hold WN22HNL, one tenant cannot duplicate it. Note this is the OPPOSITE conclusion to `domains.hostname`, where global uniqueness is the safe choice because a hostname can only resolve to one tenant. Not reversible.
+
+**2026-08-02 · `delivered` is NOT a terminal vehicle state.** A customer has a 30-day short-term right to reject under CRA s.22, so a delivered vehicle can come back. Modelling delivery as terminal would leave no lawful path to record a rejection — the exact scenario the Deal Evidence Ledger exists for. Caught by a reachability test. Reversible only by removing the CRA rejection path, which would be wrong.
+
+**2026-08-02 · Days-to-sell is measured from Live, not from purchase.** Time before Live is `daysToLive` and belongs to the prep team. Blending them blames the sales team for time the car spent in the workshop, and a dealer who spots that stops trusting the whole dashboard. Reversible but inadvisable.
+
+**2026-08-02 · Go-live blockers are returned as a list with per-blocker `overridable` flags, not a boolean.** The dealer needs to see exactly what to fix. An incomplete VAT stock book, a missing price and an unacknowledged mileage anomaly are non-overridable; a missing provenance check is overridable with a recorded reason and a named authoriser. Reversible.

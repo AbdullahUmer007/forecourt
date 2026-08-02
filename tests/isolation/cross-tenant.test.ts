@@ -76,8 +76,12 @@ const TENANT_TABLES = [
   'invitations',
   'api_keys',
   'audit_events',
-  // M3+ — created by later migrations; each skips until its table exists
+  // M3 — vehicle core
   'vehicles',
+  'vehicle_status_history',
+  'vehicle_prices',
+  'vehicle_costs',
+  // M4+ — created by later migrations; each skips until its table exists
   'contacts',
   'leads',
   'deals',
@@ -118,6 +122,8 @@ const B_ROLE = '66666666-6666-4666-8666-666666666666';
 const B_SITE = '88888888-8888-4888-8888-888888888888';
 const B_BRAND = '99999999-9999-4999-8999-999999999992';
 const B_USER = '44444444-4444-4444-8444-444444444444';
+const A_VEHICLE = 'bbbbbbb1-bbbb-4bbb-8bbb-bbbbbbbbbbb1';
+const B_VEHICLE = 'bbbbbbb2-bbbb-4bbb-8bbb-bbbbbbbbbbb2';
 
 const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   sites: { columns: 'tenant_id, name', values: `'${TENANT_B}', 'Smuggled Site'` },
@@ -146,6 +152,22 @@ const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   audit_events: {
     columns: 'tenant_id, actor_type, resource_type, action',
     values: `'${TENANT_B}', 'user', 'vehicle', 'create'`,
+  },
+  vehicles: {
+    columns: 'tenant_id, site_id, stock_number, stock_sequence, registration',
+    values: `'${TENANT_B}', '${B_SITE}', 'SMUG-0001', 9001, 'SM99GLD'`,
+  },
+  vehicle_status_history: {
+    columns: 'tenant_id, vehicle_id, to_state',
+    values: `'${TENANT_B}', '${B_VEHICLE}', 'booked_in'`,
+  },
+  vehicle_prices: {
+    columns: 'tenant_id, vehicle_id, price_pence',
+    values: `'${TENANT_B}', '${B_VEHICLE}', 999900`,
+  },
+  vehicle_costs: {
+    columns: 'tenant_id, vehicle_id, category, description',
+    values: `'${TENANT_B}', '${B_VEHICLE}', 'valet', 'Smuggled cost'`,
   },
 };
 
@@ -213,6 +235,26 @@ async function seedRivalData(): Promise<void> {
       ('${A}','user','vehicle','create'),
       ('${B}','user','vehicle','create');
   `);
+
+  // M3 tables. Seeded separately because they only exist after migration 0002.
+  const hasVehicles = await tableExists('vehicles');
+  if (hasVehicles) {
+    await sql.unsafe(`
+      INSERT INTO vehicles (id, tenant_id, site_id, stock_number, stock_sequence, registration, make, model) VALUES
+        ('${A_VEHICLE}','${A}','77777777-7777-4777-8777-777777777777','A-9001',9001,'AA11AAA','Tesla','Model X'),
+        ('${B_VEHICLE}','${B}','88888888-8888-4888-8888-888888888888','B-9001',9001,'BB11BBB','Tesla','Model X')
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO vehicle_status_history (tenant_id, vehicle_id, to_state) VALUES
+        ('${A}','${A_VEHICLE}','booked_in'), ('${B}','${B_VEHICLE}','booked_in');
+
+      INSERT INTO vehicle_prices (tenant_id, vehicle_id, price_pence) VALUES
+        ('${A}','${A_VEHICLE}',1999900), ('${B}','${B_VEHICLE}',1999900);
+
+      INSERT INTO vehicle_costs (tenant_id, vehicle_id, category, description) VALUES
+        ('${A}','${A_VEHICLE}','valet','Valet A'), ('${B}','${B_VEHICLE}','valet','Valet B');
+    `);
+  }
 }
 
 describeDb('cross-tenant isolation', () => {
@@ -393,7 +435,10 @@ describeDb('cross-tenant isolation', () => {
   // Gate 5 — unique constraints are tenant-scoped, not global.
   // -------------------------------------------------------------------
   it('vehicle registration uniqueness is scoped by tenant, not global', async () => {
-    if (!(await tableExists('vehicles'))) return;
+    expect(
+      await tableExists('vehicles'),
+      'vehicles table missing — this test must not skip once M3 is migrated',
+    ).toBe(true);
 
     const rows = await sql`
       SELECT i.indexrelid::regclass AS index_name,

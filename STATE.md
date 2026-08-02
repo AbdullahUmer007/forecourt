@@ -13,9 +13,9 @@
 
 | | |
 |---|---|
-| **Current module** | M3 — Vehicle core (`ready`, not started) |
-| **Last shipped** | M2 Tenancy & identity (1 Aug 2026, overnight) |
-| **Backlog complete** | 3 of 21 modules (14%) |
+| **Current module** | M4 — Vehicle data & provenance (`blocked` — needs a data provider contract) |
+| **Last shipped** | M3 Vehicle core (2 Aug 2026) |
+| **Backlog complete** | 4 of 21 modules (19%) |
 | **Repository** | **`github.com/AbdullahUmer007/forecourt`** (private, `main`, 48 files, pushed 2026-08-01) |
 | **Blocking issue** | None. GitHub push access is **permanently unavailable** on this plan — see "Delivery method" below. Sessions deliver `git bundle` files; Abdullah pulls and pushes. This is settled, not a workaround. |
 | **Next milestone** | End of M8 — Kennington's stock live, passing all 16 audit checks, compliant payment on every car |
@@ -29,9 +29,9 @@
 | M0 | Dealer Site Audit tool | ✅ done | 16 checks, fixture mode, Kennington fixture scores 16/100. Web front end still to build. |
 | M1 | Foundation | ✅ done | Workspace, tokens, domain (11 tests green), db/RLS, isolation suite, skills committed |
 | M2 | Tenancy & identity | ✅ done | 13 tables, 9 roles, permissions with derived-value protection, provisioning + go-live checklist. **Fixed a cross-tenant leak in the M1 RLS generator** — see reports/session-2026-08-01-m2.md |
-| M3 | Vehicle core | 🟢 ready | Next up. Note: registration must be `UNIQUE (tenant_id, registration)` — a global unique would leak the existence of a rival's stock |
-| M4 | Vehicle data & provenance | ⬜ todo | Blocked by M3. **Needs a data provider contract — long lead time, start now** |
-| M5 | Media pipeline | ⬜ todo | Blocked by M3 |
+| M3 | Vehicle core | ✅ done | 4 tables, 15-state lifecycle with go-live gating, days metrics, advert strength. Registration is `UNIQUE (tenant_id, registration)` — verified two dealers can hold the same plate. Corrected `delivered` from terminal: a CRA rejection must be able to return it. |
+| M4 | Vehicle data & provenance | 🟡 blocked | M3 done, but **needs a data provider contract**. The schema columns and go-live gates are already in place waiting for it. Consider building M5/M6 first. |
+| M5 | Media pipeline | 🟢 ready | Unblocked by M3. Good next candidate while M4 waits on contracts. |
 | M6 | Public website engine | ⬜ todo | Acquisition-critical |
 | M7 | Public inventory experience | ⬜ todo | Acquisition-critical |
 | M8 | Finance display & compliance | ⬜ todo | Acquisition-critical. **Needs adviser sign-off before go-live** |
@@ -100,8 +100,8 @@ Investigated exhaustively on 1–2 Aug 2026 and closed:
 
 | | Now | 90-day target |
 |---|---|---|
-| Modules complete | 3 / 21 | 9 (M0–M8) |
-| Tests passing | 129 (61 domain + 68 isolation) | — |
+| Modules complete | 4 / 21 | 9 (M0–M8) |
+| Tests passing | 175 (98 domain + 77 isolation) | — |
 | Dealer sites audited | 1 (Kennington, via fixture) | 500 |
 | Design partners | 0 | 8 |
 | Paying dealers | 0 | first in sight |
@@ -116,3 +116,5 @@ Investigated exhaustively on 1–2 Aug 2026 and closed:
 | 2026-08-01 | Setup | Strategy docs 01–07, three skills, design brief, M0 audit tool (16 checks, tested), M1 foundation (11 tests green), build plan, manager charter, scheduled tasks created |
 | 2026-08-01 | Repo | `github.com/AbdullahUmer007/forecourt` created and pushed — 48 files, 74 objects, `main`. Claude GitHub App access still to be granted. |
 | 2026-08-01 | M2 build | Tenancy, identity, roles, permissions, provisioning. 129 tests green. Found and fixed a cross-tenant leak: permissive `site_scope` policies were OR-ing away tenant isolation on every table with a `site_id`. |
+| 2026-08-02 | CI fix | Three CI bugs: pnpm version conflict, a migration glob matching nothing, and `verify-policies.mjs` skipping partitioned parents and the tenants/users tables. |
+| 2026-08-02 | M3 build | Vehicle core — 4 tables, lifecycle state machine with go-live gating, days metrics, advert strength. 175 tests green, 18 tables protected. |
