@@ -17,7 +17,7 @@
 | **Last shipped** | M2 Tenancy & identity (1 Aug 2026, overnight) |
 | **Backlog complete** | 3 of 21 modules (14%) |
 | **Repository** | **`github.com/AbdullahUmer007/forecourt`** (private, `main`, 48 files, pushed 2026-08-01) |
-| **Blocking issue** | None blocking. GitHub App installed 1 Aug; awaiting a fresh session to confirm repo access (this session's binding was fixed at start). Until confirmed, sessions deliver bundles. |
+| **Blocking issue** | None. GitHub push access is **permanently unavailable** on this plan — see "Delivery method" below. Sessions deliver `git bundle` files; Abdullah pulls and pushes. This is settled, not a workaround. |
 | **Next milestone** | End of M8 — Kennington's stock live, passing all 16 audit checks, compliant payment on every car |
 
 ---
@@ -52,8 +52,7 @@
 
 ## Needs Abdullah (ranked)
 
-1. ~~Grant the Claude GitHub App access.~~ **DONE 1 Aug** — app installed from github.com/apps/claude against `AbdullahUmer007/forecourt`. **Do not ask Abdullah about this again.** A session's repo binding is fixed at session start, so the session that requested it could not verify it. First session to successfully call `GET /repos/AbdullahUmer007/forecourt` should record it here. If three consecutive sessions still get 403, stop trying: work permanently via `git bundle` and remove this line.
-2. **Compliance advisers on retainer** — a motor-trade FCA compliance consultant and a VAT specialist, ~£1.5–3k/month. M8, M11 and M12 cannot go live without them.
+1. **Compliance advisers on retainer** — a motor-trade FCA compliance consultant and a VAT specialist, ~£1.5–3k/month. M8, M11 and M12 cannot go live without them.
 3. **Start the data provider conversations** — cap hpi / HPI Check (same parent, negotiate together), an aggregator for launch speed, Auto Trader technology partner status. All sales-gated, months of lead time, and they gate M4 and M16.
 4. **Confirm the Kennington numbers** before any pitch: units per month, current finance penetration, average commission, what they actually pay today.
 5. **Decide the product name and buy the domain.** "Forecourt" is a working name — check trade marks in classes 9 and 42.
@@ -61,11 +60,34 @@
 
 ---
 
+## Delivery method — SETTLED, do not revisit
+
+**Sessions cannot push to GitHub. Do not attempt it, do not test for it, and never ask Abdullah to fix it.**
+
+Investigated exhaustively on 1–2 Aug 2026 and closed:
+- The GitHub OAuth connector works — a session can authenticate and read the account identity as `AbdullahUmer007`.
+- The Claude GitHub App was correctly installed against `AbdullahUmer007/forecourt` on 1 Aug.
+- Every API call to `/repos/AbdullahUmer007/forecourt` still returns **403 "GitHub access to this repository is not enabled for this session"**, in three separate sessions including a freshly-fired one.
+- The `add_repo` tool the error message names **does not exist in Cowork sessions** — it is a Claude Code feature.
+- The session-to-repository binding is an **organisation-level setting**, and organisation settings require a **Team or Enterprise plan**. This account is on an individual plan, so the control is not available. Confirmed by Abdullah on 2 Aug.
+
+**The workflow, permanently:**
+1. Build and commit locally in the session container.
+2. `git bundle create <name>.bundle --all` and deliver it with `SendUserFile`.
+3. Abdullah runs `git pull ~/Downloads/<name>.bundle main && git push`.
+
+**Consequences to hold in mind:**
+- A session **cannot see the true state of `main`**. `STATE.md` in the project is the authoritative record — trust it over any assumption about the remote.
+- Always state in the report which commits the bundle contains, so Abdullah can tell what is outstanding.
+- Never assume a previous session's work reached GitHub. It only did if Abdullah pulled and pushed it.
+
+---
+
 ## Open risks
 
 | Risk | Status |
 |---|---|
-| Claude GitHub App lacks repo access → no autonomous clone/push | **Live but reduced.** Repo exists and is populated; sessions can still deliver patches. Grant is the fix. |
+| Sessions cannot push to GitHub (plan-tier limitation) | **Closed — accepted permanently.** Bundle delivery is the workflow. The residual risk is drift between the container's copy and `main`; mitigated by treating project `STATE.md` as authoritative and naming the bundle's commits in every report. |
 | Git credentials on the founder's machine default to a different GitHub account (`naumansharifwork`) | The `forecourt` remote URL now pins `AbdullahUmer007@`, so pushes from `/d/Projects/dealer/forecourt` are correctly attributed. Other repos on that machine are unaffected and may still push under the cached account. |
 | FCA motor finance redress scheme partially suspended (Upper Tribunal, ~1–2 July 2026; hearing expected Dec 2026–Feb 2027) | Monitoring monthly. All scheme parameters held as data, not code. |
 | FCA CP26/15 may change the CONC 3.5.3R representative example and the 51% threshold | Monitoring. `<FinancePromotion>` field list must be configurable, not fixed. |
