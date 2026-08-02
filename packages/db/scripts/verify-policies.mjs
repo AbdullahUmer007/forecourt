@@ -26,7 +26,7 @@ const rows = await sql`
          (SELECT count(*) FROM pg_policy p WHERE p.polrelid = c.oid) AS policy_count
   FROM pg_class c
   JOIN pg_namespace n ON n.oid = c.relnamespace
-  WHERE n.nspname = 'public' AND c.relkind = 'r'
+  WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p')  -- 'p' = partitioned parent
     AND EXISTS (
       SELECT 1 FROM information_schema.columns
       WHERE table_schema = 'public' AND table_name = c.relname AND column_name = 'tenant_id'
@@ -42,10 +42,37 @@ for (const r of rows) {
   );
 }
 
+
+// ---------------------------------------------------------------------------
+// The tables with NO tenant_id are invisible to the query above — and "it has
+// no tenant_id" is precisely how a table ends up unprotected. `tenants` is
+// scoped on `id`; `users` is global by design and scoped via membership.
+// Both leaked before this check existed.
+// ---------------------------------------------------------------------------
+const SPECIAL = ['tenants', 'users'];
+const special = await sql`
+  SELECT c.relname AS table_name,
+         c.relrowsecurity AS rls_enabled,
+         c.relforcerowsecurity AS rls_forced,
+         (SELECT count(*) FROM pg_policy p WHERE p.polrelid = c.oid) AS policy_count
+  FROM pg_class c
+  JOIN pg_namespace n ON n.oid = c.relnamespace
+  WHERE n.nspname = 'public' AND c.relname = ANY(${SPECIAL})`;
+
+for (const name of SPECIAL) {
+  const row = special.find((r) => r.table_name === name);
+  if (!row) continue; // not created by this migration yet
+  const ok = row.rls_enabled && row.rls_forced && Number(row.policy_count) > 0;
+  console.log(
+    `${ok ? '✓' : '✗'} ${name.padEnd(34)} enabled=${row.rls_enabled} forced=${row.rls_forced} policies=${row.policy_count}`,
+  );
+  if (!ok) failures.push(name);
+}
+
 await sql.end();
 
 if (failures.length) {
   console.error(`\n${failures.length} table(s) are not protected. See packages/db/src/rls.sql.`);
   process.exit(1);
 }
-console.log(`\nAll ${rows.length} tenant tables protected.`);
+console.log(`\nAll ${rows.length + special.length} tables protected (${rows.length} tenant-scoped + ${special.length} special).`);

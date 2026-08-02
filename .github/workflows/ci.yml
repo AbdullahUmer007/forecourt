@@ -27,8 +27,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      # No `version:` here — package.json's `packageManager` field is the single
+      # source of truth. Specifying both makes action-setup fail outright.
       - uses: pnpm/action-setup@v4
-        with: { version: 9 }
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
 
@@ -37,10 +38,22 @@ jobs:
       - name: Apply RLS scaffolding and migrations
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f packages/db/src/rls.sql
-          for f in packages/db/migrations/*[0-9].sql; do
+          # Forward migrations only, in order. `*[0-9].sql` does NOT work:
+          # it requires a digit immediately before .sql, so it matched nothing
+          # and silently ran no migrations at all.
+          for f in $(ls packages/db/migrations/*.sql | grep -v '\.down\.sql$' | sort); do
             echo "→ $f"
             psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
           done
+
+      - name: Assert the schema actually exists
+        run: |
+          n=$(psql "$DATABASE_URL" -t -A -c \
+            "SELECT count(*) FROM information_schema.tables WHERE table_schema='public'")
+          echo "tables created: $n"
+          # A migration loop that matches no files exits 0 and leaves an empty
+          # database, which then makes every isolation test skip and look green.
+          test "$n" -ge 13 || { echo "::error::Expected >=13 tables, found $n"; exit 1; }
 
       - name: Verify every tenant table is protected
         run: node packages/db/scripts/verify-policies.mjs
