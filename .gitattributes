@@ -1,0 +1,61 @@
+# Line-ending normalisation.
+#
+# Without this, a Windows checkout converts every file to CRLF and all ~70
+# tracked files read as modified forever — `git status` becomes useless, diffs
+# become unreadable, and CI shell scripts break on the stray carriage returns.
+#
+# `text=auto eol=lf` stores LF in the repository and checks LF out everywhere,
+# which is what CI, Docker and Postgres all expect.
+
+* text=auto eol=lf
+
+# Explicitly text, so they are never mangled regardless of heuristics.
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.js        text eol=lf
+*.mjs       text eol=lf
+*.cjs       text eol=lf
+*.json      text eol=lf
+*.jsonc     text eol=lf
+*.md        text eol=lf
+*.sql       text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.css       text eol=lf
+*.html      text eol=lf
+*.svg       text eol=lf
+*.toml      text eol=lf
+*.env*      text eol=lf
+.gitignore  text eol=lf
+.gitattributes text eol=lf
+
+# Shell scripts MUST be LF or they fail to execute on Linux runners with
+# "bad interpreter: /bin/bash^M".
+*.sh        text eol=lf
+*.bash      text eol=lf
+
+# Windows-only files keep CRLF.
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.ps1       text eol=crlf
+
+# Binary — never touched, never diffed.
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.webp      binary
+*.avif      binary
+*.gif       binary
+*.ico       binary
+*.pdf       binary
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.otf       binary
+*.zip       binary
+*.bundle    binary
+*.skill     binary
+
+# Generated — collapse in diffs and exclude from language statistics.
+pnpm-lock.yaml   linguist-generated=true -diff
+package-lock.json linguist-generated=true -diff
