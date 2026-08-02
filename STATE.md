@@ -71,10 +71,34 @@ Investigated exhaustively on 1–2 Aug 2026 and closed:
 - The `add_repo` tool the error message names **does not exist in Cowork sessions** — it is a Claude Code feature.
 - The session-to-repository binding is an **organisation-level setting**, and organisation settings require a **Team or Enterprise plan**. This account is on an individual plan, so the control is not available. Confirmed by Abdullah on 2 Aug.
 
-**The workflow, permanently:**
-1. Build and commit locally in the session container.
-2. `git bundle create <name>.bundle --all` and deliver it with `SendUserFile`.
-3. Abdullah runs `git pull ~/Downloads/<name>.bundle main && git push`.
+**The workflow (improved 2 Aug — the local folder is now connected):**
+
+Abdullah connected `D:\Projects\dealer\forecourt` as a device folder, so a
+session can write **directly into his working copy**. This is now the preferred
+path — no download, no bundle, no pull.
+
+1. Build and commit locally in the session container (keeps a clean history).
+2. `SendUserFile` each changed file to get a `file_uuid`.
+3. `device_commit_files` to `D:\Projects\dealer\forecourt\<path>`.
+4. Abdullah runs `git add -A && git commit && git push`.
+
+**⚠️ NEVER run git via `device_bash`. Not even `git status`.**
+
+`device_bash` cannot delete files, so ANY git command that takes a lock —
+including `git status` and `git diff` — leaves a stale `.git/index.lock`
+behind that it cannot clean up. That jams the repository, and Abdullah has to
+`rm -f .git/index.lock` before he can commit anything. This happened on
+2 Aug and cost him a confusing failure.
+
+Safe on the device folder: reading FILES (`cat`, `ls`, `grep`, `head`).
+Unsafe: anything starting with `git`.
+
+To learn the repo state, read `.git/HEAD` and the files directly, or just ask.
+All git operations — status, add, commit, push — are Abdullah's, in his own
+terminal.
+
+Fall back to `git bundle` only for very large changesets where per-file
+commits would be tedious.
 
 **Consequences to hold in mind:**
 - A session **cannot see the true state of `main`**. `STATE.md` in the project is the authoritative record — trust it over any assumption about the remote.
@@ -88,6 +112,7 @@ Investigated exhaustively on 1–2 Aug 2026 and closed:
 | Risk | Status |
 |---|---|
 | Sessions cannot push to GitHub (plan-tier limitation) | **Closed — accepted permanently.** Bundle delivery is the workflow. The residual risk is drift between the container's copy and `main`; mitigated by treating project `STATE.md` as authoritative and naming the bundle's commits in every report. |
+| Line endings: Windows checkout was CRLF against an LF repo, showing all 71 files as permanently modified. Fixed 2 Aug with `.gitattributes` (`text=auto eol=lf`). Any future "everything is modified" report is this recurring — check `git diff --ignore-all-space` first. |
 | Git credentials on the founder's machine default to a different GitHub account (`naumansharifwork`) | The `forecourt` remote URL now pins `AbdullahUmer007@`, so pushes from `/d/Projects/dealer/forecourt` are correctly attributed. Other repos on that machine are unaffected and may still push under the cached account. |
 | FCA motor finance redress scheme partially suspended (Upper Tribunal, ~1–2 July 2026; hearing expected Dec 2026–Feb 2027) | Monitoring monthly. All scheme parameters held as data, not code. |
 | FCA CP26/15 may change the CONC 3.5.3R representative example and the 51% threshold | Monitoring. `<FinancePromotion>` field list must be configurable, not fixed. |
@@ -119,3 +144,4 @@ Investigated exhaustively on 1–2 Aug 2026 and closed:
 | 2026-08-02 | CI fix | Three CI bugs: pnpm version conflict, a migration glob matching nothing, and `verify-policies.mjs` skipping partitioned parents and the tenants/users tables. |
 | 2026-08-02 | M3 build | Vehicle core — 4 tables, lifecycle state machine with go-live gating, days metrics, advert strength. 175 tests green, 18 tables protected. |
 | 2026-08-02 | M4a/b build | Adapter framework + DVLA VES and DVSA MOT (both free, no contract needed). Mileage anomaly detection now populates the field M3's go-live gate reads. 214 tests green, 21 tables protected. |
+| 2026-08-02 | Delivery | Local repo folder connected — sessions now write directly into the working copy instead of shipping bundles. Fixed a CRLF/LF problem that had all 71 tracked files reading as modified. |
