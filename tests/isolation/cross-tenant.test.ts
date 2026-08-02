@@ -85,7 +85,10 @@ const TENANT_TABLES = [
   'vehicle_lookups',
   'mot_records',
   'provider_usage_daily',
-  // M5+ — created by later migrations; each skips until its table exists
+  // M5 — media
+  'vehicle_media',
+  'media_processing_jobs',
+  // M6+ — created by later migrations; each skips until its table exists
   'contacts',
   'leads',
   'deals',
@@ -93,7 +96,6 @@ const TENANT_TABLES = [
   'stock_book_entries',
   'deal_evidence',
   'contact_consents',
-  'vehicle_media',
   'appointments',
 ] as const;
 
@@ -131,6 +133,8 @@ const B_BRAND = '99999999-9999-4999-8999-999999999992';
 const B_USER = '44444444-4444-4444-8444-444444444444';
 const A_VEHICLE = 'bbbbbbb1-bbbb-4bbb-8bbb-bbbbbbbbbbb1';
 const B_VEHICLE = 'bbbbbbb2-bbbb-4bbb-8bbb-bbbbbbbbbbb2';
+const A_MEDIA = 'ccccccc1-cccc-4ccc-8ccc-ccccccccccc1';
+const B_MEDIA = 'ccccccc2-cccc-4ccc-8ccc-ccccccccccc2';
 
 const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   sites: { columns: 'tenant_id, name', values: `'${TENANT_B}', 'Smuggled Site'` },
@@ -187,6 +191,14 @@ const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   provider_usage_daily: {
     columns: 'tenant_id, usage_date, provider, lookup_type',
     values: `'${TENANT_B}', '2026-08-02', 'dvla_ves', 'vehicle'`,
+  },
+  vehicle_media: {
+    columns: 'tenant_id, vehicle_id, storage_key, shot',
+    values: `'${TENANT_B}', '${B_VEHICLE}', 't/smuggled/original', 'front'`,
+  },
+  media_processing_jobs: {
+    columns: 'tenant_id, media_id, steps, idempotency_key',
+    values: `'${TENANT_B}', '${B_MEDIA}', ARRAY['validate'], 'smuggled-key'`,
   },
 };
 
@@ -272,6 +284,21 @@ async function seedRivalData(): Promise<void> {
 
       INSERT INTO vehicle_costs (tenant_id, vehicle_id, category, description) VALUES
         ('${A}','${A_VEHICLE}','valet','Valet A'), ('${B}','${B_VEHICLE}','valet','Valet B');
+    `);
+  }
+
+  // M5 tables.
+  if (await tableExists('vehicle_media')) {
+    await sql.unsafe(`
+      INSERT INTO vehicle_media (id, tenant_id, vehicle_id, storage_key, shot, status, exif_stripped, published) VALUES
+        ('${A_MEDIA}','${A}','${A_VEHICLE}','t/${A}/v/a/m/a/hash/original','front_three_quarter','ready',true,true),
+        ('${B_MEDIA}','${B}','${B_VEHICLE}','t/${B}/v/b/m/b/hash/original','front_three_quarter','ready',true,true)
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO media_processing_jobs (tenant_id, media_id, steps, idempotency_key) VALUES
+        ('${A}','${A_MEDIA}',ARRAY['validate','strip_exif'],'job-a'),
+        ('${B}','${B_MEDIA}',ARRAY['validate','strip_exif'],'job-b')
+      ON CONFLICT DO NOTHING;
     `);
   }
 

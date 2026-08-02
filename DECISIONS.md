@@ -58,3 +58,13 @@ Format: `date · decision · rationale · reversible?`
 **2026-08-02 · A combined vehicle lookup returns partial data rather than failing.** If MOT history is down we still return the DVLA record, with the failed source NAMED in a `degraded` array. A buyer standing in an auction hall would rather have half the car than an error. Reversible.
 
 **2026-08-02 · Mileage anomaly detection reports EVERY reading below the running highest, not just the first.** Reporting only the first makes a clocked car look like a single clerical error. Caught by my own test expecting one anomaly where the data honestly contained two. Not reversible without weakening a fraud signal.
+
+**2026-08-02 · EXIF stripping is mandatory and unconditional, enforced by a CHECK constraint.** A phone photo carries GPS. Publishing it discloses where the dealer's stock sits overnight and — for a part-exchange appraisal — usually a customer's home address. `vehicle_media_published_requires_ready` makes it impossible to publish an image that has not been stripped. Not reversible: it is a data-protection control, not an optimisation.
+
+**2026-08-02 · Damage photographs shown to a buyer cannot be deleted, only unpublished.** A photograph of declared condition, shown before sale, is a Consumer Rights Act defence. Enforced by a CHECK constraint as well as in domain logic, and the refusal message offers the lawful alternative rather than just saying no. Not reversible.
+
+**2026-08-02 · Damage photographs sort to the END of the published set.** They must be present and visible — that is the defence — but leading a listing with a scuffed bumper loses the click the defence was meant to protect. Reversible; revisit if dealers ask for it.
+
+**2026-08-02 · `vehicles.published_photo_count` is maintained by a database trigger, not application code.** M3's go-live gate reads it, so a missed update would silently block or unblock a vehicle from being advertised. The database owns anything a gate depends on. Reversible but inadvisable.
+
+**2026-08-02 · Uploads are validated by magic bytes, not the content-type header.** The header is caller-supplied and therefore untrustworthy. HEIC and AVIF are exempted from sniffing because they share an ISO-BMFF container signature; the processor rejects them later if they turn out not to be images. Reversible.
