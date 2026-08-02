@@ -13,9 +13,9 @@
 
 | | |
 |---|---|
-| **Current module** | M6b — website renderer & block editor, or M7 (`ready`) |
-| **Last shipped** | M6a SEO & structured data (2 Aug 2026) |
-| **Backlog complete** | 6 of 21 modules (29%) |
+| **Current module** | M7 — Public inventory experience (`ready`) |
+| **Last shipped** | M6b Site renderer (2 Aug 2026) |
+| **Backlog complete** | 6.5 of 21 modules (31%) |
 | **Repository** | **`github.com/AbdullahUmer007/forecourt`** (private, `main`, 48 files, pushed 2026-08-01) |
 | **Blocking issue** | None. GitHub push access is **permanently unavailable** on this plan — see "Delivery method" below. Sessions deliver `git bundle` files; Abdullah pulls and pushes. This is settled, not a workaround. |
 | **Next milestone** | End of M8 — Kennington's stock live, passing all 16 audit checks, compliant payment on every car |
@@ -32,8 +32,8 @@
 | M3 | Vehicle core | ✅ done | 4 tables, 15-state lifecycle with go-live gating, days metrics, advert strength. Registration is `UNIQUE (tenant_id, registration)` — verified two dealers can hold the same plate. Corrected `delivered` from terminal: a CRA rejection must be able to return it. |
 | M4 | Vehicle data & provenance | 🟨 half done | **Free half BUILT**: adapter framework (cache, cost metering, circuit breaker, idempotency, raw-response storage, fixture replay), DVLA VES + DVSA MOT adapters, registration handling, mileage anomaly detection, 3 tables. **Paid half still blocked**: valuation (cap hpi) and provenance (HPI Check) need contracts — the interface and columns are ready for them. |
 | M5 | Media pipeline | ✅ done | Guided capture plan (15 shots, 5 required), ordering and hero rules, responsive variant plan (AVIF/WebP/JPEG × 5 breakpoints), tenant-prefixed content-hashed storage keys, processing pipeline with mandatory EXIF stripping, upload validation by magic bytes, disclosure-evidence rules. 2 tables. `published_photo_count` is now maintained by a DB trigger — M3's go-live gate depends on it. |
-| M6 | Public website engine | 🟨 half done | **M6a BUILT — the SEO core.** Slugs, canonical URLs, sitemap from live stock, robots.txt with a live-host directive, sold-vehicle 301 resolution, landing-page thin-content rules, per-vehicle titles and descriptions, JSON-LD (Car/Offer/AutoDealer/BreadcrumbList/ItemList). **Our generated site scores ≥85 on our own audit; the competitor scores 16.** M6b outstanding: the Next.js renderer, block editor, domain verification and analytics. |
-| M7 | Public inventory experience | ⬜ todo | Acquisition-critical |
+| M6 | Public website engine | 🟨 half done | **M6a BUILT — the SEO core.** Slugs, canonical URLs, sitemap from live stock, robots.txt with a live-host directive, sold-vehicle 301 resolution, landing-page thin-content rules, per-vehicle titles and descriptions, JSON-LD (Car/Offer/AutoDealer/BreadcrumbList/ItemList). **Our generated site scores ≥85 on our own audit; the competitor scores 16.** **M6b BUILT:** host-to-tenant resolution (unknown or unverified host 404s, never falls through), theme tokens as CSS custom properties, the VDP renderer, Next.js middleware plus route handlers for the page, sitemap.xml and robots.txt. **The self-audit now runs against REAL rendered HTML, not a fixture**, and enforces zero-JS and page-weight budgets. **Design review applied 2 Aug** — GB plate, cash-price label with price-drop, provenance as a stated outcome, named declared marks, EV battery health with context, zero-based mileage chart. Outstanding: search/results and home pages, block editor, domain verification flow, analytics with consent mode, and the `src/data/*` loaders. |
+| M7 | Public inventory experience | 🟢 ready | Next up. Search/results, facets, shortlists. The VDP and the render layer are done. |
 | M8 | Finance display & compliance | ⬜ todo | Acquisition-critical. **Needs adviser sign-off before go-live** |
 | M9 | Contacts & consent | ⬜ todo | |
 | M10 | Leads & communications | ⬜ todo | |
@@ -126,7 +126,7 @@ commits would be tedious.
 | | Now | 90-day target |
 |---|---|---|
 | Modules complete | 6 / 21 | 9 (M0–M8) |
-| Tests passing | 319 (182 domain + 30 adapters + 89 isolation + 18 self-audit) | — |
+| Tests passing | 369 (182 domain + 30 adapters + 89 isolation + 68 self-audit) | — |
 | Dealer sites audited | 1 (Kennington, via fixture) | 500 |
 | Design partners | 0 | 8 |
 | Paying dealers | 0 | first in sight |
@@ -147,3 +147,5 @@ commits would be tedious.
 | 2026-08-02 | Delivery | Local repo folder connected — sessions now write directly into the working copy instead of shipping bundles. Fixed a CRLF/LF problem that had all 71 tracked files reading as modified. |
 | 2026-08-02 | M5 build | Media pipeline — capture plan, ordering, variants, storage keys, processing, evidence rules. 263 tests green, 23 tables protected. DB now owns `published_photo_count`. |
 | 2026-08-02 | M6a build | SEO core — slugs, sitemap, robots, sold-vehicle redirects, JSON-LD. **Self-audit gate added: our generated site scores ≥85 against our own tool.** Also fixed a non-idempotent isolation seed that only passed on a fresh database. 319 tests green. |
+| 2026-08-02 | M6b build | Site renderer — tenant resolution, theme tokens, VDP, Next.js routes. Self-audit upgraded to run against real rendered HTML. Zero-JS and page-weight budgets now enforced by test. 358 tests green. |
+| 2026-08-02 | Design review | Reviewed the Claude Design VDP against our renderer and adopted six improvements: GB plate with UK band, labelled cash price with our own price-drop history, provenance stated as an outcome (tri-state, adverse results disclosed), declared marks counted and named, EV battery health with its typical range, and a zero-based mileage chart above the MOT table. Declined three — guide-price comparison (cap hpi blocked), advisory→prep follow-through (M14), finance block (M8). 369 tests green. |
