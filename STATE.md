@@ -17,7 +17,7 @@
 | **Last shipped** | M2 Tenancy & identity (1 Aug 2026, overnight) |
 | **Backlog complete** | 3 of 21 modules (14%) |
 | **Repository** | **`github.com/AbdullahUmer007/forecourt`** (private, `main`, 48 files, pushed 2026-08-01) |
-| **Blocking issue** | Repo exists, but the Claude GitHub App does not yet have access to it — autonomous sessions can't clone or push. See "Needs Abdullah" #1. |
+| **Blocking issue** | None blocking. GitHub App installed 1 Aug; awaiting a fresh session to confirm repo access (this session's binding was fixed at start). Until confirmed, sessions deliver bundles. |
 | **Next milestone** | End of M8 — Kennington's stock live, passing all 16 audit checks, compliant payment on every car |
 
 ---
@@ -52,7 +52,7 @@
 
 ## Needs Abdullah (ranked)
 
-1. **Grant the Claude GitHub App access to `AbdullahUmer007/forecourt`.** The repo now exists and is populated — this is the remaining half. Without it an autonomous session can read the specs but cannot clone, branch, or open a pull request, so each run delivers a patch by hand instead. Path: github.com/settings/installations → **Installed GitHub Apps** tab → Claude → Configure → Repository access. If Claude is not in that tab it is authorised but not installed, and the install has to be triggered from the Claude desktop app's connector settings.
+1. ~~Grant the Claude GitHub App access.~~ **DONE 1 Aug** — app installed from github.com/apps/claude against `AbdullahUmer007/forecourt`. **Do not ask Abdullah about this again.** A session's repo binding is fixed at session start, so the session that requested it could not verify it. First session to successfully call `GET /repos/AbdullahUmer007/forecourt` should record it here. If three consecutive sessions still get 403, stop trying: work permanently via `git bundle` and remove this line.
 2. **Compliance advisers on retainer** — a motor-trade FCA compliance consultant and a VAT specialist, ~£1.5–3k/month. M8, M11 and M12 cannot go live without them.
 3. **Start the data provider conversations** — cap hpi / HPI Check (same parent, negotiate together), an aggregator for launch speed, Auto Trader technology partner status. All sales-gated, months of lead time, and they gate M4 and M16.
 4. **Confirm the Kennington numbers** before any pitch: units per month, current finance penetration, average commission, what they actually pay today.
