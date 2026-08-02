@@ -68,3 +68,13 @@ Format: `date · decision · rationale · reversible?`
 **2026-08-02 · `vehicles.published_photo_count` is maintained by a database trigger, not application code.** M3's go-live gate reads it, so a missed update would silently block or unblock a vehicle from being advertised. The database owns anything a gate depends on. Reversible but inadvisable.
 
 **2026-08-02 · Uploads are validated by magic bytes, not the content-type header.** The header is caller-supplied and therefore untrustworthy. HEIC and AVIF are exempted from sniffing because they share an ISO-BMFF container signature; the processor rejects them later if they turn out not to be images. Reversible.
+
+**2026-08-02 · A sold vehicle 301s to the closest-priced car of the same model, never to a "Sold Out" page.** Those pages accumulate as near-identical dead ends, waste crawl budget, compete with each other, and drop a real buyer who clicked through from search onto nothing. Verified by property test that every sold URL resolves to a 301 with a destination. Not reversible.
+
+**2026-08-02 · Facet landing pages always render but only index above a stock threshold.** Two failure modes, both observed on the competitor's estate: pages indexed by Google that 404, and thin pages with no stock. Rendering always (never 404 a URL we minted) with `noindex, follow` below three matching vehicles solves both. Reversible; the threshold is a parameter.
+
+**2026-08-02 · Structured data must never contain a finance figure.** A monthly payment or APR in JSON-LD is still a financial promotion under CONC 3.5.3R, and JSON-LD has nowhere to carry the representative example that must accompany it. `assertNoFinanceFigures` enforces this and is asserted in tests. Not reversible.
+
+**2026-08-02 · `aggregateRating` is omitted unless there is a genuine rating with a non-zero review count.** An invented or zero-count rating is a structured-data violation and can earn a manual penalty. Not reversible.
+
+**2026-08-02 · We audit our own generated output with our own tool, as a blocking test.** We sell by auditing competitors' customers' sites; if ours failed the same checks the pitch collapses, and the first dealer to run the free tool on us would find out. `tests/self-audit/generated-site.test.ts` scores ≥85 today, with the finance check deliberately failing until M8 and asserted as a known gap so it flips when M8 lands. Not reversible.

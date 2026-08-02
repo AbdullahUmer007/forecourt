@@ -13,9 +13,9 @@
 
 | | |
 |---|---|
-| **Current module** | M6 — Public website engine (`ready`) |
-| **Last shipped** | M5 Media pipeline (2 Aug 2026) |
-| **Backlog complete** | 5.5 of 21 modules (26%) |
+| **Current module** | M6b — website renderer & block editor, or M7 (`ready`) |
+| **Last shipped** | M6a SEO & structured data (2 Aug 2026) |
+| **Backlog complete** | 6 of 21 modules (29%) |
 | **Repository** | **`github.com/AbdullahUmer007/forecourt`** (private, `main`, 48 files, pushed 2026-08-01) |
 | **Blocking issue** | None. GitHub push access is **permanently unavailable** on this plan — see "Delivery method" below. Sessions deliver `git bundle` files; Abdullah pulls and pushes. This is settled, not a workaround. |
 | **Next milestone** | End of M8 — Kennington's stock live, passing all 16 audit checks, compliant payment on every car |
@@ -32,7 +32,7 @@
 | M3 | Vehicle core | ✅ done | 4 tables, 15-state lifecycle with go-live gating, days metrics, advert strength. Registration is `UNIQUE (tenant_id, registration)` — verified two dealers can hold the same plate. Corrected `delivered` from terminal: a CRA rejection must be able to return it. |
 | M4 | Vehicle data & provenance | 🟨 half done | **Free half BUILT**: adapter framework (cache, cost metering, circuit breaker, idempotency, raw-response storage, fixture replay), DVLA VES + DVSA MOT adapters, registration handling, mileage anomaly detection, 3 tables. **Paid half still blocked**: valuation (cap hpi) and provenance (HPI Check) need contracts — the interface and columns are ready for them. |
 | M5 | Media pipeline | ✅ done | Guided capture plan (15 shots, 5 required), ordering and hero rules, responsive variant plan (AVIF/WebP/JPEG × 5 breakpoints), tenant-prefixed content-hashed storage keys, processing pipeline with mandatory EXIF stripping, upload validation by magic bytes, disclosure-evidence rules. 2 tables. `published_photo_count` is now maintained by a DB trigger — M3's go-live gate depends on it. |
-| M6 | Public website engine | 🟢 ready | **Next up, and the most commercially important module in the plan.** M5 and M3 both done. This is what fixes Kennington's audit failures: sitemap, slugs, structured data, sold-vehicle redirects, MOT history display. |
+| M6 | Public website engine | 🟨 half done | **M6a BUILT — the SEO core.** Slugs, canonical URLs, sitemap from live stock, robots.txt with a live-host directive, sold-vehicle 301 resolution, landing-page thin-content rules, per-vehicle titles and descriptions, JSON-LD (Car/Offer/AutoDealer/BreadcrumbList/ItemList). **Our generated site scores ≥85 on our own audit; the competitor scores 16.** M6b outstanding: the Next.js renderer, block editor, domain verification and analytics. |
 | M7 | Public inventory experience | ⬜ todo | Acquisition-critical |
 | M8 | Finance display & compliance | ⬜ todo | Acquisition-critical. **Needs adviser sign-off before go-live** |
 | M9 | Contacts & consent | ⬜ todo | |
@@ -117,7 +117,7 @@ commits would be tedious.
 | FCA motor finance redress scheme partially suspended (Upper Tribunal, ~1–2 July 2026; hearing expected Dec 2026–Feb 2027) | Monitoring monthly. All scheme parameters held as data, not code. |
 | FCA CP26/15 may change the CONC 3.5.3R representative example and the 51% threshold | Monitoring. `<FinancePromotion>` field list must be configurable, not fixed. |
 | Competitor could fix the SEO and finance gaps | Structural for them (URL routing, sitemaps, schema, a compliant finance component across 22 themes). Lead measured in months. Keep moving to compliance depth. |
-| Our own site failing our own audit | Every audit check becomes a CI gate on sites we build. Non-negotiable. |
+| Our own site failing our own audit | **Controlled.** `tests/self-audit/generated-site.test.ts` builds a site with the real generators and runs the real audit checks against it. Scores ≥85 with only the finance check outstanding until M8. Any regression fails the build. |
 
 ---
 
@@ -125,8 +125,8 @@ commits would be tedious.
 
 | | Now | 90-day target |
 |---|---|---|
-| Modules complete | 5.5 / 21 | 9 (M0–M8) |
-| Tests passing | 263 (144 domain + 30 adapters + 89 isolation) | — |
+| Modules complete | 6 / 21 | 9 (M0–M8) |
+| Tests passing | 319 (182 domain + 30 adapters + 89 isolation + 18 self-audit) | — |
 | Dealer sites audited | 1 (Kennington, via fixture) | 500 |
 | Design partners | 0 | 8 |
 | Paying dealers | 0 | first in sight |
@@ -146,3 +146,4 @@ commits would be tedious.
 | 2026-08-02 | M4a/b build | Adapter framework + DVLA VES and DVSA MOT (both free, no contract needed). Mileage anomaly detection now populates the field M3's go-live gate reads. 214 tests green, 21 tables protected. |
 | 2026-08-02 | Delivery | Local repo folder connected — sessions now write directly into the working copy instead of shipping bundles. Fixed a CRLF/LF problem that had all 71 tracked files reading as modified. |
 | 2026-08-02 | M5 build | Media pipeline — capture plan, ordering, variants, storage keys, processing, evidence rules. 263 tests green, 23 tables protected. DB now owns `published_photo_count`. |
+| 2026-08-02 | M6a build | SEO core — slugs, sitemap, robots, sold-vehicle redirects, JSON-LD. **Self-audit gate added: our generated site scores ≥85 against our own tool.** Also fixed a non-idempotent isolation seed that only passed on a fresh database. 319 tests green. |

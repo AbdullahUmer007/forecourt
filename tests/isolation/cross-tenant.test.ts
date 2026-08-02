@@ -276,14 +276,20 @@ async function seedRivalData(): Promise<void> {
         ('${B_VEHICLE}','${B}','88888888-8888-4888-8888-888888888888','B-9001',9001,'BB11BBB','Tesla','Model X')
       ON CONFLICT (id) DO NOTHING;
 
-      INSERT INTO vehicle_status_history (tenant_id, vehicle_id, to_state) VALUES
-        ('${A}','${A_VEHICLE}','booked_in'), ('${B}','${B_VEHICLE}','booked_in');
+      INSERT INTO vehicle_status_history (tenant_id, vehicle_id, to_state)
+        SELECT * FROM (VALUES ('${A}'::uuid,'${A_VEHICLE}'::uuid,'booked_in'::vehicle_state),
+                              ('${B}'::uuid,'${B_VEHICLE}'::uuid,'booked_in'::vehicle_state)) v
+        WHERE NOT EXISTS (SELECT 1 FROM vehicle_status_history WHERE vehicle_id = '${A_VEHICLE}');
 
-      INSERT INTO vehicle_prices (tenant_id, vehicle_id, price_pence) VALUES
-        ('${A}','${A_VEHICLE}',1999900), ('${B}','${B_VEHICLE}',1999900);
+      INSERT INTO vehicle_prices (tenant_id, vehicle_id, price_pence)
+        SELECT * FROM (VALUES ('${A}'::uuid,'${A_VEHICLE}'::uuid,1999900::bigint),
+                              ('${B}'::uuid,'${B_VEHICLE}'::uuid,1999900::bigint)) v
+        WHERE NOT EXISTS (SELECT 1 FROM vehicle_prices WHERE vehicle_id = '${A_VEHICLE}');
 
-      INSERT INTO vehicle_costs (tenant_id, vehicle_id, category, description) VALUES
-        ('${A}','${A_VEHICLE}','valet','Valet A'), ('${B}','${B_VEHICLE}','valet','Valet B');
+      INSERT INTO vehicle_costs (tenant_id, vehicle_id, category, description)
+        SELECT * FROM (VALUES ('${A}'::uuid,'${A_VEHICLE}'::uuid,'valet'::cost_category,'Valet A'),
+                              ('${B}'::uuid,'${B_VEHICLE}'::uuid,'valet'::cost_category,'Valet B')) v
+        WHERE NOT EXISTS (SELECT 1 FROM vehicle_costs WHERE vehicle_id = '${A_VEHICLE}');
     `);
   }
 
@@ -305,16 +311,20 @@ async function seedRivalData(): Promise<void> {
   // M4 tables.
   if (await tableExists('vehicle_lookups')) {
     await sql.unsafe(`
-      INSERT INTO vehicle_lookups (tenant_id, registration, provider, lookup_type) VALUES
-        ('${A}','AA11AAA','dvla_ves','vehicle'), ('${B}','BB11BBB','dvla_ves','vehicle');
+      INSERT INTO vehicle_lookups (tenant_id, registration, provider, lookup_type)
+        SELECT * FROM (VALUES ('${A}'::uuid,'AA11AAA','dvla_ves'::data_provider,'vehicle'),
+                              ('${B}'::uuid,'BB11BBB','dvla_ves'::data_provider,'vehicle')) v
+        WHERE NOT EXISTS (SELECT 1 FROM vehicle_lookups WHERE registration = 'AA11AAA');
 
       INSERT INTO mot_records (tenant_id, vehicle_id, test_date, result, odometer_miles) VALUES
         ('${A}','${A_VEHICLE}','2026-02-14','PASSED',38940),
-        ('${B}','${B_VEHICLE}','2026-02-14','PASSED',38940);
+        ('${B}','${B_VEHICLE}','2026-02-14','PASSED',38940)
+      ON CONFLICT DO NOTHING;
 
       INSERT INTO provider_usage_daily (tenant_id, usage_date, provider, lookup_type, call_count) VALUES
         ('${A}','2026-08-02','dvla_ves','vehicle',1),
-        ('${B}','2026-08-02','dvla_ves','vehicle',1);
+        ('${B}','2026-08-02','dvla_ves','vehicle',1)
+      ON CONFLICT DO NOTHING;
     `);
   }
 }

@@ -5,3 +5,5 @@ export * from './permissions.js';
 export * from './provisioning.js';
 export * from './vehicle-lifecycle.js';
 export * from './media.js';
+export * from './seo.js';
+export * from './structured-data.js';
