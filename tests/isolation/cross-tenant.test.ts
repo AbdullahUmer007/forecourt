@@ -88,7 +88,12 @@ const TENANT_TABLES = [
   // M5 — media
   'vehicle_media',
   'media_processing_jobs',
-  // M6+ — created by later migrations; each skips until its table exists
+  // M7 — public inventory experience
+  'shortlists',
+  'shortlist_items',
+  'saved_searches',
+  'search_events',
+  // M8+ — created by later migrations; each skips until its table exists
   'contacts',
   'leads',
   'deals',
@@ -114,7 +119,7 @@ const SPECIAL_TABLES = {
 /** Append-only tables reject UPDATE via a trigger before RLS is reached. */
 const APPEND_ONLY = new Set<string>([
   'audit_events', 'deal_evidence', 'stock_book_entries', 'invoices', 'contact_consents',
-  'vehicle_status_history', 'vehicle_prices', 'vehicle_lookups',
+  'vehicle_status_history', 'vehicle_prices', 'vehicle_lookups', 'search_events',
 ]);
 
 /**
@@ -135,6 +140,13 @@ const A_VEHICLE = 'bbbbbbb1-bbbb-4bbb-8bbb-bbbbbbbbbbb1';
 const B_VEHICLE = 'bbbbbbb2-bbbb-4bbb-8bbb-bbbbbbbbbbb2';
 const A_MEDIA = 'ccccccc1-cccc-4ccc-8ccc-ccccccccccc1';
 const B_MEDIA = 'ccccccc2-cccc-4ccc-8ccc-ccccccccccc2';
+const A_SHORTLIST = 'ddddddd1-dddd-4ddd-8ddd-ddddddddddd1';
+const B_SHORTLIST = 'ddddddd2-dddd-4ddd-8ddd-ddddddddddd2';
+// 43 characters — the shortlist_token_unguessable CHECK enforces the length,
+// so a short token here would fail on the constraint rather than the policy.
+const A_TOKEN = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1';
+const B_TOKEN = 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB2';
+const SMUGGLED_TOKEN = 'SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS9';
 
 const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   sites: { columns: 'tenant_id, name', values: `'${TENANT_B}', 'Smuggled Site'` },
@@ -199,6 +211,24 @@ const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   media_processing_jobs: {
     columns: 'tenant_id, media_id, steps, idempotency_key',
     values: `'${TENANT_B}', '${B_MEDIA}', ARRAY['validate'], 'smuggled-key'`,
+  },
+  shortlists: {
+    columns: 'tenant_id, site_id, owner_kind, token',
+    values: `'${TENANT_B}', '${B_SITE}', 'anonymous', '${SMUGGLED_TOKEN}'`,
+  },
+  shortlist_items: {
+    columns: 'tenant_id, shortlist_id, vehicle_id',
+    values: `'${TENANT_B}', '${B_SHORTLIST}', '${B_VEHICLE}'`,
+  },
+  saved_searches: {
+    columns: 'tenant_id, shortlist_id, name, canonical_path, query',
+    values: `'${TENANT_B}', '${B_SHORTLIST}', 'Smuggled search', '/used-cars/tesla', '{}'::jsonb`,
+  },
+  search_events: {
+    // An explicit occurred_at, not the default: the row must land inside a
+    // declared partition, and `now()` will not once the seeded ones expire.
+    columns: 'tenant_id, canonical_path, result_count, occurred_at',
+    values: `'${TENANT_B}', '/used-cars/smuggled', 0, '2026-08-15T12:00:00Z'`,
   },
 };
 
@@ -308,6 +338,33 @@ async function seedRivalData(): Promise<void> {
     `);
   }
 
+  // M7 tables.
+  if (await tableExists('shortlists')) {
+    await sql.unsafe(`
+      INSERT INTO shortlists (id, tenant_id, site_id, owner_kind, token) VALUES
+        ('${A_SHORTLIST}','${A}','77777777-7777-4777-8777-777777777777','anonymous','${A_TOKEN}'),
+        ('${B_SHORTLIST}','${B}','88888888-8888-4888-8888-888888888888','anonymous','${B_TOKEN}')
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO shortlist_items (tenant_id, shortlist_id, vehicle_id) VALUES
+        ('${A}','${A_SHORTLIST}','${A_VEHICLE}'),
+        ('${B}','${B_SHORTLIST}','${B_VEHICLE}')
+      ON CONFLICT DO NOTHING;
+
+      INSERT INTO saved_searches (tenant_id, shortlist_id, name, canonical_path, query)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_SHORTLIST}'::uuid,'Tesla Model X','/used-cars/tesla/model-x','{}'::jsonb),
+          ('${B}'::uuid,'${B_SHORTLIST}'::uuid,'Tesla Model X','/used-cars/tesla/model-x','{}'::jsonb)) v
+        WHERE NOT EXISTS (SELECT 1 FROM saved_searches WHERE shortlist_id = '${A_SHORTLIST}');
+
+      INSERT INTO search_events (tenant_id, canonical_path, result_count, occurred_at)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'/used-cars/nissan/qashqai',0,'2026-08-15T12:00:00Z'::timestamptz),
+          ('${B}'::uuid,'/used-cars/nissan/qashqai',0,'2026-08-15T12:00:00Z'::timestamptz)) v
+        WHERE NOT EXISTS (SELECT 1 FROM search_events WHERE canonical_path = '/used-cars/nissan/qashqai');
+    `);
+  }
+
   // M4 tables.
   if (await tableExists('vehicle_lookups')) {
     await sql.unsafe(`
@@ -351,7 +408,11 @@ describeDb('cross-tenant isolation', () => {
              (SELECT count(*) FROM pg_policy p WHERE p.polrelid = c.oid) AS policy_count
       FROM pg_class c
       JOIN pg_namespace n ON n.oid = c.relnamespace
-      WHERE n.nspname = 'public' AND c.relkind = 'r'
+      -- 'p' as well as 'r'. A partitioned parent is relkind 'p', so a gate
+      -- that only looks at 'r' silently exempts every partitioned table —
+      -- which is search_events and, later, audit_events and vehicle_views.
+      -- This is the same blind spot that was fixed in verify-policies.mjs.
+      WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p')
         AND EXISTS (
           SELECT 1 FROM information_schema.columns
           WHERE table_schema = 'public' AND table_name = c.relname AND column_name = 'tenant_id'
@@ -477,6 +538,39 @@ describeDb('cross-tenant isolation', () => {
     expect(Number(rows[0]?.['leaked'] ?? 0), 'users leaked a person from another dealer').toBe(0);
   });
 
+  // -------------------------------------------------------------------
+  // Gate 3c — M7: a shortlist token is a credential, and credentials leak
+  // sideways. The token lives in a cookie on a dealer's own domain, but the
+  // lookup is what has to be safe, not the cookie.
+  // -------------------------------------------------------------------
+  it('a shortlist token from one dealer resolves to nothing at another', async () => {
+    if (!(await tableExists('shortlists'))) return;
+
+    // Prove tenant B's token really exists, or this passes vacuously.
+    const [seeded] = await sql.unsafe(
+      `SELECT count(*) AS n FROM shortlists WHERE token = $1`, [B_TOKEN],
+    );
+    expect(Number(seeded?.['n'] ?? 0), 'tenant B has no shortlist — seedRivalData() did not run').toBe(1);
+
+    const rows = await asTenant(TENANT_A, USER_A, (tx) =>
+      tx.unsafe(`SELECT count(*) AS found FROM shortlists WHERE token = $1`, [B_TOKEN]),
+    );
+    expect(
+      Number(rows[0]?.['found'] ?? 0),
+      'another dealer\'s shortlist token resolved — that is one buyer\'s saved cars exposed to a different dealer',
+    ).toBe(0);
+  });
+
+  it('the same shortlist token may exist for two dealers without colliding', async () => {
+    if (!(await tableExists('shortlists'))) return;
+    // Uniqueness is (tenant_id, token), not (token). A global unique index
+    // would leak the existence of another dealer's token through a conflict.
+    const [idx] = await sql`
+      SELECT indexdef FROM pg_indexes
+      WHERE schemaname = 'public' AND indexname = 'shortlists_token_unique'`;
+    expect(String(idx?.['indexdef'] ?? '')).toMatch(/\(tenant_id, token\)/);
+  });
+
   it.each(Object.keys(SPECIAL_TABLES))('%s has RLS enabled, forced and a policy', async (table) => {
     const [row] = await sql`
       SELECT c.relrowsecurity AS enabled, c.relforcerowsecurity AS forced,
@@ -491,7 +585,7 @@ describeDb('cross-tenant isolation', () => {
   // -------------------------------------------------------------------
   // Gate 4 — append-only tables reject mutation.
   // -------------------------------------------------------------------
-  it.each(['deal_evidence', 'stock_book_entries', 'invoices', 'contact_consents'])(
+  it.each(['deal_evidence', 'stock_book_entries', 'invoices', 'contact_consents', 'search_events'])(
     '%s rejects UPDATE and DELETE',
     async (table) => {
       if (!(await tableExists(table))) return;
