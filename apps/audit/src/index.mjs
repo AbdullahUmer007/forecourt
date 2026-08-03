@@ -64,7 +64,6 @@ const band =
   : total >= 40 ? 'Significant problems that are costing this dealer enquiries.'
   : 'Serious structural problems. Stock is largely invisible to search.';
 
-const stock = site.estimatedStockCount ? `around ${site.estimatedStockCount} cars` : 'their stock';
 const vehicleUrlCount = (site.sitemap?.urls || []).length;
 
 const md = `# Website audit — ${site.host}

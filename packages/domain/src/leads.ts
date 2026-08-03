@@ -91,7 +91,7 @@ export interface Lead {
  * leaving a terminal stage without an explicit reopen, so "won" cannot quietly
  * become "negotiating" and corrupt the conversion figures.
  */
-export function allowedTransitions(from: LeadStage): readonly LeadStage[] {
+export function allowedLeadTransitions(from: LeadStage): readonly LeadStage[] {
   if (TERMINAL_STAGES.includes(from)) return [];
   const working: LeadStage[] = [
     'new', 'contacted', 'qualified', 'appointment', 'test_drive', 'negotiating',
@@ -132,7 +132,7 @@ export function changeStage(lead: Lead, change: StageChange): StageResult {
     };
   }
 
-  if (!allowedTransitions(lead.stage).includes(change.stage)) {
+  if (!allowedLeadTransitions(lead.stage).includes(change.stage)) {
     return { ok: false, lead, error: `A lead cannot move from ${lead.stage} to ${change.stage}.` };
   }
 

@@ -73,7 +73,9 @@ export class ProviderError extends Error {
   constructor(
     readonly provider: Provider,
     message: string,
-    readonly cause?: unknown,
+    // `override` because Error itself declares `cause` — without it, a future
+    // TS or lib bump could have this silently shadow rather than override.
+    override readonly cause?: unknown,
     /** Retrying an identical request may succeed (timeout, 5xx, rate limit). */
     readonly retryable = true,
   ) {

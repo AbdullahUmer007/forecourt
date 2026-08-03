@@ -12,7 +12,7 @@ import {
   type DamageMark, type ReconStandard, type Valuation, type Offer,
   type Settlement, type Appraisal,
 } from './appraisal.js';
-import { money, zero, add, subtract } from './money.js';
+import { money, zero, subtract } from './money.js';
 import { balanceToFinance, type Deal } from './deals.js';
 
 const AUG = (d: number, h = 12): Date => new Date(Date.UTC(2026, 7, d, h));

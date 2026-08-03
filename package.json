@@ -10,7 +10,7 @@
     "audit:fixture": "node apps/audit/src/index.mjs --fixture apps/audit/fixtures/kenningtoncarsales.json",
     "test": "vitest run",
     "test:isolation": "vitest run tests/isolation",
-    "typecheck": "tsc -b",
+    "typecheck": "tsc -p tsconfig.json",
     "lint": "eslint .",
     "db:migrate": "node packages/db/scripts/migrate.mjs",
     "db:policies": "node packages/db/scripts/verify-policies.mjs",
@@ -21,12 +21,17 @@
     "db:seed": "tsx packages/db/scripts/seed-demo.mjs"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "20.19.43",
     "drizzle-kit": "^0.28.0",
     "drizzle-orm": "^0.45.2",
+    "eslint": "^9",
     "fast-check": "^3.22.0",
+    "globals": "^17.9.0",
     "postgres": "^3.4.9",
+    "tsx": "^4.19.0",
     "typescript": "^5.6.0",
-    "vitest": "^2.1.0",
-    "tsx": "^4.19.0"
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^2.1.0"
   }
 }

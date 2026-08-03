@@ -5,11 +5,11 @@ import { fileURLToPath } from 'node:url';
 import {
   AdapterRunner, InMemoryCache, InMemoryCostMeter, CircuitBreaker,
   ProviderError, CircuitOpenError, idempotencyKey, PROVIDER_LABELS,
-  type Fetcher, type Provider,
+  type Fetcher,
 } from './framework.js';
 import {
   normaliseRegistration, formatRegistration, registrationCandidates, isPlausibleRegistration,
-  parseDvla, parseMotHistory, detectMileageAnomalies, lookupVehicle, lookupDvla, lookupMotHistory,
+  parseDvla, parseMotHistory, detectMileageAnomalies, lookupVehicle, lookupDvla,
 } from './vehicle-data.js';
 
 const fixture = (name: string): unknown =>
@@ -37,7 +37,9 @@ const makeCtx = (over: { fetcher?: Fetcher; meter?: InMemoryCostMeter; breaker?:
     fetcher: over.fetcher ?? fixtureFetcher(),
     cache: new InMemoryCache(),
     meter,
-    breaker: over.breaker,
+    // Absent, not present-and-undefined — `AdapterRunner` builds its own
+    // default breaker when the key is missing.
+    ...(over.breaker !== undefined && { breaker: over.breaker }),
   });
   return { ctx: { runner, tenantId: 't1' }, meter };
 };

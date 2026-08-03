@@ -233,7 +233,7 @@ export function createSavedSearch(input: {
   };
 }
 
-export interface SendDecision { send: boolean; reason: string }
+export interface AlertSendDecision { send: boolean; reason: string }
 
 /**
  * Whether an alert may be sent, decided AT SEND TIME.
@@ -250,7 +250,7 @@ export function canSendAlert(
     consentValidAtSendTime: boolean;
     suppressed: boolean;
   },
-): SendDecision {
+): AlertSendDecision {
   if (search.consentId === null) {
     return { send: false, reason: 'no consent record — a saved-search alert is direct marketing' };
   }
@@ -298,7 +298,7 @@ export function canSendAlertWithConsent(
     suppressions: readonly SuppressionRecord[];
     contactErased?: boolean;
   },
-): SendDecision {
+): AlertSendDecision {
   const gate = canSend({
     kind: 'marketing',
     channel: ctx.channel,

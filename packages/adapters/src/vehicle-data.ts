@@ -144,7 +144,7 @@ export function parseMotHistory(raw: unknown): MotHistory {
   const registration = normaliseRegistration(String(r['registration'] ?? ''));
   const rawTests = Array.isArray(r['motTests']) ? (r['motTests'] as Record<string, unknown>[]) : [];
 
-  const tests: MotTest[] = rawTests.map((t) => {
+  const tests: MotTest[] = rawTests.map((t): MotTest => {
     const unitRaw = str(t['odometerUnit'])?.toLowerCase() ?? null;
     const unit: 'mi' | 'km' | null = unitRaw === 'km' ? 'km' : unitRaw === 'mi' ? 'mi' : null;
     const defects = Array.isArray(t['defects']) ? (t['defects'] as Record<string, unknown>[]) : [];

@@ -13,7 +13,7 @@
  *      quietly ignored.
  */
 
-import { normaliseDestination, type ConsentChannel, type ConsentRecord } from './consent.js';
+import { normaliseDestination, type ConsentRecord } from './consent.js';
 
 // ---------------------------------------------------------------- types
 

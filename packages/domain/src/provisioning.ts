@@ -228,7 +228,7 @@ export function buildProvisioningPlan(input: TenantInput): ProvisioningPlan {
 export const outstandingChecklistItems = (satisfied: readonly string[]): ChecklistItem[] =>
   GO_LIVE_CHECKLIST.filter((i) => i.required && !satisfied.includes(i.key));
 
-export const canGoLive = (satisfied: readonly string[]): boolean =>
+export const canTenantGoLive = (satisfied: readonly string[]): boolean =>
   outstandingChecklistItems(satisfied).length === 0;
 
 export const goLiveProgress = (satisfied: readonly string[]): number => {

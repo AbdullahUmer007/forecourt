@@ -26,7 +26,7 @@ export function loadEnv(file = join(ROOT, '.env')) {
 
   // Strip a BOM: PowerShell's redirection writes UTF-8 with one, and it would
   // otherwise become part of the first key's name.
-  const text = readFileSync(file, 'utf8').replace(/^﻿/, '');
+  const text = readFileSync(file, 'utf8').replace(/^\uFEFF/, '');
   const keys = [];
 
   for (const rawLine of text.split(/\r?\n/)) {

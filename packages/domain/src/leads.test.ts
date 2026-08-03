@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  changeStage, reopen, allowedTransitions, slaState, slaDueAt, DEFAULT_SLA_MINUTES,
+  changeStage, reopen, allowedLeadTransitions, slaState, slaDueAt, DEFAULT_SLA_MINUTES,
   parseMarketplaceLead, prepareOutbound, outboundIdempotencyKey,
   summarisePipeline, lossAnalysis, LOSS_REASON_LABELS,
   type Lead, type LossReason,
@@ -61,7 +61,7 @@ describe('the lead pipeline', () => {
     const r = changeStage(won, { stage: 'negotiating', at: AUG(4) });
     expect(r.ok).toBe(false);
     expect(r.error).toMatch(/reopen/i);
-    expect(allowedTransitions('won')).toHaveLength(0);
+    expect(allowedLeadTransitions('won')).toHaveLength(0);
   });
 
   it('reopens explicitly, clearing the loss reason', () => {

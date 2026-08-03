@@ -25,7 +25,7 @@
  * already understands.
  */
 
-import { html, raw, when, esc } from './html.js';
+import { html, raw, esc } from './html.js';
 import { criticalCss, DEFAULT_THEME, type BrandTheme } from './theme.js';
 import { masthead, siteFooter, type OpeningHoursView } from './chrome.js';
 import { canonicalUrl } from '../../../../packages/domain/src/seo.js';

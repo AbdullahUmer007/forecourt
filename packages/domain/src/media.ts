@@ -198,7 +198,10 @@ const qualityFor = (format: ImageFormat, width: number): number => {
 
 export function variantPlan(sourceWidth: number): VariantSpec[] {
   // Never upscale — enlarging a small photo makes it worse and heavier.
-  const widths = BREAKPOINTS.filter((w) => w <= sourceWidth);
+  // Typed as number[] rather than the breakpoint union deliberately: a source
+  // narrower than the smallest breakpoint falls back to its own width below,
+  // which is correct and is not one of the five.
+  const widths: number[] = BREAKPOINTS.filter((w) => w <= sourceWidth);
   if (widths.length === 0) widths.push(Math.min(sourceWidth, BREAKPOINTS[0]));
   return widths.flatMap((width) =>
     FORMATS.map((format) => ({ width, format, quality: qualityFor(format, width) })),

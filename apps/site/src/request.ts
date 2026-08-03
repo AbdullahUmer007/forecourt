@@ -27,6 +27,11 @@
 
 import { resolveTenant, type ResolvedTenant } from './tenant.js';
 import { lookupDomain } from './data/domains.js';
+// No tenant is resolved on this path, so there is no brand theme — but the
+// platform default palette still comes from tokens.json rather than being
+// retyped here, and it brings dark mode with it. A dealer checking their DNS
+// on a phone at night was getting a full-brightness white page.
+import { criticalCss } from './render/theme.js';
 
 export type TenantResult =
   | { ok: true; tenant: ResolvedTenant }
@@ -60,10 +65,11 @@ export function notConfigured(status: 404 | 421): Response {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
 <title>This domain isn't connected yet</title>
-<style>body{margin:0;font:16px/1.5 Inter,system-ui,sans-serif;color:#0F172A;background:#F8FAFC;
+<style>${criticalCss()}
+body{margin:0;font:16px/1.5 Inter,system-ui,sans-serif;color:var(--ink);background:var(--surface-2);
 display:grid;place-items:center;min-height:100vh}main{max-width:46ch;padding:24px}
-h1{font-size:24px;line-height:30px;margin:0 0 12px}p{color:#475569}
-code{background:#F1F5F9;padding:2px 6px;border-radius:4px}</style>
+h1{font-size:24px;line-height:30px;margin:0 0 12px}p{color:var(--ink-muted)}
+code{background:var(--surface-3);padding:2px 6px;border-radius:4px}</style>
 </head><body><main>
 <h1>This domain isn't connected yet</h1>
 <p>No dealer site is set up for this address, or its DNS verification hasn't finished.

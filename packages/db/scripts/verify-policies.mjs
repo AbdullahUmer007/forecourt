@@ -5,7 +5,6 @@
  *
  *   DATABASE_URL=postgres://... node packages/db/scripts/verify-policies.mjs
  */
-import { readFileSync } from 'node:fs';
 import { loadEnv } from '../../../scripts/load-env.mjs';
 
 // Reads the root .env when run locally; in CI the variable is already set and

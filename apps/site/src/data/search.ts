@@ -11,7 +11,7 @@
  * these queries only decide what is relevant.
  */
 
-import { withTenant, toPence, toInt, toDate, type Tx } from './db.js';
+import { withTenant, toPence, toInt, toDate } from './db.js';
 import { baseColour, type SearchQuery, type FacetCount, type MultiDimension } from '../../../../packages/domain/src/search.js';
 import { slugify } from '../../../../packages/domain/src/seo.js';
 import type { ResultVehicle } from '../render/results.js';

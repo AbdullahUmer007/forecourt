@@ -4,7 +4,7 @@ import {
   SYSTEM_ROLES, ALL_PERMISSIONS, DERIVED_FROM, STEP_UP_REQUIRED,
   roleByKey, matches, holds, resolvePermissions, authorize, assertAuthorized,
   redact, hiddenFields, canSortBy, requiresMfa,
-  type Principal, type Permission,
+  type Principal,
 } from './permissions.js';
 
 const principal = (over: Partial<Principal> = {}): Principal => {
@@ -16,8 +16,12 @@ const principal = (over: Partial<Principal> = {}): Principal => {
     permissions: role.permissions,
     scope: role.scope,
     siteIds: ['s1'],
-    discountLimitPence: role.discountLimitPence,
-    refundLimitPence: role.refundLimitPence,
+    // Spread conditionally rather than assigning a possibly-undefined value:
+    // under `exactOptionalPropertyTypes` a role with no discount limit means
+    // the key is ABSENT, not present and undefined — and the two differ to
+    // `authorize`, which treats an absent limit as "no limit configured".
+    ...(role.discountLimitPence !== undefined && { discountLimitPence: role.discountLimitPence }),
+    ...(role.refundLimitPence !== undefined && { refundLimitPence: role.refundLimitPence }),
     ...over,
   };
 };

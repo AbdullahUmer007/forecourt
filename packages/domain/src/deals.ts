@@ -20,7 +20,7 @@
  */
 
 import {
-  type Money, money, add, subtract, sum, zero, isNegative, format,
+  type Money, add, subtract, sum, zero, isNegative, format,
 } from './money.js';
 import {
   calculateClocks, type ContractFormation, type ConsumerRightsRule,
@@ -80,7 +80,7 @@ const TRANSITIONS: Record<DealState, readonly DealState[]> = {
   unwound: [],
 };
 
-export interface TransitionResult {
+export interface DealTransitionResult {
   ok: boolean;
   deal: Deal;
   error: string | null;
@@ -100,7 +100,7 @@ export function transition(
   to: DealState,
   at: Date,
   opts: { cancellationReason?: string } = {},
-): TransitionResult {
+): DealTransitionResult {
   if (to === deal.state) return { ok: true, deal, error: null };
 
   if (!TRANSITIONS[deal.state].includes(to)) {

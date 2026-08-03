@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import {
-  slugify, vehicleUrlPath, canonicalUrl, makeLandingPath,
+  slugify, vehicleUrlPath, canonicalUrl,
   vehicleTitle, vehicleDescription,
   buildSitemap, renderSitemapXml, renderRobotsTxt,
   resolveSoldVehicle, landingPageDecision, robotsMetaFor,

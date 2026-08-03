@@ -244,7 +244,7 @@ write('home.html', renderHomePage({
     href: vehicleUrlPath(urlParts(v)),
     pricePence: v.pricePence,
     meta: [`${v.mileage.toLocaleString('en-GB')} miles`, v.fuelType, v.transmission].join(' · '),
-    thumbUrl: placeholderImage(v, 640),
+    thumbUrl: placeholderImage(v, 'hero'),
     thumbAlt: `${v.year} ${v.make} ${v.model}`,
   })),
   browseByBody: countBy(DEMO_STOCK, (v) => v.bodyStyle).slice(0, 8)

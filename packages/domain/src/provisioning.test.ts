@@ -1,29 +1,50 @@
 import { describe, it, expect } from 'vitest';
 import {
   validateTenantInput, canProvision, buildProvisioningPlan,
-  GO_LIVE_CHECKLIST, outstandingChecklistItems, canGoLive, goLiveProgress,
+  GO_LIVE_CHECKLIST, outstandingChecklistItems, canTenantGoLive, goLiveProgress,
   type TenantInput,
 } from './provisioning.js';
 import { SYSTEM_ROLES } from './permissions.js';
 
+/**
+ * A fixture override may explicitly CLEAR a field — `{ fcaFrn: undefined }` is
+ * how these tests say "a regulated firm that did not give us an FRN", which is
+ * the case the validator exists to catch.
+ *
+ * Under `exactOptionalPropertyTypes` that is not the same as `Partial<T>`:
+ * an optional `fcaFrn?: string` accepts the key being absent, not the key
+ * being present and undefined. So the override is applied by DELETING the key
+ * rather than spreading undefined over it, which is also what the test means.
+ */
+type Overrides<T> = { [K in keyof T]?: T[K] | undefined };
+
+const applyOverrides = <T extends object>(base: T, over: Overrides<T>): T => {
+  const out = { ...base } as Record<string, unknown>;
+  for (const [key, value] of Object.entries(over)) {
+    if (value === undefined) delete out[key];
+    else out[key] = value;
+  }
+  return out as T;
+};
+
 /** Kennington Car Sales — our real test dealer. Public data. */
-const kennington = (over: Partial<TenantInput> = {}): TenantInput => ({
-  name: 'Kennington Car Sales',
-  legalName: 'Kennington Car Sales Limited',
-  companiesHouseNo: '08384467',
-  vatRegistered: true,
-  vatNumber: 'GB000000000',
-  fcaFrn: '993469',
-  fcaPermission: 'limited',
-  vatSchemeDefault: 'margin',
-  acceptsCash: false,
-  hvdRegistered: false,
-  tradeBodies: ['AA Approved Dealer'],
-  plan: 'pro',
-  owner: { email: 'owner@kenningtoncarsales.co.uk', name: 'Dealer Principal' },
-  firstSite: { name: 'Bletchley' },
-  ...over,
-});
+const kennington = (over: Overrides<TenantInput> = {}): TenantInput =>
+  applyOverrides<TenantInput>({
+    name: 'Kennington Car Sales',
+    legalName: 'Kennington Car Sales Limited',
+    companiesHouseNo: '08384467',
+    vatRegistered: true,
+    vatNumber: 'GB000000000',
+    fcaFrn: '993469',
+    fcaPermission: 'limited',
+    vatSchemeDefault: 'margin',
+    acceptsCash: false,
+    hvdRegistered: false,
+    tradeBodies: ['AA Approved Dealer'],
+    plan: 'pro',
+    owner: { email: 'owner@kenningtoncarsales.co.uk', name: 'Dealer Principal' },
+    firstSite: { name: 'Bletchley' },
+  }, over);
 
 describe('compliance profile validation', () => {
   it('accepts a well-formed limited-permission dealer', () => {
@@ -81,7 +102,8 @@ describe('compliance profile validation', () => {
   });
 
   it('every error carries a field and a message', () => {
-    const issues = validateTenantInput({ ...kennington(), name: '', legalName: '', fcaFrn: undefined });
+    const issues = validateTenantInput(
+      kennington({ name: '', legalName: '', fcaFrn: undefined }));
     for (const i of issues) {
       expect(i.field).toBeTruthy();
       expect(i.message.length).toBeGreaterThan(10);
@@ -144,25 +166,25 @@ describe('the go-live checklist', () => {
 
   it('will not let a tenant go live with no stock', () => {
     const satisfied = required.filter((k) => k !== 'stock_imported');
-    expect(canGoLive(satisfied)).toBe(false);
+    expect(canTenantGoLive(satisfied)).toBe(false);
     expect(outstandingChecklistItems(satisfied).map((i) => i.key)).toEqual(['stock_imported']);
   });
 
   it('will not let a tenant go live with an incomplete VAT stock book', () => {
-    expect(canGoLive(required.filter((k) => k !== 'stock_book_complete'))).toBe(false);
+    expect(canTenantGoLive(required.filter((k) => k !== 'stock_book_complete'))).toBe(false);
   });
 
   it('will not let a tenant go live with vehicles that have no photographs', () => {
-    expect(canGoLive(required.filter((k) => k !== 'hero_images'))).toBe(false);
+    expect(canTenantGoLive(required.filter((k) => k !== 'hero_images'))).toBe(false);
   });
 
   it('goes live when every required item is satisfied', () => {
-    expect(canGoLive(required)).toBe(true);
+    expect(canTenantGoLive(required)).toBe(true);
     expect(goLiveProgress(required)).toBe(100);
   });
 
   it('optional items do not block go-live', () => {
-    expect(canGoLive(required)).toBe(true);   // accounting/finance/users not included
+    expect(canTenantGoLive(required)).toBe(true);   // accounting/finance/users not included
   });
 
   it('reports progress as a percentage of required items only', () => {

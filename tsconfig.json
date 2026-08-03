@@ -1,0 +1,37 @@
+{
+  // The root typecheck program. `pnpm typecheck` pointed at `tsc -b` and a
+  // tsconfig.json that did not exist, so it had never once run — every module
+  // to date shipped without a type check, because vitest transpiles with
+  // esbuild and does not typecheck.
+  //
+  // One flat program rather than project references: there are 85 source files
+  // and no .tsx anywhere (apps/site deliberately has no React in its own code),
+  // so the cost of a single pass is trivial and there is no build graph to keep
+  // in sync. apps/site keeps its own tsconfig for the Next plugin and editor
+  // integration; this one is the CI gate.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"],
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    // The self-audit tests import the audit tool's checks straight from
+    // `apps/audit/src/checks.mjs`. Without allowJs that import is an implicit
+    // `any`, which then makes every downstream `.status` and `.finding` an
+    // error — and, worse, would have silently typed the audit results as `any`
+    // in the one suite that gates our own site's score. Inferring from the JS
+    // is better than a hand-written .d.ts that drifts from it.
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": [
+    "packages/*/src/**/*.ts",
+    "apps/site/src/**/*.ts",
+    "tests/**/*.ts",
+    "demo/**/*.ts"
+  ],
+  "exclude": ["node_modules", "**/node_modules", "**/.next", "**/dist"]
+}

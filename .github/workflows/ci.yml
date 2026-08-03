@@ -69,5 +69,15 @@ jobs:
       - name: Audit tool regression (fixture)
         run: pnpm audit:fixture
 
+      # Both of these are real gates as of 3 Aug 2026. `typecheck` had been
+      # suffixed `|| true` since it was added, and `lint` did not exist as a
+      # step at all — eslint was not installed and there was no config file,
+      # so `pnpm lint` failed on a missing binary. Between them they were
+      # hiding a genuine bug (placeholderImage called with a width where a
+      # kind was expected) and four domain exports that `export *` was
+      # silently dropping because two modules declared the same name.
       - name: Typecheck
-        run: pnpm typecheck || true   # TODO: remove the || true once apps/ exist
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint

@@ -37,7 +37,6 @@ const TENANT = '11111111-1111-4111-8111-111111111111';
 const SITE = '11111111-1111-4111-8111-111111111112';
 const BRAND = '11111111-1111-4111-8111-111111111113';
 const PRODUCT = '11111111-1111-4111-8111-111111111114';
-const NOW = new Date();
 
 /**
  * Load the demo stock. A real scrape can be dropped in as JSON.
