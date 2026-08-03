@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+/*
+ * The design tokens, as CSS custom properties.
+ *
+ * These values are the ones in packages/tokens/tokens.json. They are declared
+ * here rather than imported because Tailwind v4's `@theme` needs them at build
+ * time and `pnpm tokens:build` does not exist yet — packages/tokens/build.mjs
+ * is referenced by package.json and was never written. That is logged in
+ * STATE.md; when the generator exists this block becomes its output.
+ *
+ * The eslint no-raw-hex rule exempts this file for the same reason it exempts
+ * apps/site/src/render/theme.ts: this IS the token boundary. Everything
+ * downstream references var(--color-…) and never a literal.
+ */
+@theme {
+  --color-brand-50: #E6F4F1;
+  --color-brand-100: #C7E5E1;
+  --color-brand-300: #5EC7DC;
+  --color-brand-600: #0E5A6B;
+  --color-brand-700: #0B4553;
+
+  --color-accent-500: #F59E0B;
+  --color-accent-700: #B45309;
+
+  --color-surface-1: #FFFFFF;
+  --color-surface-2: #F8FAFC;
+  --color-surface-3: #F1F5F9;
+
+  --color-edge: #E2E8F0;
+  --color-edge-strong: #CBD5E1;
+
+  --color-ink: #0F172A;
+  --color-ink-muted: #475569;
+  --color-ink-subtle: #64748B;
+
+  --color-good: #0CA30C;
+  --color-warning: #FAB219;
+  --color-warning-ink: #B45309;
+  --color-serious: #EC835A;
+  --color-critical: #D03B3B;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/*
+ * Dark mode is SELECTED, not flipped: every value below was chosen against the
+ * dark surface, not derived by inverting the light one. Rule 10 of the design
+ * system.
+ */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+
+      --color-brand-50: #0A2E38;
+      --color-brand-100: #0B3A47;
+      --color-brand-600: #177A8F;
+      --color-brand-700: #0E5A6B;
+
+      --color-surface-1: #16181D;
+      --color-surface-2: #0E1013;
+      --color-surface-3: #1D2027;
+
+      --color-edge: #2A2E36;
+      --color-edge-strong: #3A404A;
+
+      --color-ink: #FFFFFF;
+      --color-ink-muted: #94A3B8;
+      --color-ink-subtle: #7A8598;
+
+      --color-warning-ink: #FAB219;
+    }
+  }
+
+  html {
+    font-family: var(--font-sans);
+    /* body 14/20 — the CRM is a dense tool, not a marketing page. */
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  body {
+    background: var(--color-surface-2);
+    color: var(--color-ink);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /*
+   * Rule 8: a visible focus ring on everything interactive, 2px brand-600 at
+   * 2px offset. `outline: none` without a replacement fails review, so the
+   * replacement is declared once, here, rather than per component.
+   */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Rule 9: no decorative motion in the CRM, and honour the preference. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Registrations, VINs, stock numbers and money columns. */
+  .mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Columns that must align vertically. Large standalone figures do NOT use
+     this — tabular makes `121` look loose at display size. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}

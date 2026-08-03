@@ -14,8 +14,11 @@
     "noEmit": true,
     "composite": false,
     "declaration": false,
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["node"],
+    // apps/crm is React. `preserve` matches what Next does with the JSX itself;
+    // this program only needs to typecheck it, never emit it.
+    "jsx": "preserve",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     // The self-audit tests import the audit tool's checks straight from
@@ -30,6 +33,8 @@
   "include": [
     "packages/*/src/**/*.ts",
     "apps/site/src/**/*.ts",
+    "apps/crm/src/**/*.ts",
+    "apps/crm/src/**/*.tsx",
     "tests/**/*.ts",
     "demo/**/*.ts"
   ],
