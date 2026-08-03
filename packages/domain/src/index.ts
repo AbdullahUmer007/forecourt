@@ -7,5 +7,7 @@ export * from './vehicle-lifecycle.js';
 export * from './media.js';
 export * from './seo.js';
 export * from './structured-data.js';
+export * from './finance.js';
+export * from './finance-language.js';
 export * from './search.js';
 export * from './shortlist.js';

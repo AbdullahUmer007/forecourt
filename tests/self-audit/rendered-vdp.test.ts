@@ -88,7 +88,11 @@ const input: VdpInput = {
     typicalLowPercent: 90, typicalHighPercent: 94, ageYears: 4,
   },
   priceContext: { previousPence: 2_119_900n, changedOn: '2026-07-12' },
-  financeHtml: null,
+  // M8: no longer a string. `finance` takes an ApprovedPromotion, which only
+  // `approvePromotion()` can build. Null here, so this suite continues to prove
+  // that a page with no approved example shows no cost-of-credit figure at all.
+  // The with-finance case lives in rendered-finance.test.ts.
+  finance: null,
 };
 const HTML = renderVehiclePage(input);
 
@@ -122,7 +126,9 @@ describe('the rendered vehicle detail page', () => {
   });
 
   it('puts the gallery, name, price, specs and CTAs above the fold in that order', () => {
-    const order = ['vdp-gallery', 'vdp-title', 'vdp-price', 'vdp-specs', 'cta-row'];
+    // Class names track the redesign; the ORDER is what this test guards, and
+    // that order is fixed by the design brief.
+    const order = ['gallery-frame', 'vdp-title', 'vdp-price', 'key-specs', 'cta-row'];
     const positions = order.map((cls) => HTML.indexOf(cls));
     expect(positions.every((p) => p > -1)).toBe(true);
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);
@@ -284,8 +290,8 @@ describe('the rendered vehicle detail page', () => {
 
   // ---- compliance -------------------------------------------------------
   it('shows NO payment figure while the finance module is unbuilt', () => {
-    // M8 supplies financeHtml via <FinancePromotion>, which cannot render
-    // without a valid representative example. Until then: nothing.
+    // The finance block is supplied via an ApprovedPromotion, which cannot be
+    // constructed without a valid representative example. With none: nothing.
     expect(HTML).not.toMatch(/per month|\bpcm\b|% ?APR/i);
   });
 
@@ -447,5 +453,17 @@ describe('host-to-tenant resolution', () => {
     // next request — a leak no RLS policy can catch.
     expect(key).toContain('t-kennington');
     expect(key.startsWith('t:')).toBe(true);
+  });
+});
+
+describe('the render layer does not silently drop content', () => {
+  it('never leaks a Raw marker into the vehicle page', () => {
+    // `raw()` and `when()` return objects that only the `html` tagged template
+    // unwraps. Interpolated into a plain template literal they stringify to
+    // "[object Object]" and silently drop whatever they wrapped — this is how
+    // the derivative and the enquiry phone number both disappeared during the
+    // redesign. Neither broke a test, because every test asserted on what
+    // SHOULD be present rather than on this marker.
+    expect(HTML).not.toContain('[object Object]');
   });
 });

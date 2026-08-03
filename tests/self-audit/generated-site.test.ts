@@ -22,6 +22,11 @@ import {
   vehicleJsonLd, dealerJsonLd, breadcrumbJsonLd, vehicleBreadcrumbs, renderJsonLd,
   type StructuredDealer, type StructuredVehicle,
 } from '../../packages/domain/src/structured-data.js';
+import { renderFinancePromotion } from '../../apps/site/src/render/finance.js';
+import {
+  approvePromotion, impliedApr, CONC_REPRESENTATIVE_EXAMPLE_V1,
+  type FinancePromotionRule, type RepresentativeExample, type FinanceQuote,
+} from '../../packages/domain/src/finance.js';
 
 const ORIGIN = 'https://www.kenningtoncarsales.co.uk';
 const HOST = 'www.kenningtoncarsales.co.uk';
@@ -36,6 +41,59 @@ const dealer: StructuredDealer = {
   openingHours: [{ days: ['Monday', 'Saturday'], opens: '10:00', closes: '18:00' }],
   ratingValue: 4.8, reviewCount: 252, priceRange: '££',
 };
+
+/**
+ * M8. The rule is signed off HERE, in the test harness, and nowhere else —
+ * the migration seeds it unsigned, and it stays unsigned until a named person
+ * approves it. This fixture stands in for that approval so the audit can be
+ * run against a fully-built site.
+ */
+const SIGNED_RULE: FinancePromotionRule = {
+  ...CONC_REPRESENTATIVE_EXAMPLE_V1,
+  signedOffBy: 'A. Consultant, Motor Compliance Ltd (test fixture)',
+  signedOffAt: new Date('2026-07-01T00:00:00Z'),
+};
+
+const EX_TERM = 48;
+const EX_MONTHLY = 25_000n;
+const EX_CREDIT = 1_000_000n;
+const EXAMPLE: RepresentativeExample = {
+  id: 'e1', tenantId: 't-kennington', version: 1, productType: 'hp',
+  cashPricePence: 1_200_000n, advancePaymentPence: 200_000n, amountOfCreditPence: EX_CREDIT,
+  termMonths: EX_TERM, monthlyPaymentPence: EX_MONTHLY, finalPaymentPence: null, otherCharges: [],
+  interestRatePercent: 9.9, interestRateFixed: true,
+  representativeAprPercent: impliedApr(EX_CREDIT,
+    Array.from({ length: EX_TERM }, (_, i) => ({ atMonth: i + 1, amountPence: EX_MONTHLY })))!,
+  // Statutory figure: amount of credit plus the total charge for credit, which
+  // is the sum of the repayments. It EXCLUDES the advance payment — that is
+  // disclosed separately as item 5 of the example. See finance.ts:198.
+  totalAmountPayablePence: EX_MONTHLY * BigInt(EX_TERM),
+  approvedBy: 'Dealer Principal', approvedAt: new Date('2026-07-15T00:00:00Z'),
+  effectiveFrom: new Date('2026-07-15T00:00:00Z'), effectiveTo: null,
+};
+const PROMOTION = approvePromotion(EXAMPLE, SIGNED_RULE, NOW);
+
+/** An indicative quote for a car, as the finance platform would return it. */
+function quoteFor(pricePence: bigint): FinanceQuote {
+  const deposit = (pricePence / 10n / 100n) * 100n;   // ~10%, to the pound
+  const credit = pricePence - deposit;
+  const term = 48;
+  // Derived from the credit so the quote reconciles — verifyQuote refuses
+  // anything that does not, and the audit must run against a valid page.
+  const monthly = (credit * 130n) / (100n * BigInt(term));
+  const apr = impliedApr(credit,
+    Array.from({ length: term }, (_, i) => ({ atMonth: i + 1, amountPence: monthly })))!;
+  return {
+    quoteId: 'q', provider: 'ivendi', lenderName: 'Blue Motor Finance', productType: 'hp',
+    cashPricePence: pricePence, depositPence: deposit, partExchangePence: 0n,
+    amountOfCreditPence: credit, termMonths: term, monthlyPaymentPence: monthly,
+    finalPaymentPence: null, fees: [], aprPercent: apr, flatRatePercent: null, fixedRate: true,
+    totalChargeForCreditPence: monthly * BigInt(term) - credit,
+    totalAmountPayablePence: monthly * BigInt(term),
+    annualMileage: null, excessPencePerMile: null,
+    quotedAt: NOW, expiresAt: new Date('2026-09-01T00:00:00Z'),
+  };
+}
 
 /** A 120-car forecourt — Kennington's actual stock level. */
 const STOCK = Array.from({ length: 120 }, (_, i) => ({
@@ -79,6 +137,11 @@ function renderVehiclePage(v: (typeof STOCK)[number]): { url: string; html: stri
 <h1>${v.year} ${v.make} ${v.model} ${v.derivative}</h1>
 <section id="mot"><h2>MOT history</h2><p>Full MOT history, every test and mileage reading. Latest advisories listed.</p></section>
 <section id="provenance"><p>Provenance checked — HPI check clear, 14 July 2026.</p></section>
+${renderFinancePromotion({
+  promotion: PROMOTION,
+  quote: quoteFor(v.pricePence),
+  dealer: { name: dealer.name, fcaFrn: '993469', principalName: null, principalFrn: null, isCreditBroker: true },
+})}
 <a href="tel:+441908883940">Call us</a>
 <a href="https://wa.me/447477070105">WhatsApp</a>
 <a href="${ORIGIN}/initial-disclosure">Initial disclosure</a>
@@ -200,6 +263,7 @@ describe('our generated site, audited by our own tool', () => {
     ['robots-sitemap-host', 'sitemap directive points at the live host'],
     ['broken-indexed-pages', 'no broken internal links'],
     ['fca-disclosure', 'credit-broker statement and FRN in HTML'],
+    ['finance-display', 'a payment on every car, each with a complete representative example'],
     ['image-formats', 'AVIF and WebP'],
     ['mobile-contact', 'click-to-call and WhatsApp'],
     ['legal-pages-html', 'compliance documents are pages, not PDFs'],
@@ -220,16 +284,22 @@ describe('our generated site, audited by our own tool', () => {
   });
 
   /**
-   * The one check we do NOT yet pass, and we say so out loud.
+   * CLOSED 2 August 2026. This was the one check we did not pass, and it was
+   * written to start failing the moment M8 landed — which is what happened.
    *
-   * M8 builds the compliant finance display. Until then our generated site
-   * shows no payment figure — the same position Kennington is in. The
-   * difference is that ours is a sequencing decision with a dated plan, and
-   * this assertion will start failing the moment M8 lands, which is the
-   * reminder to update it.
+   * The finance display is the heaviest single check in the audit (18 points)
+   * and it is the one the competitor's estate fails hardest: payments shown
+   * with no representative example, or no payments at all on a broker's site.
    */
-  it('KNOWN GAP: finance display is not built until M8', () => {
-    expect(byId.get('finance-display')?.status).toBe('fail');
-    expect(total).toBeLessThan(100);
+  it('now passes the check that was open until M8', () => {
+    const finance = byId.get('finance-display');
+    expect(finance?.status, finance?.finding).toBe('pass');
+    expect(finance?.finding).toMatch(/representative-example wording present/);
+  });
+
+  it('scores 100 on our own audit — no check is outstanding', () => {
+    const failing = results.filter((r) => r.status !== 'pass');
+    expect(failing.map((r) => `${r.id}: ${r.finding}`)).toEqual([]);
+    expect(total).toBe(100);
   });
 });

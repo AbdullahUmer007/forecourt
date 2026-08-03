@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  summary::-webkit-details-marker { display: none; }
+  summary { list-style: none; cursor: pointer; }
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms !important; } }
+</style>
+</helmet>
+<div style="{{ theme }}">
+<header>
+  <div style="position:sticky;top:0;z-index:30;background:var(--s1,#fff);border-bottom:1px solid var(--bd,#E2E8F0)">
+    <div style="max-width:1280px;margin:0 auto;padding:8px clamp(16px,3cqw,32px);display:flex;align-items:center;gap:12px">
+      <a href="#" style="display:flex;flex-direction:column;justify-content:center;min-height:44px;min-width:0;flex:1 1 auto" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">
+        <span style="font-size:clamp(15px,1.7cqw,21px);font-weight:700;letter-spacing:-0.022em;color:var(--ink,#0F172A);line-height:1.15;text-wrap:balance">Kennington Car Sales</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;line-height:15px;font-weight:500;color:var(--sub,#64748B);white-space:nowrap">
+          <span aria-hidden="true" style="width:7px;height:7px;border-radius:999px;background:var(--good,#0CA30C);flex:none"></span>Open until 6pm
+        </span>
+      </a>
+      <a href="tel:01908993469" style="flex:none;display:flex;align-items:center;gap:6px;min-height:44px;padding:0 10px;border-radius:6px;background:var(--b600,#0E5A6B);color:#FFFFFF;font-size:14px;font-weight:600;white-space:nowrap;transition:background 100ms cubic-bezier(0.2,0,0,1)" style-hover="background:var(--b700,#0B4553);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">
+        <span aria-hidden="true" style="font-size:15px">✆</span>01908 993 469
+      </a>
+    </div>
+  </div>
+  <nav aria-label="Main" style="background:var(--s1,#fff);border-bottom:1px solid var(--bd,#E2E8F0)">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px);display:flex;gap:clamp(14px,1.6cqw,24px);overflow-x:auto;scrollbar-width:none">
+      <sc-for list="{{ nav }}" as="item" hint-placeholder-count="6">
+        <a href="#" style="display:flex;align-items:center;min-height:40px;font-size:14px;font-weight:500;white-space:nowrap;color:{{ item.colour }};border-bottom:2px solid {{ item.rule }}" style-hover="color:var(--link,#0E5A6B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ item.label }}</a>
+      </sc-for>
+    </div>
+  </nav>
+</header>
+
+<main style="background:var(--s2,#F8FAFC);color:var(--ink,#0F172A)">
+  <section style="max-width:1280px;margin:0 auto;padding:clamp(20px,2.5cqw,40px) clamp(16px,3cqw,32px) clamp(14px,1.8cqw,22px);display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between">
+    <div>
+      <h1 style="margin:0;font-size:clamp(26px,3.1cqw,44px);line-height:1.06;letter-spacing:-0.022em;font-weight:600;text-wrap:balance">{{ heading }}</h1>
+      <p style="margin:10px 0 0;font-size:clamp(15px,1.4cqw,17px);line-height:1.45;color:var(--mut,#475569);max-width:62ch;text-wrap:pretty">{{ standfirst }}</p>
+    </div>
+    <sc-if value="{{ hasCars }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a href="?view=compare" style="display:flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:6px;background:{{ compareBg }};border:1px solid {{ compareBd }};color:{{ compareInk }};font-size:15px;font-weight:600" style-hover="text-decoration:none;border-color:var(--link,#0E5A6B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px"><span aria-hidden="true">⇄</span>Compare</a>
+        <a href="?view=list" style="display:flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:6px;background:{{ listBg }};border:1px solid {{ listBd }};color:{{ listInk }};font-size:15px;font-weight:600" style-hover="text-decoration:none;border-color:var(--link,#0E5A6B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px"><span aria-hidden="true">☰</span>List</a>
+      </div>
+    </sc-if>
+  </section>
+
+  <!-- KEEP THE LIST prompt -->
+  <sc-if value="{{ hasCars }}" hint-placeholder-val="{{ true }}">
+    <section style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px) clamp(14px,1.8cqw,22px)">
+      <form style="background:var(--well,#E6F4F1);border-radius:10px;padding:clamp(14px,1.8cqw,22px);display:flex;flex-wrap:wrap;gap:clamp(12px,2cqw,28px);align-items:flex-start">
+        <div style="flex:1 1 min(100%,280px)">
+          <h2 style="margin:0;font-size:clamp(17px,1.8cqw,22px);line-height:1.25;font-weight:600;text-wrap:pretty">Keep this list if you clear your cookies</h2>
+          <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);max-width:52ch;text-wrap:pretty">Your saved cars live on this device only. Leave an email and we will send you the list as a link — nothing else happens unless you tick the box below. You do not need an account, and the list works whether you give us anything or not.</p>
+        </div>
+        <div style="flex:1 1 min(100%,320px);display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <label style="flex:1 1 180px;display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Your email</span>
+              <input type="email" placeholder="jane@example.co.uk" style="min-height:48px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);padding:0 14px;font-size:16px" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px" />
+            </label>
+            <button type="submit" style="align-self:flex-end;min-height:48px;padding:0 18px;border:none;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:16px;font-weight:600;cursor:pointer" style-hover="background:var(--b700,#0B4553)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Email me my list</button>
+          </div>
+          <label style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:6px;min-height:44px">
+            <input type="checkbox" style="width:20px;height:20px;margin:0;flex:none;accent-color:#0E5A6B" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px" />
+            <span style="font-size:13px;line-height:19px;color:var(--mut,#475569);text-wrap:pretty">Also tell me if one of these cars drops in price or is about to sell. Nothing else — no newsletter, no offers. One click unsubscribes, and the link is at the top of every email.</span>
+          </label>
+        </div>
+      </form>
+    </section>
+  </sc-if>
+
+  <!-- LIST -->
+  <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+    <section style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px)">
+      <form style="display:flex;flex-direction:column;gap:10px">
+        <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ cars }}" as="car" hint-placeholder-count="3">
+            <li style="background:var(--s1,#fff);border:1px solid {{ car.cardBd }};border-radius:10px;overflow:hidden;display:flex;flex-wrap:wrap">
+              <div style="flex:0 0 min(100%,240px);position:relative">
+                <div aria-hidden="true" style="aspect-ratio:4/3;background-color:var(--s3,#F1F5F9);background-image:repeating-linear-gradient(135deg,transparent 0 14px,var(--stripe,rgba(15,23,42,0.05)) 14px 15px);opacity:{{ car.photoOpacity }}"></div>
+                <sc-if value="{{ car.sold }}" hint-placeholder-val="{{ false }}">
+                  <span style="position:absolute;top:10px;left:10px;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:4px;background:var(--plane,#16181D);color:#fff;font-size:12px;font-weight:600"><span aria-hidden="true">●</span>Sold {{ car.soldDate }}</span>
+                </sc-if>
+              </div>
+              <div style="flex:1 1 min(100%,360px);padding:14px 16px;display:flex;flex-wrap:wrap;gap:14px">
+                <div style="flex:1 1 min(100%,260px)">
+                  <div style="display:flex;gap:10px;align-items:flex-start">
+                    <label style="flex:none;display:flex;align-items:center;justify-content:center;width:44px;height:44px;margin:-6px 0 0 -8px;cursor:{{ car.pickCursor }}">
+                      <input type="checkbox" checked="{{ car.picked }}" disabled="{{ car.sold }}" style="width:20px;height:20px;margin:0;accent-color:#0E5A6B" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px" />
+                      <span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Compare this car</span>
+                    </label>
+                    <div style="min-width:0">
+                      <h2 style="margin:0;font-size:18px;line-height:24px;font-weight:600;letter-spacing:-0.012em;color:{{ car.titleInk }};text-wrap:pretty"><a href="#" style-hover="color:var(--link,#0E5A6B)">{{ car.name }}</a></h2>
+                      <p style="margin:3px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty">{{ car.derivative }}</p>
+                      <p style="margin:6px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:16px;color:var(--sub,#64748B)">{{ car.reg }} · saved {{ car.saved }}</p>
+                    </div>
+                  </div>
+                  <dl style="margin:12px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px 14px">
+                    <sc-for list="{{ car.facts }}" as="f" hint-placeholder-count="5">
+                      <div>
+                        <dt style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">{{ f.label }}</dt>
+                        <dd style="margin:0;font-size:14px;line-height:20px;font-weight:600;color:{{ f.colour }}">{{ f.value }}</dd>
+                      </div>
+                    </sc-for>
+                  </dl>
+                </div>
+                <div style="flex:0 1 auto;margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:8px;min-width:150px">
+                  <div style="text-align:right">
+                    <p style="margin:0;font-size:26px;line-height:30px;font-weight:700;letter-spacing:-0.025em;color:{{ car.titleInk }}">{{ car.price }}</p>
+                    <p style="margin:2px 0 0;font-size:13px;line-height:18px;color:var(--sub,#64748B)">{{ car.finance }}</p>
+                  </div>
+                  <sc-if value="{{ car.live }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex;flex-direction:column;gap:6px;align-items:stretch;width:100%">
+                      <a href="#" style="display:flex;align-items:center;justify-content:center;min-height:44px;padding:0 14px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:15px;font-weight:600" style-hover="background:var(--b700,#0B4553);text-decoration:none">Enquire</a>
+                      <button type="submit" style="min-height:44px;padding:0 14px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);color:var(--mut,#475569);font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:var(--critical,#D03B3B);color:var(--critical,#D03B3B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Remove</button>
+                    </div>
+                  </sc-if>
+                </div>
+                <sc-if value="{{ car.sold }}" hint-placeholder-val="{{ false }}">
+                  <div style="flex:1 1 100%;background:var(--s3,#F1F5F9);border-radius:6px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:14px;align-items:center">
+                    <div style="flex:1 1 min(100%,280px)">
+                      <p style="margin:0;font-size:14px;line-height:20px;font-weight:600">This one sold on {{ car.soldDate }} — to a buyer who came on the Saturday.</p>
+                      <p style="margin:6px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty">We have kept it on your list so you can see what you liked. The closest thing on the forecourt today is a <strong style="font-weight:600">2022 Kia EV6 GT-Line S</strong> — £1,050 less, 2,400 fewer miles, same shape and same charging speed.</p>
+                    </div>
+                    <div style="flex:0 1 auto;display:flex;flex-wrap:wrap;gap:8px">
+                      <a href="#" style="display:flex;align-items:center;min-height:44px;padding:0 16px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:15px;font-weight:600" style-hover="background:var(--b700,#0B4553);text-decoration:none">See the EV6 · £27,900</a>
+                      <a href="#" style="display:flex;align-items:center;min-height:44px;padding:0 16px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:15px;font-weight:600" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none">Find me another like it</a>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </li>
+          </sc-for>
+        </ul>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:12px 16px">
+          <p style="margin:0;flex:1 1 240px;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty">{{ compareHint }}</p>
+          <button type="submit" style="flex:none;min-height:48px;padding:0 20px;border:none;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:16px;font-weight:600;cursor:pointer" style-hover="background:var(--b700,#0B4553)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ compareCta }}</button>
+        </div>
+      </form>
+    </section>
+  </sc-if>
+
+  <!-- COMPARE -->
+  <sc-if value="{{ isCompare }}" hint-placeholder-val="{{ false }}">
+    <section style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px)">
+      <div style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;overflow:hidden">
+        <div style="overflow-x:auto">
+          <table style="border-collapse:collapse;width:100%;min-width:620px">
+            <caption style="text-align:left;padding:16px 16px 12px;font-size:14px;line-height:20px;color:var(--mut,#475569)">Three saved cars, side by side. The best figure in each row is marked — scroll sideways on a phone; the row labels stay put.</caption>
+            <thead>
+              <tr>
+                <th scope="col" style="position:sticky;left:0;z-index:2;background:var(--s1,#fff);text-align:left;vertical-align:bottom;padding:10px 14px;border-bottom:1px solid var(--bd,#E2E8F0);min-width:132px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Comparing</th>
+                <sc-for list="{{ compareCars }}" as="c" hint-placeholder-count="3">
+                  <th scope="col" style="text-align:left;vertical-align:bottom;padding:10px 14px;border-bottom:1px solid var(--bd,#E2E8F0);border-left:1px solid var(--bd,#E2E8F0);min-width:168px;background:{{ c.headBg }}">
+                    <div aria-hidden="true" style="aspect-ratio:4/3;border-radius:6px;background-color:var(--s3,#F1F5F9);background-image:repeating-linear-gradient(135deg,transparent 0 12px,var(--stripe,rgba(15,23,42,0.05)) 12px 13px);opacity:{{ c.photoOpacity }};margin-bottom:10px"></div>
+                    <sc-if value="{{ c.sold }}" hint-placeholder-val="{{ false }}">
+                      <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:4px;background:var(--plane,#16181D);color:#fff;font-size:12px;font-weight:600;margin-bottom:6px"><span aria-hidden="true">●</span>Sold</span>
+                    </sc-if>
+                    <span style="display:block;font-size:16px;line-height:21px;font-weight:600;letter-spacing:-0.01em;color:{{ c.titleInk }};text-wrap:pretty">{{ c.name }}</span>
+                    <span style="display:block;font-size:13px;line-height:18px;font-weight:400;color:var(--mut,#475569);text-wrap:pretty">{{ c.derivative }}</span>
+                  </th>
+                </sc-for>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ compareRows }}" as="row" hint-placeholder-count="9">
+                <tr>
+                  <th scope="row" style="position:sticky;left:0;z-index:1;background:{{ row.labelBg }};text-align:left;padding:11px 14px;border-bottom:1px solid var(--bd,#E2E8F0);font-size:13px;line-height:18px;font-weight:{{ row.labelWeight }};color:var(--ink,#0F172A)">{{ row.label }}</th>
+                  <sc-for list="{{ row.cells }}" as="cell" hint-placeholder-count="3">
+                    <td style="padding:11px 14px;border-bottom:1px solid var(--bd,#E2E8F0);border-left:1px solid var(--bd,#E2E8F0);background:{{ cell.bg }};vertical-align:top">
+                      <span style="display:flex;align-items:baseline;gap:7px;font-size:{{ cell.size }};line-height:1.3;font-weight:{{ cell.weight }};font-variant-numeric:{{ cell.figures }};color:{{ cell.ink }}">
+                        <sc-if value="{{ cell.best }}" hint-placeholder-val="{{ false }}">
+                          <span aria-hidden="true" style="color:var(--good,#0CA30C);font-weight:700;font-size:13px">✓</span>
+                        </sc-if>{{ cell.value }}</span>
+                      <span style="display:block;font-size:12px;line-height:16px;color:var(--sub,#64748B);text-wrap:pretty">{{ cell.note }}</span>
+                    </td>
+                  </sc-for>
+                </tr>
+              </sc-for>
+              <tr>
+                <th scope="row" style="position:sticky;left:0;z-index:1;background:var(--s1,#fff);text-align:left;padding:14px;font-size:13px;line-height:18px;font-weight:500;color:var(--sub,#64748B)">Next step</th>
+                <sc-for list="{{ compareCars }}" as="c" hint-placeholder-count="3">
+                  <td style="padding:14px;border-left:1px solid var(--bd,#E2E8F0);vertical-align:top">
+                    <a href="#" style="display:flex;align-items:center;justify-content:center;min-height:44px;padding:0 14px;border-radius:6px;background:{{ c.ctaBg }};border:1px solid {{ c.ctaBd }};color:{{ c.ctaInk }};font-size:15px;font-weight:600;text-align:center" style-hover="text-decoration:none;filter:brightness(0.96)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ c.cta }}</a>
+                  </td>
+                </sc-for>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p style="margin:12px 0 0;font-size:13px;line-height:19px;color:var(--sub,#64748B);max-width:80ch;text-wrap:pretty">Comparing three is the most we will show at once — a fourth column makes every figure too narrow to read on a phone. Pick a different three from the list and press Compare again.</p>
+    </section>
+  </sc-if>
+
+  <!-- EMPTY -->
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <section style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px);display:flex;flex-direction:column;gap:clamp(12px,1.5cqw,20px)">
+      <div style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:clamp(20px,2.5cqw,36px);display:flex;flex-wrap:wrap;gap:clamp(16px,2.5cqw,40px);align-items:flex-start">
+        <div style="flex:1 1 min(100%,320px)">
+          <p style="margin:0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Nothing saved yet</p>
+          <h2 style="margin:8px 0 0;font-size:clamp(20px,2.3cqw,32px);line-height:1.14;letter-spacing:-0.02em;font-weight:600;text-wrap:balance">Tap the heart on any car and it lands here.</h2>
+          <p style="margin:12px 0 0;font-size:15px;line-height:22px;color:var(--mut,#475569);max-width:54ch;text-wrap:pretty">Save two or three and this page will lay them out side by side — price, mileage, MOT, declared marks and monthly payment in the same row, so you can see what you are actually choosing between. No account, no sign-up; the list lives on this device until you tell us otherwise.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:18px">
+            <a href="#" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:16px;font-weight:600" style-hover="background:var(--b700,#0B4553);text-decoration:none">Browse all 123 cars</a>
+            <a href="#" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:16px;font-weight:600" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none">Just arrived this week</a>
+          </div>
+        </div>
+        <div style="flex:1 1 min(100%,260px)">
+          <p style="margin:0 0 10px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Or start where most people do</p>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px">
+            <sc-for list="{{ startPoints }}" as="s" hint-placeholder-count="6">
+              <li><a href="#" style="display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:6px;background:var(--s3,#F1F5F9);font-size:14px;font-weight:600;color:var(--ink,#0F172A)" style-hover="background:var(--well,#E6F4F1);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ s.label }}<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:var(--mut,#475569)">{{ s.count }}</span></a></li>
+            </sc-for>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </sc-if>
+
+  <!-- SAVED SEARCHES -->
+  <section style="max-width:1280px;margin:0 auto;padding:clamp(24px,3cqw,48px) clamp(16px,3cqw,32px) clamp(28px,3.5cqw,56px)">
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;padding-bottom:clamp(12px,1.6cqw,20px)">
+      <div>
+        <h2 style="margin:0;font-size:clamp(20px,2.1cqw,28px);line-height:1.2;letter-spacing:-0.015em;font-weight:600">Searches you are watching</h2>
+        <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);max-width:64ch;text-wrap:pretty">We buy 30–40 cars a month. A watched search means you hear the day one lands, usually before it is photographed.</p>
+      </div>
+    </div>
+    <ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:clamp(10px,1.4cqw,16px)">
+      <sc-for list="{{ searches }}" as="s" hint-placeholder-count="2">
+        <li style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+          <div>
+            <h3 style="margin:0;font-size:17px;line-height:23px;font-weight:600;text-wrap:pretty">{{ s.name }}</h3>
+            <p style="margin:4px 0 0;font-size:13px;line-height:18px;color:var(--sub,#64748B)">{{ s.detail }}</p>
+          </div>
+          <form style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end">
+            <label style="flex:1 1 130px;display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Tell me</span>
+              <select style="min-height:44px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);padding:0 10px;font-size:15px;font-weight:500" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">
+                <sc-for list="{{ s.frequencies }}" as="f" hint-placeholder-count="3">
+                  <option>{{ f }}</option>
+                </sc-for>
+              </select>
+            </label>
+            <button type="submit" style="flex:none;min-height:44px;padding:0 16px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);color:var(--link,#0E5A6B);font-size:15px;font-weight:600;cursor:pointer" style-hover="border-color:var(--link,#0E5A6B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Save</button>
+          </form>
+          <label style="display:flex;gap:10px;align-items:flex-start;min-height:44px">
+            <input type="checkbox" style="width:20px;height:20px;margin:2px 0 0;flex:none;accent-color:#0E5A6B" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px" />
+            <span style="font-size:13px;line-height:19px;color:var(--mut,#475569);text-wrap:pretty">Email me when a car matching this search arrives. Stock alerts for this search only — one click unsubscribes.</span>
+          </label>
+          <div style="display:flex;gap:14px;align-items:center;border-top:1px solid var(--bd,#E2E8F0);padding-top:10px">
+            <a href="#" style="display:flex;align-items:center;min-height:40px;font-size:14px;font-weight:600;color:var(--link,#0E5A6B);text-decoration:underline">{{ s.resultLink }}</a>
+            <button type="submit" style="margin-left:auto;min-height:40px;padding:0 10px;border:none;background:none;font-size:14px;font-weight:600;color:var(--mut,#475569);cursor:pointer;text-decoration:underline" style-hover="color:var(--critical,#D03B3B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Stop watching</button>
+          </div>
+        </li>
+      </sc-for>
+      <li style="background:var(--well,#E6F4F1);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:10px">
+        <h3 style="margin:0;font-size:17px;line-height:23px;font-weight:600;text-wrap:pretty">Watch something else</h3>
+        <p style="margin:0;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty">Describe it the way you would say it out loud — "automatic estate under £12,000, petrol" — and we will turn it into a search.</p>
+        <form style="display:flex;flex-direction:column;gap:8px">
+          <input type="text" placeholder="Automatic Golf under £15,000" style="min-height:48px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);padding:0 14px;font-size:16px" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px" />
+          <button type="submit" style="min-height:48px;border:none;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:16px;font-weight:600;cursor:pointer" style-hover="background:var(--b700,#0B4553)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Watch this search</button>
+        </form>
+        <p style="margin:0;font-size:12px;line-height:17px;color:var(--sub,#64748B);text-wrap:pretty">We will show you what we understood before saving it, so you can correct us.</p>
+      </li>
+    </ul>
+  </section>
+
+  <footer style="background:var(--s1,#fff);border-top:1px solid var(--bd,#E2E8F0);padding:24px 0 96px">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px);display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;font-size:12px;line-height:17px;color:var(--sub,#64748B)">
+      <p style="margin:0;max-width:74ch;text-wrap:pretty">Saved cars are stored against a cookie on this device for 90 days. Give us an email and we keep the list against that instead — you can delete it in one click from any email we send. We never sell or share it. <a href="#" style="color:var(--link,#0E5A6B);font-weight:600;text-decoration:underline">Privacy policy</a> · <a href="#" style="color:var(--link,#0E5A6B);font-weight:600;text-decoration:underline">Cookie policy</a></p>
+      <p style="margin:0">Site by Forecourt</p>
+    </div>
+  </footer>
+</main>
+
+<sc-if value="{{ sticky }}" hint-placeholder-val="{{ false }}">
+  <div style="position:sticky;bottom:0;z-index:40;background:var(--s1,#fff);border-top:1px solid var(--bd,#E2E8F0);padding:10px 12px;display:flex;gap:8px;align-items:center;box-shadow:0 -1px 12px rgba(15,23,42,0.08)">
+    <a href="?view=compare" style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:15px;font-weight:600" style-hover="background:var(--b700,#0B4553);text-decoration:none">{{ stickyCta }}</a>
+    <a href="tel:01908993469" style="flex:none;display:flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:15px;font-weight:600;gap:6px" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none"><span aria-hidden="true">✆</span>Call</a>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light' | 'dark'&quot;},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;list&quot;,&quot;compare&quot;,&quot;compare-sold&quot;,&quot;sold&quot;,&quot;empty&quot;],&quot;default&quot;:&quot;list&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;States&quot;},&quot;sticky&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;States&quot;}}">
+class Component extends DCLogic {
+  tokens(dark) {
+    const light = {
+      "--s1": "#FFFFFF", "--s2": "#F8FAFC", "--s3": "#F1F5F9", "--bd": "#E2E8F0",
+      "--ink": "#0F172A", "--mut": "#475569", "--sub": "#64748B",
+      "--b600": "#0E5A6B", "--b700": "#0B4553", "--link": "#0E5A6B", "--well": "#E6F4F1",
+      "--accent": "#F59E0B", "--accentInk": "#B45309",
+      "--good": "#0CA30C", "--warn": "#FAB219", "--serious": "#EC835A", "--critical": "#D03B3B",
+      "--plane": "#16181D", "--stripe": "rgba(15,23,42,0.05)"
+    };
+    const dk = {
+      "--s1": "#16181D", "--s2": "#0E1013", "--s3": "#1D2027", "--bd": "#2A2E36",
+      "--ink": "#FFFFFF", "--mut": "#94A3B8", "--sub": "#7A8598",
+      "--b600": "#0E5A6B", "--b700": "#0B4553", "--link": "#5EC7DC", "--well": "#1D2027",
+      "--accent": "#F59E0B", "--accentInk": "#F59E0B",
+      "--good": "#0CA30C", "--warn": "#FAB219", "--serious": "#EC835A", "--critical": "#D03B3B",
+      "--plane": "#0E1013", "--stripe": "rgba(255,255,255,0.06)"
+    };
+    return dark ? dk : light;
+  }
+
+  cell(value, note, opts) {
+    const o = opts || {};
+    return {
+      value, note: note || "",
+      best: !!o.best,
+      size: o.big ? "20px" : "14px",
+      weight: o.big ? "700" : "600",
+      figures: o.tabular === false ? "proportional-nums" : "tabular-nums",
+      ink: o.faded ? "var(--sub,#64748B)" : "var(--ink,#0F172A)",
+      bg: o.sold ? "var(--s2,#F8FAFC)" : "transparent"
+    };
+  }
+
+  renderVals() {
+    const dark = (this.props.mode ?? "light") === "dark";
+    const state = this.props.state ?? "list";
+    const sold = state === "sold" || state === "compare-sold";
+    const isEmpty = state === "empty";
+    const isCompare = state === "compare" || state === "compare-sold";
+    const isList = state === "list" || state === "sold";
+    const theme = Object.assign({}, this.tokens(dark), {
+      containerType: "inline-size",
+      background: dark ? "#0E1013" : "#F8FAFC",
+      color: dark ? "#FFFFFF" : "#0F172A",
+      fontFamily: "Inter, system-ui, sans-serif"
+    });
+
+    const facts = (mot, marks, motGood) => ([
+      { label: "Year", value: "2022", colour: "var(--ink,#0F172A)" },
+      { label: "Mileage", value: "40,470", colour: "var(--ink,#0F172A)" },
+      { label: "MOT to", value: mot, colour: motGood ? "var(--ink,#0F172A)" : "var(--accentInk,#B45309)" },
+      { label: "Declared marks", value: marks, colour: "var(--ink,#0F172A)" },
+      { label: "Distance", value: "38 miles", colour: "var(--ink,#0F172A)" }
+    ]);
+
+    const base = [
+      {
+        name: "2022 Tesla Model X", derivative: "Dual Motor Long Range · 7 seats", reg: "WN22 HNL",
+        saved: "26 July", price: "£45,999", finance: "£649 a month · 9.6% APR rep.",
+        facts: facts("17 Feb 2027", "2 · both cosmetic", true), picked: true
+      },
+      {
+        name: "2022 BMW iX", derivative: "xDrive40 M Sport", reg: "RE22 BMX",
+        saved: "26 July", price: "£43,880", finance: "£618 a month · 9.6% APR rep.",
+        facts: facts("4 Mar 2027", "1 · scuffed alloy", true), picked: true
+      },
+      {
+        name: "2022 Kia EV6", derivative: "GT-Line S · 77.4kWh", reg: "VU22 EV6",
+        saved: "1 Aug", price: "£28,950", finance: "£408 a month · 9.6% APR rep.",
+        facts: facts("19 Sep 2026", "None declared", false), picked: true
+      }
+    ];
+
+    const cars = base.map((c, i) => {
+      const isSold = sold && i === 2;
+      return Object.assign({}, c, {
+        sold: isSold, live: !isSold,
+        soldDate: "28 July",
+        photoOpacity: isSold ? "0.45" : "1",
+        titleInk: isSold ? "var(--sub,#64748B)" : "var(--ink,#0F172A)",
+        cardBd: isSold ? "var(--bd,#E2E8F0)" : "var(--bd,#E2E8F0)",
+        picked: isSold ? false : c.picked,
+        pickCursor: isSold ? "not-allowed" : "pointer"
+      });
+    });
+
+    const compareCars = cars.map(c => ({
+      name: c.name, derivative: c.derivative, sold: c.sold,
+      photoOpacity: c.photoOpacity, titleInk: c.titleInk,
+      headBg: c.sold ? "var(--s2,#F8FAFC)" : "transparent",
+      cta: c.sold ? "See the closest live car" : "Enquire about this one",
+      ctaBg: c.sold ? "var(--s1,#fff)" : "var(--b600,#0E5A6B)",
+      ctaBd: c.sold ? "var(--bd,#E2E8F0)" : "var(--b600,#0E5A6B)",
+      ctaInk: c.sold ? "var(--link,#0E5A6B)" : "#FFFFFF"
+    }));
+
+    const soldFlag = sold;
+    const compareRows = [
+      { label: "Price", labelWeight: "600", labelBg: "var(--s1,#fff)", cells: [
+        this.cell("£45,999", "reduced £1,200 on 12 July", { big: true, tabular: false }),
+        this.cell("£43,880", "reduced £900 on 2 July", { big: true, tabular: false }),
+        this.cell("£28,950", soldFlag ? "sold at £28,950" : "priced 22 July", { big: true, tabular: false, best: true, faded: soldFlag, sold: soldFlag })
+      ] },
+      { label: "Monthly payment", labelWeight: "500", labelBg: "var(--s1,#fff)", cells: [
+        this.cell("£649.12", "HP · 48 months · £5,000 deposit"),
+        this.cell("£618.40", "HP · 48 months · £5,000 deposit"),
+        this.cell("£408.20", "HP · 48 months · £5,000 deposit", { best: true, faded: soldFlag, sold: soldFlag })
+      ] },
+      { label: "Representative APR", labelWeight: "600", labelBg: "var(--well,#E6F4F1)", cells: [
+        this.cell("9.6% APR", "fixed 9.9% · total payable £52,550.76", { big: true }),
+        this.cell("9.6% APR", "fixed 9.9% · total payable £50,163.20", { big: true }),
+        this.cell("9.6% APR", "fixed 9.9% · total payable £34,593.60", { big: true, faded: soldFlag, sold: soldFlag })
+      ] },
+      { label: "Year", labelWeight: "500", labelBg: "var(--s1,#fff)", cells: [
+        this.cell("2022", "registered 3 Mar"), this.cell("2022", "registered 18 May"), this.cell("2022", "registered 9 Sep", { best: true, faded: soldFlag, sold: soldFlag })
+      ] },
+      { label: "Mileage", labelWeight: "500", labelBg: "var(--s1,#fff)", cells: [
+        this.cell("40,470", "10,100 a year"), this.cell("29,760", "7,300 a year"), this.cell("27,880", "7,200 a year", { best: true, faded: soldFlag, sold: soldFlag })
+      ] },
+      { label: "MOT expires", labelWeight: "500", labelBg: "var(--s1,#fff)", cells: [
+        this.cell("17 Feb 2027", "no advisories outstanding", { best: true }),
+        this.cell("4 Mar 2027", "no advisories outstanding"),
+        this.cell("19 Sep 2026", "7 weeks away", { faded: soldFlag, sold: soldFlag })
+      ] },
+      { label: "Declared marks", labelWeight: "500", labelBg: "var(--s1,#fff)", cells: [
+        this.cell("2", "kerbed alloy · bonnet chip"),
+        this.cell("1", "scuffed offside rear alloy"),
+        this.cell("None", "nothing found at prep", { best: true, faded: soldFlag, sold: soldFlag })
+      ] },
+      { label: "Battery health", labelWeight: "500", labelBg: "var(--s1,#fff)", cells: [
+        this.cell("93.2%", "tested 24 July", { best: true }),
+        this.cell("91.8%", "tested 19 July"),
+        this.cell("92.4%", "tested 1 Aug", { faded: soldFlag, sold: soldFlag })
+      ] },
+      { label: "Provenance", labelWeight: "500", labelBg: "var(--s1,#fff)", cells: [
+        this.cell("Clear", "HPI checked 14 July"),
+        this.cell("Clear", "HPI checked 11 July"),
+        this.cell("Clear", "HPI checked 22 July", { faded: soldFlag, sold: soldFlag })
+      ] }
+    ];
+
+    return {
+      theme,
+      nav: [
+        { label: "Cars in stock", colour: "var(--mut,#475569)", rule: "transparent" },
+        { label: "Saved cars", colour: "var(--link,#0E5A6B)", rule: "var(--link,#0E5A6B)" },
+        { label: "Finance", colour: "var(--mut,#475569)", rule: "transparent" },
+        { label: "Part-exchange", colour: "var(--mut,#475569)", rule: "transparent" },
+        { label: "About us", colour: "var(--mut,#475569)", rule: "transparent" },
+        { label: "Contact", colour: "var(--mut,#475569)", rule: "transparent" }
+      ],
+      heading: isEmpty ? "Your saved cars" : (sold ? "3 saved cars — one has sold" : "3 saved cars"),
+      standfirst: isEmpty
+        ? "This is where the cars you save end up, so you can put them next to each other instead of holding four tabs open."
+        : (sold
+          ? "One of these went on Saturday. We have left it here with the closest thing we have today, because knowing what you liked is more useful to both of us than a gap in the list."
+          : "Saved on this device — no account needed. Compare any two or three side by side, and we will tell you if one drops in price."),
+      isList, isCompare, isEmpty,
+      hasCars: !isEmpty,
+      cars: cars.map(c => Object.assign({}, c, { sold: !!c.sold, live: !!c.live })),
+      compareCars: compareCars.map(c => Object.assign({}, c, { sold: !!c.sold })),
+      compareRows,
+      compareBg: isCompare ? "var(--b600,#0E5A6B)" : "var(--s1,#fff)",
+      compareBd: isCompare ? "var(--b600,#0E5A6B)" : "var(--bd,#E2E8F0)",
+      compareInk: isCompare ? "#FFFFFF" : "var(--link,#0E5A6B)",
+      listBg: isCompare ? "var(--s1,#fff)" : "var(--b600,#0E5A6B)",
+      listBd: isCompare ? "var(--bd,#E2E8F0)" : "var(--b600,#0E5A6B)",
+      listInk: isCompare ? "var(--link,#0E5A6B)" : "#FFFFFF",
+      compareHint: sold
+        ? "Tick two or three to compare. The sold car cannot be compared, but its figures stay on this page."
+        : "Tick two or three cars, then compare them on one screen. The page reloads with a comparison — nothing happens in the background.",
+      compareCta: sold ? "Compare the 2 live cars" : "Compare 3 cars",
+      stickyCta: sold ? "Compare 2 cars" : "Compare 3 cars",
+      startPoints: [
+        { label: "Under £10,000", count: "28" },
+        { label: "SUVs", count: "41" },
+        { label: "Automatics", count: "78" },
+        { label: "Electric", count: "18" },
+        { label: "Seven seats", count: "9" },
+        { label: "Just arrived", count: "11" }
+      ],
+      searches: [
+        { name: "Automatic Golf under £15,000", detail: "Any year · petrol or diesel · within 50 miles · 4 in stock now", frequencies: ["The day one arrives", "Once a week", "Once a month"], resultLink: "See the 4 that match" },
+        { name: "Seven-seat electric, under £50,000", detail: "2021 onwards · automatic · 2 in stock now", frequencies: ["The day one arrives", "Once a week", "Once a month"], resultLink: "See the 2 that match" }
+      ],
+      sticky: this.props.sticky ?? false
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -93,7 +93,13 @@ const TENANT_TABLES = [
   'shortlist_items',
   'saved_searches',
   'search_events',
-  // M8+ — created by later migrations; each skips until its table exists
+  // M8 — finance display & compliance
+  'finance_products',
+  'representative_examples',
+  'vehicle_finance_quotes',
+  'initial_disclosure_versions',
+  'finance_promotion_log',
+  // M9+ — created by later migrations; each skips until its table exists
   'contacts',
   'leads',
   'deals',
@@ -120,6 +126,7 @@ const SPECIAL_TABLES = {
 const APPEND_ONLY = new Set<string>([
   'audit_events', 'deal_evidence', 'stock_book_entries', 'invoices', 'contact_consents',
   'vehicle_status_history', 'vehicle_prices', 'vehicle_lookups', 'search_events',
+  'representative_examples', 'initial_disclosure_versions', 'finance_promotion_log', 'compliance_rules',
 ]);
 
 /**
@@ -229,6 +236,34 @@ const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
     // declared partition, and `now()` will not once the seeded ones expire.
     columns: 'tenant_id, canonical_path, result_count, occurred_at',
     values: `'${TENANT_B}', '/used-cars/smuggled', 0, '2026-08-15T12:00:00Z'`,
+  },
+  finance_products: {
+    columns: 'tenant_id, lender_name, provider, product_type, display_name',
+    values: `'${TENANT_B}', 'Smuggled Finance', 'ivendi', 'hp', 'Smuggled HP'`,
+  },
+  representative_examples: {
+    // cash_price - advance = amount_of_credit, or the CHECK rejects it before
+    // the policy is consulted and the test would prove nothing.
+    columns: 'tenant_id, version, product_type, cash_price_pence, advance_payment_pence, ' +
+             'amount_of_credit_pence, term_months, monthly_payment_pence, interest_rate_percent, ' +
+             'representative_apr_percent, total_amount_payable_pence',
+    values: `'${TENANT_B}', 99, 'hp', 1200000, 200000, 1000000, 48, 25000, 9.9, 9.9, 1400000`,
+  },
+  vehicle_finance_quotes: {
+    columns: 'tenant_id, vehicle_id, provider, lender_name, product_type, cash_price_pence, ' +
+             'deposit_pence, part_exchange_pence, amount_of_credit_pence, term_months, ' +
+             'monthly_payment_pence, apr_percent, total_charge_for_credit_pence, ' +
+             'total_amount_payable_pence, expires_at',
+    values: `'${TENANT_B}', '${B_VEHICLE}', 'ivendi', 'Smuggled Finance', 'hp', 1200000, 200000, 0, ` +
+            `1000000, 48, 25000, 9.9, 200000, 1400000, now() + interval '7 days'`,
+  },
+  initial_disclosure_versions: {
+    columns: 'tenant_id, version, body_markdown, commission_statement',
+    values: `'${TENANT_B}', 99, 'Smuggled disclosure', 'We receive commission.'`,
+  },
+  finance_promotion_log: {
+    columns: 'tenant_id, page_path, rendered_hash, occurred_at',
+    values: `'${TENANT_B}', '/used-cars/smuggled', 'deadbeef', '2026-08-15T12:00:00Z'`,
   },
 };
 
@@ -362,6 +397,47 @@ async function seedRivalData(): Promise<void> {
           ('${A}'::uuid,'/used-cars/nissan/qashqai',0,'2026-08-15T12:00:00Z'::timestamptz),
           ('${B}'::uuid,'/used-cars/nissan/qashqai',0,'2026-08-15T12:00:00Z'::timestamptz)) v
         WHERE NOT EXISTS (SELECT 1 FROM search_events WHERE canonical_path = '/used-cars/nissan/qashqai');
+    `);
+  }
+
+  // M8 tables.
+  if (await tableExists('representative_examples')) {
+    await sql.unsafe(`
+      INSERT INTO finance_products (tenant_id, lender_name, provider, product_type, display_name)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'Lender A','ivendi','hp'::finance_product_type,'HP A'),
+          ('${B}'::uuid,'Lender B','ivendi','hp'::finance_product_type,'HP B')) v
+        WHERE NOT EXISTS (SELECT 1 FROM finance_products WHERE lender_name = 'Lender A');
+
+      INSERT INTO representative_examples
+        (tenant_id, version, product_type, cash_price_pence, advance_payment_pence,
+         amount_of_credit_pence, term_months, monthly_payment_pence, interest_rate_percent,
+         representative_apr_percent, total_amount_payable_pence)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,1,'hp'::finance_product_type,1200000::bigint,200000::bigint,1000000::bigint,48,25000::bigint,9.9,9.9,1400000::bigint),
+          ('${B}'::uuid,1,'hp'::finance_product_type,1200000::bigint,200000::bigint,1000000::bigint,48,25000::bigint,9.9,9.9,1400000::bigint)) v
+        WHERE NOT EXISTS (SELECT 1 FROM representative_examples WHERE tenant_id = '${A}');
+
+      INSERT INTO vehicle_finance_quotes
+        (tenant_id, vehicle_id, provider, lender_name, product_type, cash_price_pence, deposit_pence,
+         part_exchange_pence, amount_of_credit_pence, term_months, monthly_payment_pence, apr_percent,
+         total_charge_for_credit_pence, total_amount_payable_pence, expires_at)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_VEHICLE}'::uuid,'ivendi','Lender A','hp'::finance_product_type,1200000::bigint,200000::bigint,0::bigint,1000000::bigint,48,25000::bigint,9.9,200000::bigint,1400000::bigint,now() + interval '7 days'),
+          ('${B}'::uuid,'${B_VEHICLE}'::uuid,'ivendi','Lender B','hp'::finance_product_type,1200000::bigint,200000::bigint,0::bigint,1000000::bigint,48,25000::bigint,9.9,200000::bigint,1400000::bigint,now() + interval '7 days')) v
+        WHERE NOT EXISTS (SELECT 1 FROM vehicle_finance_quotes WHERE tenant_id = '${A}');
+
+      INSERT INTO initial_disclosure_versions (tenant_id, version, body_markdown, commission_statement)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,1,'Disclosure A','We receive commission.'),
+          ('${B}'::uuid,1,'Disclosure B','We receive commission.')) v
+        WHERE NOT EXISTS (SELECT 1 FROM initial_disclosure_versions WHERE tenant_id = '${A}');
+
+      INSERT INTO finance_promotion_log (tenant_id, page_path, rendered_hash, occurred_at)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'/used-cars/a','hash-a','2026-08-15T12:00:00Z'::timestamptz),
+          ('${B}'::uuid,'/used-cars/b','hash-b','2026-08-15T12:00:00Z'::timestamptz)) v
+        WHERE NOT EXISTS (SELECT 1 FROM finance_promotion_log WHERE page_path = '/used-cars/a');
     `);
   }
 
@@ -571,6 +647,40 @@ describeDb('cross-tenant isolation', () => {
     expect(String(idx?.['indexdef'] ?? '')).toMatch(/\(tenant_id, token\)/);
   });
 
+  // -------------------------------------------------------------------
+  // Gate 3d — M8: the rulebook is platform property. A tenant that could
+  // edit its own representative-example rule could switch its own
+  // compliance gate off, which is worse than any single bad promotion.
+  // -------------------------------------------------------------------
+  it('a tenant can read compliance_rules but cannot write them', async () => {
+    if (!(await tableExists('compliance_rules'))) return;
+
+    const readable = await asTenant(TENANT_A, USER_A, (tx) =>
+      tx.unsafe(`SELECT count(*) AS n FROM compliance_rules WHERE key = 'conc.representative_example'`),
+    );
+    expect(Number(readable[0]?.['n'] ?? 0), 'every dealer must be able to read the same law').toBeGreaterThan(0);
+
+    let code: string | undefined;
+    try {
+      await asTenant(TENANT_A, USER_A, (tx) =>
+        tx.unsafe(`INSERT INTO compliance_rules (key, version, effective_from, parameters, source_url, checked_at)
+                   VALUES ('conc.representative_example', 999, now(), '{"representativeThreshold":0}', 'http://x', now())`),
+      );
+    } catch (err) { code = (err as { code?: string }).code; }
+    expect(code, 'a tenant inserted its own compliance rule').toBe('42501');
+  });
+
+  it('the representative-example rule ships unsigned, so nothing can render until it is approved', async () => {
+    if (!(await tableExists('compliance_rules'))) return;
+    const rows = await sql`
+      SELECT version, signed_off_by FROM compliance_rules
+      WHERE key = 'conc.representative_example' ORDER BY version DESC LIMIT 1`;
+    // If this ever fails because someone seeded a signature into a migration,
+    // that is the failure it exists to catch: sign-off is an act by a named
+    // person, not a line in a SQL file.
+    expect(rows[0]?.['signed_off_by'], 'a compliance rule must not ship pre-signed').toBeNull();
+  });
+
   it.each(Object.keys(SPECIAL_TABLES))('%s has RLS enabled, forced and a policy', async (table) => {
     const [row] = await sql`
       SELECT c.relrowsecurity AS enabled, c.relforcerowsecurity AS forced,
@@ -585,7 +695,11 @@ describeDb('cross-tenant isolation', () => {
   // -------------------------------------------------------------------
   // Gate 4 — append-only tables reject mutation.
   // -------------------------------------------------------------------
-  it.each(['deal_evidence', 'stock_book_entries', 'invoices', 'contact_consents', 'search_events'])(
+  it.each([
+    'deal_evidence', 'stock_book_entries', 'invoices', 'contact_consents', 'search_events',
+    // M8: what we advertised, and what the rulebook said when we advertised it.
+    'compliance_rules', 'representative_examples', 'initial_disclosure_versions', 'finance_promotion_log',
+  ])(
     '%s rejects UPDATE and DELETE',
     async (table) => {
       if (!(await tableExists(table))) return;

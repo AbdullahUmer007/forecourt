@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }
+</style>
+</helmet>
+<div style="{{ theme }}">
+<header>
+  <div style="position:sticky;top:0;z-index:30;background:var(--s1,#fff);border-bottom:1px solid var(--bd,#E2E8F0)">
+    <div style="max-width:1280px;margin:0 auto;padding:8px clamp(16px,3cqw,32px);display:flex;align-items:center;gap:12px">
+      <a href="#" style="display:flex;flex-direction:column;justify-content:center;min-height:44px;min-width:0;flex:1 1 auto" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">
+        <span style="font-size:clamp(15px,1.7cqw,21px);font-weight:700;letter-spacing:-0.022em;color:var(--ink,#0F172A);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Kennington Car Sales</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;line-height:15px;font-weight:500;color:var(--sub,#64748B);white-space:nowrap">
+          <span aria-hidden="true" style="width:7px;height:7px;border-radius:999px;background:var(--good,#0CA30C);flex:none"></span>Open until 6pm · Bletchley
+        </span>
+      </a>
+      <a href="tel:01908123456" style="flex:none;display:flex;align-items:center;gap:6px;min-height:44px;padding:0 11px;border-radius:6px;background:var(--b600,#0E5A6B);color:#FFFFFF;font-size:15px;font-weight:600;white-space:nowrap;transition:background 100ms cubic-bezier(0.2,0,0,1)" style-hover="background:var(--b700,#0B4553);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">
+        <span aria-hidden="true" style="font-size:15px">✆</span>01908 123 456
+      </a>
+    </div>
+  </div>
+  <nav aria-label="Main" style="background:var(--s1,#fff);border-bottom:1px solid var(--bd,#E2E8F0)">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px);display:flex;gap:clamp(14px,1.6cqw,24px);overflow-x:auto;scrollbar-width:none">
+      <sc-for list="{{ nav }}" as="item" hint-placeholder-count="5">
+        <a href="#" style="display:flex;align-items:center;min-height:40px;font-size:14px;font-weight:500;white-space:nowrap;color:var(--mut,#475569);transition:color 100ms cubic-bezier(0.2,0,0,1)" style-hover="color:var(--link,#0E5A6B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ item }}</a>
+      </sc-for>
+    </div>
+  </nav>
+</header>
+
+<main style="background:var(--s2,#F8FAFC);color:var(--ink,#0F172A)">
+  <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px)">
+    <nav aria-label="Breadcrumb" style="display:flex;gap:8px;align-items:center;padding:12px 0;font-size:13px;line-height:18px;color:var(--sub,#64748B)">
+      <a href="#" style="min-height:24px;display:flex;align-items:center" style-hover="color:var(--link,#0E5A6B)">Stock</a><span aria-hidden="true">/</span>
+      <a href="#" style="min-height:24px;display:flex;align-items:center" style-hover="color:var(--link,#0E5A6B)">Tesla</a><span aria-hidden="true">/</span>
+      <span style="color:var(--mut,#475569)">Model X</span>
+    </nav>
+  </div>
+
+  <!-- HERO -->
+  <section style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px) 40px;display:flex;flex-wrap:wrap;gap:clamp(16px,2.5cqw,32px);align-items:start">
+    <div style="flex:1 1 min(100%,620px);min-width:0">
+      <sc-if value="{{ hasPhotos }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="position:relative;border-radius:10px;overflow:hidden;background:var(--s3,#F1F5F9);border:1px solid var(--bd,#E2E8F0)">
+            <div style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none">
+              <sc-for list="{{ heroShots }}" as="shot" hint-placeholder-count="4">
+                <figure style="margin:0;flex:0 0 100%;scroll-snap-align:center;aspect-ratio:4/3;background-color:var(--s3,#F1F5F9);background-image:repeating-linear-gradient(135deg,transparent 0 14px,var(--stripe,rgba(15,23,42,0.05)) 14px 15px);display:flex;align-items:flex-end;justify-content:center;padding:16px">
+                  <figcaption style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:16px;color:var(--sub,#64748B);background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:4px;padding:4px 8px">{{ shot }}</figcaption>
+                </figure>
+              </sc-for>
+            </div>
+            <div style="position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap">
+              <span style="display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:4px;background:var(--accent,#F59E0B);color:#0F172A;font-size:13px;font-weight:600"><span aria-hidden="true">↓</span>Reduced by £1,200</span>
+            </div>
+            <a href="#gallery" style="position:absolute;bottom:12px;right:12px;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:6px;background:var(--plane,#16181D);color:#FFFFFF;font-size:14px;font-weight:600" style-hover="text-decoration:none;background:var(--b700,#0B4553)" style-focus="outline:2px solid #FFFFFF;outline-offset:2px">View all 14 photos</a>
+          </div>
+          <div aria-hidden="true" style="display:flex;gap:6px;justify-content:center;padding-top:10px">
+            <sc-for list="{{ heroShots }}" as="shot" hint-placeholder-count="4">
+              <span style="width:28px;height:4px;border-radius:999px;background:var(--bd,#E2E8F0)"></span>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ noPhotos }}" hint-placeholder-val="{{ false }}">
+        <div style="aspect-ratio:4/3;border-radius:10px;border:1px dashed var(--bd,#E2E8F0);background:var(--s3,#F1F5F9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center">
+          <span aria-hidden="true" style="font-size:28px;color:var(--sub,#64748B)">▣</span>
+          <p style="margin:0;font-size:clamp(17px,1.6cqw,20px);line-height:1.4;font-weight:600;max-width:34ch;text-wrap:pretty">Photographs are being taken today — this car arrived on the forecourt yesterday.</p>
+          <p style="margin:0;font-size:14px;line-height:20px;color:var(--mut,#475569);max-width:44ch;text-wrap:pretty">Ring us and we will send you photos and a walkaround video within the hour, before it goes on the website.</p>
+          <a href="tel:01908123456" style="display:flex;align-items:center;min-height:44px;padding:0 18px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-weight:600;font-size:15px" style-hover="background:var(--b700,#0B4553);text-decoration:none">Ask for photos</a>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="flex:1 1 min(100%,340px);min-width:0;display:flex;flex-direction:column;gap:clamp(16px,2cqw,24px)">
+      <div>
+        <h1 style="margin:0;font-size:clamp(26px,3.1cqw,44px);line-height:1.06;letter-spacing:-0.022em;font-weight:600;text-wrap:balance">
+          <span style="font-weight:400;color:var(--mut,#475569)">2022</span> Tesla Model X
+        </h1>
+        <p style="margin:6px 0 0;font-size:clamp(16px,1.5cqw,20px);line-height:1.35;font-weight:500;color:var(--mut,#475569);text-wrap:pretty">Dual Motor Long Range · 5dr Auto</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-top:12px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;letter-spacing:0.04em;padding:5px 9px;border-radius:4px;background:var(--s3,#F1F5F9);border:1px solid var(--bd,#E2E8F0)">WN22 HNL</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:16px;color:var(--sub,#64748B)">Stock KCS-4417</span>
+        </div>
+      </div>
+
+      <div>
+        <sc-if value="{{ hasPrice }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <p style="margin:0;font-size:clamp(40px,5.4cqw,76px);line-height:0.94;letter-spacing:-0.03em;font-weight:700;font-variant-numeric:proportional-nums">£45,999</p>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding-top:10px">
+              <span style="text-decoration:line-through;color:var(--sub,#64748B);font-size:16px;font-weight:500">£47,199</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--accentInk,#B45309)"><span aria-hidden="true">↓</span>£1,200 off on 12 July</span>
+            </div>
+            <p style="margin:8px 0 0;font-size:13px;line-height:18px;color:var(--sub,#64748B)">Or £649.12 a month · 9.9% APR representative</p>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noPrice }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <p style="margin:0;font-size:clamp(28px,3.4cqw,46px);line-height:1.02;letter-spacing:-0.025em;font-weight:700">Price on application</p>
+            <p style="margin:10px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);max-width:40ch;text-wrap:pretty">This car is in prep and not yet priced. Ring the forecourt and we will tell you the retail price today, plus what we will allow for your part-exchange.</p>
+          </div>
+        </sc-if>
+      </div>
+
+      <ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:1px;background:var(--bd,#E2E8F0);border:1px solid var(--bd,#E2E8F0);border-radius:6px;overflow:hidden">
+        <sc-for list="{{ keySpecs }}" as="spec" hint-placeholder-count="6">
+          <li style="background:var(--s1,#fff);padding:10px 12px">
+            <span style="display:block;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">{{ spec.label }}</span>
+            <span style="display:block;font-size:15px;line-height:20px;font-weight:600;padding-top:2px">{{ spec.value }}</span>
+          </li>
+        </sc-for>
+      </ul>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
+        <a href="tel:01908123456" style="display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border-radius:6px;background:var(--b600,#0E5A6B);color:#FFFFFF;font-size:16px;font-weight:600;transition:background 100ms cubic-bezier(0.2,0,0,1)" style-hover="background:var(--b700,#0B4553);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px"><span aria-hidden="true">✆</span>Call the forecourt</a>
+        <a href="#reserve" style="display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border-radius:6px;background:var(--accent,#F59E0B);color:#0F172A;font-size:16px;font-weight:600;transition:filter 100ms cubic-bezier(0.2,0,0,1)" style-hover="filter:brightness(0.94);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Reserve for £99</a>
+        <a href="#enquiry" style="display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:16px;font-weight:600" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Enquire</a>
+        <a href="#" style="display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:16px;font-weight:600" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">WhatsApp</a>
+      </div>
+
+      <ul style="list-style:none;margin:0;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:var(--well,#E6F4F1);border-radius:6px">
+        <sc-for list="{{ reassure }}" as="r" hint-placeholder-count="3">
+          <li style="display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:20px;color:var(--ink,#0F172A)">
+            <span aria-hidden="true" style="color:var(--good,#0CA30C);font-weight:700;flex:none">✓</span>{{ r }}
+          </li>
+        </sc-for>
+      </ul>
+    </div>
+  </section>
+
+  <!-- DECLARED CONDITION — full bleed dark plane -->
+  <section style="background:var(--plane,#16181D);color:var(--planeInk,#FFFFFF);padding:clamp(32px,4cqw,64px) 0">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px)">
+      <div style="display:flex;flex-wrap:wrap;gap:clamp(12px,2cqw,32px);align-items:flex-end;justify-content:space-between;padding-bottom:clamp(20px,2.5cqw,32px)">
+        <div style="flex:1 1 min(100%,520px)">
+          <p style="margin:0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:var(--planeLink,#5EC7DC)">Declared condition</p>
+          <h2 style="margin:8px 0 0;font-size:clamp(26px,3.2cqw,44px);line-height:1.08;letter-spacing:-0.02em;font-weight:600;text-wrap:balance">Every mark on this car, photographed and named.</h2>
+          <p style="margin:12px 0 0;font-size:clamp(15px,1.4cqw,18px);line-height:1.5;color:var(--planeMut,#94A3B8);max-width:60ch;text-wrap:pretty">A used car has history. We photograph and caption all of it before you drive here, so nothing on the forecourt is a surprise. Two marks found on this Model X at prep — both listed below.</p>
+        </div>
+        <div style="flex:0 0 auto;display:flex;align-items:baseline;gap:12px">
+          <span style="font-size:clamp(44px,5cqw,68px);line-height:0.9;font-weight:700;letter-spacing:-0.03em;font-variant-numeric:proportional-nums">2</span>
+          <span style="font-size:14px;line-height:20px;color:var(--planeMut,#94A3B8);max-width:12ch">marks declared,<br />both cosmetic</span>
+        </div>
+      </div>
+      <ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:clamp(12px,1.5cqw,20px)">
+        <sc-for list="{{ marks }}" as="mark" hint-placeholder-count="2">
+          <li style="background:var(--planeCard,#16181D);border:1px solid var(--planeBd,#2A2E36);border-radius:10px;overflow:hidden">
+            <div style="aspect-ratio:3/2;background-color:var(--planeWell,#1D2027);background-image:repeating-linear-gradient(135deg,transparent 0 14px,rgba(255,255,255,0.05) 14px 15px);display:flex;align-items:flex-end;padding:14px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:16px;color:var(--planeMut,#94A3B8)">{{ mark.shot }}</span>
+            </div>
+            <div style="padding:16px 18px 18px">
+              <div style="display:flex;align-items:center;gap:8px;padding-bottom:8px">
+                <span aria-hidden="true" style="color:{{ mark.dot }};font-size:13px">●</span>
+                <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--planeMut,#94A3B8)">{{ mark.severity }}</span>
+              </div>
+              <h3 style="margin:0;font-size:clamp(17px,1.7cqw,22px);line-height:1.25;font-weight:600;text-wrap:pretty">{{ mark.title }}</h3>
+              <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:var(--planeMut,#94A3B8);text-wrap:pretty">{{ mark.detail }}</p>
+            </div>
+          </li>
+        </sc-for>
+      </ul>
+      <p style="margin:clamp(16px,2cqw,24px) 0 0;font-size:14px;line-height:20px;color:var(--planeMut,#94A3B8)">Nothing else found. Underside, tyres, glass, interior and paint depth all checked at prep on 21 July 2026 — <a href="#" style="color:var(--planeLink,#5EC7DC);font-weight:500;text-decoration:underline">read the 42-point prep sheet</a>.</p>
+    </div>
+  </section>
+
+  <!-- PROVENANCE + BATTERY -->
+  <section style="max-width:1280px;margin:0 auto;padding:clamp(28px,3.5cqw,56px) clamp(16px,3cqw,32px);display:flex;flex-wrap:wrap;gap:clamp(16px,2cqw,28px)">
+    <div style="flex:1 1 min(100%,420px);background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:clamp(18px,2cqw,28px)">
+      <h2 style="margin:0;font-size:clamp(20px,2.1cqw,28px);line-height:1.2;letter-spacing:-0.015em;font-weight:600">Provenance clear</h2>
+      <p style="margin:8px 0 16px;font-size:14px;line-height:20px;color:var(--mut,#475569)">Checked 14 July 2026 with HPI Check.</p>
+      <ul style="list-style:none;margin:0;padding:0;display:grid;gap:1px;background:var(--bd,#E2E8F0);border:1px solid var(--bd,#E2E8F0);border-radius:6px;overflow:hidden">
+        <sc-for list="{{ provenance }}" as="p" hint-placeholder-count="5">
+          <li style="background:var(--s1,#fff);display:flex;align-items:center;gap:10px;padding:11px 14px;min-height:44px">
+            <span aria-hidden="true" style="color:var(--good,#0CA30C);font-weight:700">✓</span>
+            <span style="font-size:14px;line-height:20px;font-weight:500">{{ p }}</span>
+            <span style="margin-left:auto;font-size:12px;line-height:16px;color:var(--sub,#64748B);white-space:nowrap">Clear</span>
+          </li>
+        </sc-for>
+      </ul>
+    </div>
+    <div style="flex:1 1 min(100%,320px);background:var(--well,#E6F4F1);border-radius:10px;padding:clamp(18px,2cqw,28px);display:flex;flex-direction:column">
+      <h2 style="margin:0;font-size:clamp(20px,2.1cqw,28px);line-height:1.2;letter-spacing:-0.015em;font-weight:600">Battery health</h2>
+      <p style="margin:16px 0 0;font-size:clamp(44px,6cqw,80px);line-height:0.9;font-weight:700;letter-spacing:-0.03em;font-variant-numeric:proportional-nums">93.2%</p>
+      <div style="display:flex;align-items:center;gap:8px;padding-top:12px">
+        <span aria-hidden="true" style="color:var(--good,#0CA30C);font-weight:700">✓</span>
+        <span style="font-size:14px;line-height:20px;font-weight:600">Healthy for its age</span>
+      </div>
+      <div aria-hidden="true" style="margin-top:14px;height:8px;border-radius:999px;background:var(--track,rgba(15,23,42,0.1));overflow:hidden">
+        <span style="display:block;height:100%;width:93.2%;background:var(--good,#0CA30C)"></span>
+      </div>
+      <p style="margin:12px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty">Tested 24 July 2026 at 40,470 miles. Typical is 90–94% at four years. Roughly 315 miles of usable range.</p>
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <section id="gallery" style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px) clamp(28px,3.5cqw,56px)">
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between;padding-bottom:16px">
+      <h2 style="margin:0;font-size:clamp(20px,2.1cqw,28px);line-height:1.2;letter-spacing:-0.015em;font-weight:600">Photographs <span style="font-weight:400;color:var(--sub,#64748B)">14</span></h2>
+      <span style="font-size:13px;line-height:18px;color:var(--sub,#64748B)">Taken 22 July 2026 at our Bletchley forecourt · swipe to see more</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:8px">
+      <sc-for list="{{ gallery }}" as="g" hint-placeholder-count="8">
+        <figure style="margin:0;aspect-ratio:16/10;border-radius:6px;overflow:hidden;background-color:var(--s3,#F1F5F9);background-image:repeating-linear-gradient(135deg,transparent 0 14px,var(--stripe,rgba(15,23,42,0.05)) 14px 15px);border:1px solid var(--bd,#E2E8F0);display:flex;align-items:flex-end;padding:10px">
+          <figcaption style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:15px;color:var(--sub,#64748B)">{{ g.label }}</figcaption>
+        </figure>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- MOT -->
+  <section style="background:var(--s1,#fff);border-top:1px solid var(--bd,#E2E8F0);border-bottom:1px solid var(--bd,#E2E8F0);padding:clamp(28px,3.5cqw,56px) 0">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px)">
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between">
+        <h2 style="margin:0;font-size:clamp(20px,2.1cqw,28px);line-height:1.2;letter-spacing:-0.015em;font-weight:600">MOT history and mileage</h2>
+        <span style="font-size:13px;line-height:18px;color:var(--sub,#64748B)">Straight from the DVSA · MOT valid to 17 Feb 2027</span>
+      </div>
+
+      <sc-if value="{{ hasMot }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-wrap:wrap;gap:clamp(16px,2cqw,32px);padding-top:clamp(18px,2cqw,28px)">
+          <figure style="margin:0;flex:1 1 min(100%,360px);background:var(--s3,#F1F5F9);border-radius:10px;padding:clamp(16px,2cqw,24px)">
+            <figcaption style="font-size:14px;line-height:20px;font-weight:600;padding-bottom:4px">Recorded mileage over time</figcaption>
+            <p style="margin:0 0 16px;font-size:13px;line-height:18px;color:var(--sub,#64748B)">Miles at each MOT test and today. No anomalies — every reading is higher than the last.</p>
+            <div style="display:flex;gap:12px;height:196px">
+              <div aria-hidden="true" style="display:flex;flex-direction:column;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:11px;color:var(--sub,#64748B);text-align:right;font-variant-numeric:tabular-nums">
+                <span>50,000</span><span>37,500</span><span>25,000</span><span>12,500</span><span>0</span>
+              </div>
+              <div style="flex:1;position:relative;display:flex;align-items:flex-end;gap:clamp(10px,2cqw,28px);border-left:1px solid var(--bd,#E2E8F0);border-bottom:1px solid var(--bd,#E2E8F0);padding:0 8px">
+                <sc-for list="{{ chart }}" as="bar" hint-placeholder-count="3">
+                  <div style="flex:1 1 0;min-width:44px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%">
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:14px;color:var(--ink,#0F172A);padding-bottom:4px;white-space:nowrap;text-align:center;font-variant-numeric:tabular-nums">{{ bar.value }}</span>
+                    <span style="display:block;width:24px;height:{{ bar.pct }}%;background:{{ bar.fill }};border-radius:4px 4px 0 0"></span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div aria-hidden="true" style="display:flex;gap:clamp(10px,2cqw,28px);padding:8px 0 0 60px">
+              <sc-for list="{{ chart }}" as="bar" hint-placeholder-count="3">
+                <span style="flex:1 1 0;min-width:44px;text-align:center;font-size:12px;line-height:16px;color:var(--sub,#64748B)">{{ bar.label }}</span>
+              </sc-for>
+            </div>
+          </figure>
+
+          <div style="flex:1 1 min(100%,360px);display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ mot }}" as="t" hint-placeholder-count="2">
+              <div style="border:1px solid var(--bd,#E2E8F0);border-radius:6px;padding:14px 16px;background:var(--s1,#fff)">
+                <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+                  <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:4px;background:var(--goodWell,#E6F4F1);font-size:13px;font-weight:600"><span aria-hidden="true" style="color:var(--good,#0CA30C)">✓</span>{{ t.result }}</span>
+                  <span style="font-size:15px;font-weight:600">{{ t.date }}</span>
+                  <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--mut,#475569);font-variant-numeric:tabular-nums">{{ t.miles }}</span>
+                </div>
+                <div style="padding-top:10px;display:flex;gap:8px;align-items:flex-start">
+                  <span aria-hidden="true" style="color:{{ t.advisoryDot }};font-weight:700;flex:none">{{ t.advisoryIcon }}</span>
+                  <p style="margin:0;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty"><span style="font-weight:600;color:var(--ink,#0F172A)">{{ t.advisoryLabel }}</span> {{ t.advisory }}</p>
+                </div>
+              </div>
+            </sc-for>
+            <p style="margin:0;font-size:13px;line-height:18px;color:var(--sub,#64748B);text-wrap:pretty">The 2026 advisory was dealt with at prep: both front tyres replaced with Michelin Pilot Sport EV, 7.8mm.</p>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ noMot }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:clamp(18px,2cqw,28px);border:1px dashed var(--bd,#E2E8F0);border-radius:10px;background:var(--s3,#F1F5F9);padding:clamp(20px,2.5cqw,32px);display:flex;flex-wrap:wrap;gap:20px;align-items:center">
+          <div style="flex:1 1 min(100%,340px)">
+            <div style="display:flex;align-items:center;gap:8px;padding-bottom:8px">
+              <span aria-hidden="true" style="color:var(--sub,#64748B);font-weight:700">◌</span>
+              <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">No tests yet</span>
+            </div>
+            <p style="margin:0;font-size:clamp(17px,1.7cqw,22px);line-height:1.3;font-weight:600;text-wrap:pretty">No MOT history — this car is under three years old.</p>
+            <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);max-width:60ch;text-wrap:pretty">First registered 3 March 2022, so its first MOT is not due until 3 March 2025. We will publish every DVSA test here the day it happens. The service history and our own 42-point prep sheet are below.</p>
+          </div>
+          <a href="#" style="display:flex;align-items:center;min-height:44px;padding:0 18px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);color:var(--link,#0E5A6B);font-weight:600;font-size:15px" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none">See the service history</a>
+        </div>
+      </sc-if>
+    </div>
+  </section>
+
+  <!-- SPEC -->
+  <section style="max-width:1280px;margin:0 auto;padding:clamp(28px,3.5cqw,56px) clamp(16px,3cqw,32px)">
+    <h2 style="margin:0 0 clamp(16px,2cqw,24px);font-size:clamp(20px,2.1cqw,28px);line-height:1.2;letter-spacing:-0.015em;font-weight:600">Full specification</h2>
+    <dl style="margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:0 clamp(16px,3cqw,48px)">
+      <sc-for list="{{ spec }}" as="row" hint-placeholder-count="13">
+        <div style="display:flex;gap:16px;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--bd,#E2E8F0);min-height:44px">
+          <dt style="font-size:14px;line-height:20px;color:var(--sub,#64748B)">{{ row.label }}</dt>
+          <dd style="margin:0;font-size:15px;line-height:20px;font-weight:600;text-align:right">{{ row.value }}</dd>
+        </div>
+      </sc-for>
+    </dl>
+  </section>
+
+  <!-- FINANCE -->
+  <section id="finance" style="background:{{ financeBg }};padding:clamp(28px,3.5cqw,56px) 0">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px)">
+      <sc-if value="{{ v2Full }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:clamp(12px,1.5cqw,20px)">
+          <dc-import name="Finance" variant="full" embed="{{ true }}" hint-size="100%,520px"></dc-import>
+          <dc-import name="Finance" variant="calculator" embed="{{ true }}" hint-size="100%,560px"></dc-import>
+        </div>
+      </sc-if>
+      <sc-if value="{{ v2Absent }}" hint-placeholder-val="{{ false }}">
+        <dc-import name="Finance" variant="absent" embed="{{ true }}" hint-size="100%,420px"></dc-import>
+      </sc-if>
+      <sc-if value="{{ hasFinance }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-wrap:wrap;gap:clamp(16px,2.5cqw,40px)">
+          <div style="flex:1 1 min(100%,300px)">
+            <h2 style="margin:0;font-size:clamp(20px,2.1cqw,28px);line-height:1.2;letter-spacing:-0.015em;font-weight:600">Finance on this Model X</h2>
+            <p style="margin:14px 0 0;font-size:clamp(40px,5cqw,68px);line-height:0.94;letter-spacing:-0.03em;font-weight:700;font-variant-numeric:proportional-nums">£649.12</p>
+            <p style="margin:4px 0 0;font-size:16px;line-height:22px;font-weight:600;color:var(--mut,#475569)">a month on PCP · 9.9% APR representative</p>
+            <p style="margin:14px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);max-width:44ch;text-wrap:pretty">Based on a £5,000 deposit over 48 months at 10,000 miles a year. Change any of it and we will re-quote while you wait.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:18px">
+              <a href="#enquiry" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:16px;font-weight:600" style-hover="background:var(--b700,#0B4553);text-decoration:none">Get my figures</a>
+              <a href="#" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:16px;font-weight:600" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none">Value my part-exchange</a>
+            </div>
+          </div>
+          <div style="flex:1 1 min(100%,340px);background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:clamp(16px,2cqw,24px)">
+            <p style="margin:0 0 12px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Representative example</p>
+            <dl style="margin:0">
+              <sc-for list="{{ finance }}" as="f" hint-placeholder-count="8">
+                <div style="display:flex;gap:16px;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--bd,#E2E8F0)">
+                  <dt style="font-size:14px;line-height:20px;color:var(--mut,#475569)">{{ f.label }}</dt>
+                  <dd style="margin:0;font-family:'JetBrains Mono',monospace;font-size:14px;line-height:20px;font-weight:600;font-variant-numeric:tabular-nums">{{ f.value }}</dd>
+                </div>
+              </sc-for>
+            </dl>
+            <div style="padding-top:12px;display:flex;flex-direction:column;gap:6px">
+              <sc-for list="{{ smallPrint }}" as="line" hint-placeholder-count="6">
+                <p style="margin:0;font-size:12px;line-height:16px;color:var(--sub,#64748B);text-wrap:pretty">{{ line }}</p>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ noFinance }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:380px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:clamp(20px,2.5cqw,32px);display:flex;flex-wrap:wrap;gap:24px;align-items:center">
+          <div style="flex:1 1 min(100%,340px)">
+            <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px">
+              <span aria-hidden="true" style="color:var(--serious,#EC835A);font-weight:700">!</span>
+              <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--mut,#475569)">Finance illustration unavailable</span>
+            </div>
+            <h2 style="margin:0;font-size:clamp(20px,2.1cqw,28px);line-height:1.2;letter-spacing:-0.015em;font-weight:600;text-wrap:pretty">We cannot show a monthly figure on this car yet.</h2>
+            <p style="margin:10px 0 0;font-size:15px;line-height:22px;color:var(--mut,#475569);max-width:56ch;text-wrap:pretty">A monthly payment has to come with a full representative example, and this car has no retail price set yet. Ring us or send an enquiry and we will quote you properly — including what your part-exchange is worth against it.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:18px">
+              <a href="tel:01908123456" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:16px;font-weight:600" style-hover="background:var(--b700,#0B4553);text-decoration:none">Call for figures</a>
+              <a href="#enquiry" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:16px;font-weight:600" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none">Ask for a quote</a>
+            </div>
+          </div>
+          <p style="flex:1 1 min(100%,260px);margin:0;font-size:12px;line-height:16px;color:var(--sub,#64748B);text-wrap:pretty">Kennington Car Sales Ltd is authorised and regulated by the Financial Conduct Authority, FRN 302947, as a credit broker not a lender. We work with a panel of lenders and may receive a commission for introducing you, the amount of which is disclosed to you in writing before you sign.</p>
+        </div>
+      </sc-if>
+    </div>
+  </section>
+
+  <!-- DEALER TRUST -->
+  <section style="background:var(--s3,#F1F5F9);padding:clamp(28px,3.5cqw,56px) 0">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px)">
+      <h2 style="margin:0 0 clamp(16px,2cqw,24px);font-size:clamp(20px,2.1cqw,28px);line-height:1.2;letter-spacing:-0.015em;font-weight:600">Buying from Kennington Car Sales</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:clamp(12px,1.5cqw,20px)">
+        <div style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:20px">
+          <p style="margin:0;font-size:clamp(36px,4cqw,52px);line-height:0.95;font-weight:700;letter-spacing:-0.03em">4.8</p>
+          <div aria-hidden="true" style="display:flex;gap:3px;padding-top:8px;color:var(--accentInk,#B45309);font-size:15px">
+            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+          </div>
+          <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569)">4.8 out of 5 from <a href="#" style="color:var(--link,#0E5A6B);font-weight:600;text-decoration:underline">252 reviews</a></p>
+        </div>
+        <sc-for list="{{ trust }}" as="t" hint-placeholder-count="3">
+          <div style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:20px">
+            <p style="margin:0;font-size:clamp(28px,3cqw,40px);line-height:1;font-weight:700;letter-spacing:-0.025em">{{ t.figure }}</p>
+            <p style="margin:8px 0 0;font-size:15px;line-height:21px;font-weight:600">{{ t.title }}</p>
+            <p style="margin:4px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty">{{ t.detail }}</p>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:clamp(12px,1.5cqw,20px);padding-top:clamp(12px,1.5cqw,20px)">
+        <div style="flex:1 1 min(100%,300px);background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:20px">
+          <p style="margin:0 0 14px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Approved and accountable</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{ bodies }}" as="b" hint-placeholder-count="4">
+              <span style="display:inline-flex;align-items:center;height:44px;padding:0 14px;border-radius:6px;background:var(--s3,#F1F5F9);border:1px solid var(--bd,#E2E8F0);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;letter-spacing:0.04em;color:var(--mut,#475569)">{{ b }}</span>
+            </sc-for>
+          </div>
+          <p style="margin:16px 0 0;font-size:12px;line-height:16px;color:var(--sub,#64748B);text-wrap:pretty">Kennington Car Sales Ltd, company 03421887. Authorised and regulated by the Financial Conduct Authority, FRN 302947, as a credit broker not a lender.</p>
+        </div>
+        <div style="flex:1 1 min(100%,300px);background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;overflow:hidden;display:flex;flex-direction:column">
+          <div aria-hidden="true" style="aspect-ratio:16/9;background-color:var(--s3,#F1F5F9);background-image:repeating-linear-gradient(135deg,transparent 0 14px,var(--stripe,rgba(15,23,42,0.05)) 14px 15px);display:flex;align-items:center;justify-content:center">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--sub,#64748B)">static map · MK1 1AA</span>
+          </div>
+          <div style="padding:18px 20px">
+            <p style="margin:0;font-size:15px;line-height:22px;font-weight:600">Watling Street, Bletchley,<br />Milton Keynes MK1 1AA</p>
+            <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569)">Mon–Sat 9am–6pm · Sun 10am–4pm</p>
+            <a href="#" style="display:inline-flex;align-items:center;min-height:44px;font-size:15px;font-weight:600;color:var(--link,#0E5A6B);text-decoration:underline">Get directions</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENQUIRY -->
+  <section id="enquiry" style="background:var(--plane,#16181D);color:var(--planeInk,#FFFFFF);padding:clamp(28px,3.5cqw,56px) 0">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px);display:flex;flex-wrap:wrap;gap:clamp(20px,3cqw,48px)">
+      <div style="flex:1 1 min(100%,280px)">
+        <h2 style="margin:0;font-size:clamp(22px,2.6cqw,36px);line-height:1.12;letter-spacing:-0.02em;font-weight:600;text-wrap:balance">Ask us anything about this Model X</h2>
+        <p style="margin:12px 0 0;font-size:15px;line-height:22px;color:var(--planeMut,#94A3B8);max-width:44ch;text-wrap:pretty">A real person at the Bletchley forecourt answers these — usually within the hour, always the same day. Ask for a video walkaround if you are coming a distance.</p>
+        <p style="margin:16px 0 0;font-size:14px;line-height:20px;color:var(--planeMut,#94A3B8)">Or ring <a href="tel:01908123456" style="color:var(--planeLink,#5EC7DC);font-weight:600;text-decoration:underline">01908 123 456</a></p>
+      </div>
+      <form style="flex:1 1 min(100%,340px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px">
+        <sc-for list="{{ fields }}" as="f" hint-placeholder-count="4">
+          <label style="display:flex;flex-direction:column;gap:6px;grid-column:{{ f.span }}">
+            <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--planeMut,#94A3B8)">{{ f.label }}</span>
+            <input type="{{ f.type }}" placeholder="{{ f.hint }}" style="min-height:48px;border-radius:6px;border:1px solid var(--planeBd,#2A2E36);background:var(--planeWell,#1D2027);color:var(--planeInk,#fff);padding:0 14px;font-size:16px" style-focus="outline:2px solid var(--planeLink,#5EC7DC);outline-offset:2px;border-color:var(--planeLink,#5EC7DC)" />
+          </label>
+        </sc-for>
+        <label style="display:flex;flex-direction:column;gap:6px;grid-column:1/-1">
+          <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--planeMut,#94A3B8)">Your question</span>
+          <textarea rows="3" placeholder="Is it available to view on Saturday morning?" style="border-radius:6px;border:1px solid var(--planeBd,#2A2E36);background:var(--planeWell,#1D2027);color:var(--planeInk,#fff);padding:12px 14px;font-size:16px;resize:vertical" style-focus="outline:2px solid var(--planeLink,#5EC7DC);outline-offset:2px;border-color:var(--planeLink,#5EC7DC)"></textarea>
+        </label>
+        <button type="submit" style="grid-column:1/-1;min-height:52px;border:none;border-radius:6px;background:var(--accent,#F59E0B);color:#0F172A;font-size:16px;font-weight:600;cursor:pointer;transition:filter 100ms cubic-bezier(0.2,0,0,1)" style-hover="filter:brightness(0.94)" style-focus="outline:2px solid var(--planeLink,#5EC7DC);outline-offset:2px">Send my enquiry</button>
+        <p style="grid-column:1/-1;margin:0;font-size:12px;line-height:16px;color:var(--planeMut,#94A3B8);text-wrap:pretty">We will only use this to answer you about this car. No marketing unless you tick to ask for it.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- SIMILAR -->
+  <section style="max-width:1280px;margin:0 auto;padding:clamp(28px,3.5cqw,56px) clamp(16px,3cqw,32px)">
+    <h2 style="margin:0 0 clamp(16px,2cqw,24px);font-size:clamp(20px,2.1cqw,28px);line-height:1.2;letter-spacing:-0.015em;font-weight:600">Similar in stock</h2>
+    <ul style="list-style:none;margin:0;padding:0 0 4px;display:flex;gap:clamp(10px,1.5cqw,16px);overflow-x:auto;scroll-snap-type:x mandatory">
+      <sc-for list="{{ similar }}" as="c" hint-placeholder-count="4">
+        <li style="flex:0 0 min(78%,280px);scroll-snap-align:start;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;overflow:hidden">
+          <a href="#" style="display:block" style-hover="text-decoration:none">
+            <div aria-hidden="true" style="aspect-ratio:4/3;background-color:var(--s3,#F1F5F9);background-image:repeating-linear-gradient(135deg,transparent 0 14px,var(--stripe,rgba(15,23,42,0.05)) 14px 15px)"></div>
+            <div style="padding:14px 16px 16px">
+              <p style="margin:0;font-size:16px;line-height:22px;font-weight:600;text-wrap:pretty">{{ c.name }}</p>
+              <p style="margin:4px 0 0;font-size:13px;line-height:18px;color:var(--sub,#64748B)">{{ c.meta }}</p>
+              <p style="margin:10px 0 0;font-size:22px;line-height:26px;font-weight:700;letter-spacing:-0.02em">{{ c.price }}</p>
+            </div>
+          </a>
+        </li>
+      </sc-for>
+    </ul>
+  </section>
+
+  <footer style="background:var(--s1,#fff);border-top:1px solid var(--bd,#E2E8F0);padding:24px 0 96px">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px);display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;font-size:12px;line-height:16px;color:var(--sub,#64748B)">
+      <p style="margin:0;max-width:70ch;text-wrap:pretty">Kennington Car Sales Ltd · Watling Street, Bletchley, Milton Keynes MK1 1AA · FRN 302947 · Prices include VAT under the margin scheme where applicable. Every effort is made to describe each car accurately; please check the details with us before travelling.</p>
+      <p style="margin:0">Site by Forecourt</p>
+    </div>
+  </footer>
+</main>
+
+<sc-if value="{{ sticky }}" hint-placeholder-val="{{ false }}">
+  <div style="position:sticky;bottom:0;z-index:40;background:var(--s1,#fff);border-top:1px solid var(--bd,#E2E8F0);padding:10px 12px;display:flex;gap:8px;align-items:center;box-shadow:0 -1px 12px rgba(15,23,42,0.08)">
+    <div style="flex:1 1 auto;min-width:0">
+      <p style="margin:0;font-size:12px;line-height:16px;color:var(--sub,#64748B);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Tesla Model X · WN22 HNL</p>
+      <p style="margin:0;font-size:18px;line-height:22px;font-weight:700;letter-spacing:-0.02em">{{ stickyPrice }}</p>
+    </div>
+    <a href="tel:01908123456" style="flex:none;display:flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding:0 16px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:15px;font-weight:600;gap:6px" style-hover="background:var(--b700,#0B4553);text-decoration:none"><span aria-hidden="true">✆</span>Call</a>
+    <a href="#enquiry" style="flex:none;display:flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:6px;background:var(--accent,#F59E0B);color:#0F172A;font-size:15px;font-weight:600" style-hover="filter:brightness(0.94);text-decoration:none">{{ stickyCta }}</a>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light' | 'dark'&quot;},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;degraded&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;'full' | 'degraded'&quot;,&quot;section&quot;:&quot;States&quot;},&quot;sticky&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;States&quot;},&quot;financeV2&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;States&quot;}}">
+class Component extends DCLogic {
+  tokens(dark) {
+    const light = {
+      "--s1": "#FFFFFF", "--s2": "#F8FAFC", "--s3": "#F1F5F9", "--bd": "#E2E8F0",
+      "--ink": "#0F172A", "--mut": "#475569", "--sub": "#64748B",
+      "--b600": "#0E5A6B", "--b700": "#0B4553", "--b300": "#5EC7DC",
+      "--link": "#0E5A6B", "--well": "#E6F4F1", "--goodWell": "#E6F4F1",
+      "--accent": "#F59E0B", "--accentInk": "#B45309",
+      "--good": "#0CA30C", "--warn": "#FAB219", "--serious": "#EC835A", "--critical": "#D03B3B",
+      "--plane": "#16181D", "--planeCard": "#16181D", "--planeWell": "#1D2027",
+      "--planeInk": "#FFFFFF", "--planeMut": "#94A3B8", "--planeBd": "#2A2E36", "--planeLink": "#5EC7DC",
+      "--stripe": "rgba(15,23,42,0.05)", "--track": "rgba(15,23,42,0.10)", "--chart1": "#2A78D6"
+    };
+    const dk = {
+      "--s1": "#16181D", "--s2": "#0E1013", "--s3": "#1D2027", "--bd": "#2A2E36",
+      "--ink": "#FFFFFF", "--mut": "#94A3B8", "--sub": "#7A8598",
+      "--b600": "#0E5A6B", "--b700": "#0B4553", "--b300": "#5EC7DC",
+      "--link": "#5EC7DC", "--well": "#1D2027", "--goodWell": "#1D2027",
+      "--accent": "#F59E0B", "--accentInk": "#F59E0B",
+      "--good": "#0CA30C", "--warn": "#FAB219", "--serious": "#EC835A", "--critical": "#D03B3B",
+      "--plane": "#0E1013", "--planeCard": "#16181D", "--planeWell": "#1D2027",
+      "--planeInk": "#FFFFFF", "--planeMut": "#94A3B8", "--planeBd": "#2A2E36", "--planeLink": "#5EC7DC",
+      "--stripe": "rgba(255,255,255,0.06)", "--track": "rgba(255,255,255,0.14)", "--chart1": "#3987E5"
+    };
+    return dark ? dk : light;
+  }
+
+  renderVals() {
+    const dark = (this.props.mode ?? "light") === "dark";
+    const degraded = (this.props.state ?? "full") === "degraded";
+    const v2 = this.props.financeV2 ?? false;
+    const theme = Object.assign({}, this.tokens(dark), {
+      containerType: "inline-size",
+      background: dark ? "#0E1013" : "#F8FAFC",
+      color: dark ? "#FFFFFF" : "#0F172A",
+      fontFamily: "Inter, system-ui, sans-serif"
+    });
+
+    return {
+      theme,
+      hasPhotos: !degraded, noPhotos: degraded,
+      hasPrice: !degraded, noPrice: degraded,
+      hasMot: !degraded, noMot: degraded,
+      hasFinance: !degraded && !v2, noFinance: degraded && !v2,
+      v2Full: v2 && !degraded, v2Absent: v2 && degraded,
+      financeBg: v2 ? "var(--s2,#F8FAFC)" : "var(--well,#E6F4F1)",
+      sticky: this.props.sticky ?? false,
+      stickyPrice: degraded ? "Price on application" : "£45,999",
+      stickyCta: degraded ? "Enquire" : "Reserve",
+      nav: ["Cars in stock", "Finance", "Part-exchange", "About us", "Contact"],
+      heroShots: ["01 · front three-quarter", "02 · rear three-quarter", "03 · interior, front", "04 · boot open"],
+      keySpecs: [
+        { label: "Mileage", value: "40,470" },
+        { label: "Fuel", value: "Electric" },
+        { label: "Gearbox", value: "Automatic" },
+        { label: "Body", value: "SUV" },
+        { label: "Seats", value: "7" },
+        { label: "Colour", value: "Pearl White" }
+      ],
+      reassure: [
+        "1 former keeper, 2 keys, full Tesla service history",
+        "MOT to 17 Feb 2027 · both front tyres new at prep",
+        "£99 reserves it for 48 hours, fully refundable"
+      ],
+      marks: [
+        { shot: "mark 01 · nearside front alloy", severity: "Cosmetic · kerbing", dot: "var(--warn,#FAB219)", title: "Kerbed nearside front alloy", detail: "About 40mm of scuffing on the outer rim face. Not structural. We can refurbish it before you collect for £95, or knock it off the price — your call." },
+        { shot: "mark 02 · bonnet, offside of badge", severity: "Cosmetic · stone chip", dot: "var(--warn,#FAB219)", title: "Bonnet stone chip", detail: "One 2mm chip, 300mm back from the leading edge. Touched in and sealed at prep so it will not rust. Visible in the right light." }
+      ],
+      provenance: ["No outstanding finance", "Not recorded as stolen", "Never written off", "No mileage anomaly", "No plate changes"],
+      gallery: [
+        { label: "01 front three-quarter" },
+        { label: "02 rear three-quarter" },
+        { label: "03 nearside profile" },
+        { label: "04 cabin, driver's seat" },
+        { label: "05 rear seats, row 2" },
+        { label: "06 third row up" },
+        { label: "07 boot, seats down" },
+        { label: "08 charge port open" }
+      ],
+      chart: [
+        { label: "Feb 2025", value: "25,110", pct: 50.2, fill: "var(--chart1,#2A78D6)" },
+        { label: "Feb 2026", value: "38,940", pct: 77.9, fill: "var(--chart1,#2A78D6)" },
+        { label: "Today", value: "40,470", pct: 80.9, fill: "var(--sub,#64748B)" }
+      ],
+      mot: [
+        { result: "Pass", date: "14 Feb 2026", miles: "38,940 mi", advisoryIcon: "!", advisoryDot: "var(--warn,#FAB219)", advisoryLabel: "1 advisory —", advisory: "nearside front tyre close to the legal limit." },
+        { result: "Pass", date: "12 Feb 2025", miles: "25,110 mi", advisoryIcon: "✓", advisoryDot: "var(--good,#0CA30C)", advisoryLabel: "No advisories —", advisory: "clean first test." }
+      ],
+      spec: [
+        { label: "Registration", value: "WN22 HNL" },
+        { label: "First registered", value: "3 Mar 2022" },
+        { label: "Derivative", value: "Dual Motor Long Range" },
+        { label: "Body and doors", value: "SUV · 5dr" },
+        { label: "Seats", value: "7" },
+        { label: "Fuel", value: "Electric" },
+        { label: "Gearbox", value: "Automatic, single speed" },
+        { label: "Battery", value: "100kWh · 93.2% health" },
+        { label: "Official range", value: "348 miles WLTP" },
+        { label: "0–60mph", value: "3.8 seconds" },
+        { label: "Colour", value: "Pearl White Multi-Coat" },
+        { label: "Former keepers", value: "1" },
+        { label: "Road tax", value: "£620 a year (expensive car rate)" },
+        { label: "VAT", value: "Margin scheme" }
+      ],
+      finance: [
+        { label: "Cash price", value: "£45,999.00" },
+        { label: "Deposit", value: "£5,000.00" },
+        { label: "Total amount of credit", value: "£40,999.00" },
+        { label: "48 monthly payments of", value: "£649.12" },
+        { label: "Optional final payment", value: "£18,400.00" },
+        { label: "Total charge for credit", value: "£6,551.76" },
+        { label: "Total amount payable", value: "£52,550.76" },
+        { label: "Fixed rate of interest", value: "5.12% p.a." }
+      ],
+      smallPrint: [
+        "Representative APR 9.9% · PCP over 48 months · 10,000 miles a year, 8p per excess mile.",
+        "Figures include a £10 option-to-purchase fee in the final payment and a £0 arrangement fee.",
+        "Finance subject to status and affordability. You must be 18 or over and a UK resident.",
+        "Kennington Car Sales Ltd is authorised and regulated by the Financial Conduct Authority, FRN 302947, as a credit broker not a lender.",
+        "We work with a panel of lenders and may receive a commission for introducing you. The amount is disclosed in writing before you sign.",
+        "This is an illustration, not an offer. Your own quote may differ once we have your details."
+      ],
+      trust: [
+        { figure: "28 yrs", title: "Trading since 1998", detail: "Same family, same site on Watling Street." },
+        { figure: "12 mth", title: "Warranty included", detail: "Parts and labour, at any VAT-registered garage." },
+        { figure: "14 days", title: "Change your mind", detail: "Full refund if you buy online and it is not right." }
+      ],
+      bodies: ["AA APPROVED", "TRADING STANDARDS", "MOTOR OMBUDSMAN", "FCA FRN 302947"],
+      fields: [
+        { label: "Your name", type: "text", hint: "Jane Whitmore", span: "1/-1" },
+        { label: "Phone", type: "tel", hint: "07700 900123", span: "auto" },
+        { label: "Email", type: "email", hint: "jane@example.co.uk", span: "auto" }
+      ],
+      similar: [
+        { name: "2021 Tesla Model Y Long Range", meta: "31,200 mi · Electric · Automatic", price: "£31,495" },
+        { name: "2022 Kia EV6 GT-Line S", meta: "27,880 mi · Electric · Automatic", price: "£28,950" },
+        { name: "2021 Audi Q7 55 TFSI e S line", meta: "38,410 mi · Plug-in hybrid", price: "£39,995" },
+        { name: "2023 Tesla Model X Plaid", meta: "18,640 mi · Electric · Automatic", price: "£61,250" }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #E9EDF2; font-family: Inter, system-ui, sans-serif; color: #0F172A; }
+  a { color: #0E5A6B; }
+  a:hover { color: #0B4553; }
+</style>
+</helmet>
+
+<section style="padding:48px clamp(16px,3vw,56px) 96px;display:flex;flex-direction:column;gap:40px">
+  <header style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;max-width:1100px">
+    <div>
+      <p style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.08em;color:#64748B">FORECOURT · REGULATED COMPONENT</p>
+      <h1 style="margin:8px 0 0;font-size:40px;line-height:1.04;letter-spacing:-0.028em;font-weight:600">Finance promotion</h1>
+      <p style="margin:10px 0 0;font-size:16px;line-height:24px;color:#475569;max-width:76ch;text-wrap:pretty">One component, four states. The mandated eight items appear in CONC 3.5.5R order in every state that shows a figure, and the representative APR is the largest thing in the block — bigger than the monthly payment it sits beside.</p>
+    </div>
+    <p style="margin:0;font-size:13px;line-height:18px;color:#64748B;font-family:'JetBrains Mono',monospace">turn 4 · 4a–4g</p>
+  </header>
+
+  <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+    <div id="4a" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">4a</span>
+        <span style="font-size:15px;font-weight:600">Standalone block · light and dark · 720</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+        <div style="width:720px;background:#F8FAFC;border-radius:10px;border:1px solid #CBD5E1;padding:20px">
+          <dc-import name="Finance" mode="light" variant="full" hint-size="680px,540px"></dc-import>
+        </div>
+        <div style="width:720px;background:#0E1013;border-radius:10px;border:1px solid #2A2E36;padding:20px">
+          <dc-import name="Finance" mode="dark" variant="full" hint-size="680px,540px"></dc-import>
+        </div>
+      </div>
+      <p style="margin:0;max-width:720px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">The APR is set at clamp(52px, 7.4cqw, 104px) against the payment's fixed 26px, so prominence is not a judgement call — it is 2:1 at every width this block ships at (52px in a 680px panel and at 375), widening past 4:1 only in containers above about 1400px. It can never invert, because the payment does not scale. Inside the ordered list the APR row repeats that: brand rule, tinted ground, 26px value, bold label, while the other seven rows sit at 14px.</p>
+    </div>
+
+    <div id="4b" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">4b</span>
+        <span style="font-size:15px;font-weight:600">Mobile · 375 · light and dark</span>
+      </div>
+      <div style="display:flex;gap:20px;align-items:flex-start">
+        <div style="width:375px;height:760px;overflow:auto;background:#F8FAFC;border-radius:10px;border:1px solid #CBD5E1;padding:16px">
+          <dc-import name="Finance" mode="light" variant="full" hint-size="343px,720px"></dc-import>
+        </div>
+        <div style="width:375px;height:760px;overflow:auto;background:#0E1013;border-radius:10px;border:1px solid #2A2E36;padding:16px">
+          <dc-import name="Finance" mode="dark" variant="full" hint-size="343px,720px"></dc-import>
+        </div>
+      </div>
+    </div>
+
+    <div id="4c" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0E5A6B;color:#fff;border-radius:4px;padding:3px 7px">4c</span>
+        <span style="font-size:15px;font-weight:600">No-JavaScript calculator</span>
+      </div>
+      <div style="width:900px;background:#F8FAFC;border-radius:10px;border:1px solid #CBD5E1;padding:20px">
+        <dc-import name="Finance" mode="light" variant="calculator" hint-size="860px,560px"></dc-import>
+      </div>
+      <p style="margin:0;max-width:900px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">Two radios and three selects, one submit, one server round trip. The result band below the form is what you land on after the reload — "Quote updated", the chosen terms restated, the APR at 80px and a freshly computed example. No slider, because a figure that moves as you drag has no example attached to it at the moment you read it.</p>
+    </div>
+
+    <div id="4d" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#B45309;color:#fff;border-radius:4px;padding:3px 7px">4d</span>
+        <span style="font-size:15px;font-weight:600">Absent — no approved example exists</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+        <div style="width:720px;background:#F8FAFC;border-radius:10px;border:1px solid #CBD5E1;padding:20px">
+          <dc-import name="Finance" mode="light" variant="absent" hint-size="680px,420px"></dc-import>
+        </div>
+        <div style="width:720px;background:#0E1013;border-radius:10px;border:1px solid #2A2E36;padding:20px">
+          <dc-import name="Finance" mode="dark" variant="absent" hint-size="680px,420px"></dc-import>
+        </div>
+      </div>
+      <p style="margin:0;max-width:720px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">Not a single figure — no payment, no rate, no "from" price, not even a struck-through example. The reason is stated as a standard we hold ourselves to rather than a system failure, and the panel on the right promises exactly what the buyer will get in writing.</p>
+    </div>
+
+    <div id="4e" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">4e</span>
+        <span style="font-size:15px;font-weight:600">Inside a results card · light and dark</span>
+      </div>
+      <div style="display:flex;gap:20px;align-items:flex-start">
+        <sc-for list="{{ cardModes }}" as="m" hint-placeholder-count="2">
+          <div style="width:300px;background:{{ m.page }};border-radius:10px;border:1px solid {{ m.bd }};padding:16px">
+            <div style="background:{{ m.card }};border:1px solid {{ m.bd }};border-radius:10px;overflow:hidden">
+              <div aria-hidden="true" style="aspect-ratio:4/3;background-color:{{ m.well }};background-image:repeating-linear-gradient(135deg,transparent 0 14px,{{ m.stripe }} 14px 15px)"></div>
+              <div style="padding:14px 16px 16px;color:{{ m.ink }}">
+                <h3 style="margin:0;font-size:17px;line-height:22px;font-weight:600;letter-spacing:-0.01em">2022 Tesla Model X</h3>
+                <p style="margin:3px 0 0;font-size:14px;line-height:20px;color:{{ m.mut }}">Dual Motor Long Range · 7 seats</p>
+                <div style="display:flex;flex-wrap:wrap;gap:6px 14px;padding-top:6px">
+                  <span style="font-size:13px;line-height:18px;color:{{ m.mut }}">40,470 miles</span>
+                  <span style="font-size:13px;line-height:18px;color:{{ m.mut }}">Electric</span>
+                  <span style="font-size:13px;line-height:18px;color:{{ m.mut }}">Automatic</span>
+                </div>
+                <p style="margin:10px 0 0;font-size:26px;line-height:30px;font-weight:700;letter-spacing:-0.025em">£19,999</p>
+                <dc-import name="Finance" mode="{{ m.mode }}" variant="card" hint-size="100%,140px"></dc-import>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+        <p style="margin:0;flex:1 1 300px;max-width:420px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">In a 300px card the APR becomes the loudest finance figure at 22px while the payment drops to a 14px supporting line — the ratio inverts from the standalone block but the ranking does not. The full eight items sit in a closed <code style="font-family:'JetBrains Mono',monospace">&lt;details&gt;</code>: present in the served HTML, on the same page as the figure, no JavaScript, and it does not turn every card into a wall of numbers.</p>
+      </div>
+    </div>
+
+    <div id="4f" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">4f</span>
+        <span style="font-size:15px;font-weight:600">In place on the vehicle page — before and after</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <p style="margin:0;width:640px;font-size:13px;font-weight:600;color:#475569">Before · the old block, scrolled to finance</p>
+          <div style="width:640px;height:820px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1">
+            <dc-import name="VDP" mode="light" state="full" financeV2="{{ false }}" hint-size="640px,820px"></dc-import>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <p style="margin:0;width:640px;font-size:13px;font-weight:600;color:#475569">After · new component in place, light</p>
+          <div style="width:640px;height:820px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1">
+            <dc-import name="VDP" mode="light" state="full" financeV2="{{ true }}" hint-size="640px,820px"></dc-import>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <p style="margin:0;width:640px;font-size:13px;font-weight:600;color:#475569">After · dark</p>
+          <div style="width:640px;height:820px;overflow:auto;border-radius:10px;border:1px solid #2A2E36">
+            <dc-import name="VDP" mode="dark" state="full" financeV2="{{ true }}" hint-size="640px,820px"></dc-import>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <p style="margin:0;width:640px;font-size:13px;font-weight:600;color:#475569">Absent state in place · price on application</p>
+          <div style="width:640px;height:820px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1">
+            <dc-import name="VDP" mode="light" state="degraded" financeV2="{{ true }}" hint-size="640px,820px"></dc-import>
+          </div>
+        </div>
+      </div>
+      <p style="margin:0;max-width:1280px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">Scroll each frame to the finance section. The reason it no longer overwhelms the page is that it stopped being a tinted full-bleed band and became one contained panel on the ordinary page plane, with the calculator as a separate quieter panel beneath it — so the section reads as two cards in a sequence rather than a regulated interruption. The car's own price stays the largest figure on the page; the APR is the largest figure in the block.</p>
+    </div>
+
+    <div id="4g" style="display:flex;flex-direction:column;gap:10px;max-width:1280px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0E5A6B;color:#fff;border-radius:4px;padding:3px 7px">4g</span>
+        <span style="font-size:15px;font-weight:600">Compliance and implementation notes</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:20px">
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">How APR prominence is achieved</h2>
+          <p style="margin:0 0 16px;font-size:13px;line-height:18px;color:#475569">CONC 3.5.6R is satisfied on five axes at once, so no single style change can quietly break it.</p>
+          <dl style="margin:0">
+            <sc-for list="{{ prominence }}" as="p" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:minmax(90px,1fr) minmax(180px,2fr);gap:12px;padding:10px 0;border-bottom:1px solid #E2E8F0;align-items:baseline">
+                <dt style="font-size:14px;line-height:20px;font-weight:600">{{ p.name }}</dt>
+                <dd style="margin:0;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty">{{ p.value }}</dd>
+              </div>
+            </sc-for>
+          </dl>
+          <p style="margin:14px 0 0;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty">The readability problem is solved separately from prominence: each of the eight mandated labels carries a 12px plain-English gloss beneath it. The order and the wording of the labels are untouched — the gloss is additional, and it is what makes a buyer read the list instead of skipping it.</p>
+        </div>
+
+        <div style="background:#0F172A;color:#fff;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600;color:#fff">The eight items, and their treatment</h2>
+          <p style="margin:0 0 16px;font-size:13px;line-height:18px;color:#94A3B8">Order is CONC 3.5.5R and is not a layout decision. Item 4 is the only one that changes weight.</p>
+          <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ items }}" as="i" hint-placeholder-count="8">
+              <li style="font-size:14px;line-height:20px;color:{{ i.colour }};font-weight:{{ i.weight }}">{{ i.label }} <span style="color:#94A3B8;font-weight:400">— {{ i.note }}</span></li>
+            </sc-for>
+          </ol>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">Build rules for engineering</h2>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ build }}" as="b" hint-placeholder-count="7">
+              <li style="display:flex;gap:10px;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty"><span aria-hidden="true" style="color:#0CA30C;font-weight:700;flex:none">✓</span>{{ b }}</li>
+            </sc-for>
+          </ul>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">Zero-JS, and what JS would buy</h2>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px">
+            <sc-for list="{{ jsNotes }}" as="j" hint-placeholder-count="5">
+              <li>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span aria-hidden="true" style="color:{{ j.dot }};font-weight:700">{{ j.icon }}</span>
+                  <span style="font-size:14px;line-height:20px;font-weight:600">{{ j.name }}</span>
+                  <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:12px;color:#64748B">{{ j.verdict }}</span>
+                </div>
+                <p style="margin:4px 0 0 22px;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty">{{ j.detail }}</p>
+              </li>
+            </sc-for>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      cardModes: [
+        { mode: "light", page: "#F8FAFC", card: "#FFFFFF", bd: "#E2E8F0", well: "#F1F5F9", stripe: "rgba(15,23,42,0.05)", ink: "#0F172A", mut: "#475569" },
+        { mode: "dark", page: "#0E1013", card: "#16181D", bd: "#2A2E36", well: "#1D2027", stripe: "rgba(255,255,255,0.06)", ink: "#FFFFFF", mut: "#94A3B8" }
+      ],
+      prominence: [
+        { name: "Size", value: "APR clamp(52px, 7.4cqw, 104px) against the payment's fixed 26px — 2:1 at every shipped width (52px in a 680px panel and at 375), 4:1 only above roughly a 1400px container. The payment never scales, so the ranking cannot invert." },
+        { name: "Position", value: "APR is the first thing in the block, top of the reading order. The payment sits beneath it, inside a bordered sub-panel." },
+        { name: "Weight", value: "APR 700 at -0.035em tracking; the payment 600. In the ordered list, the APR row is the only bold label." },
+        { name: "Ground", value: "The APR row inside the example gets the tinted well and a 3px brand rule; the other seven rows sit on plain surface-1 with hairlines." },
+        { name: "Repetition", value: "The APR appears twice — as the headline figure and as mandated item 4. The payment appears once as a headline and once as item 8." }
+      ],
+      items: [
+        { label: "1 Rate of interest", note: "9.9% fixed, with \"fixed\" spelled out, not abbreviated", colour: "#FFFFFF", weight: "400" },
+        { label: "2 Other charges", note: "\"None\" is stated explicitly; never omitted when nil", colour: "#FFFFFF", weight: "400" },
+        { label: "3 Total amount of credit", note: "£14,999.00", colour: "#FFFFFF", weight: "400" },
+        { label: "4 Representative APR", note: "9.6% APR · bold label, 26px value, brand rule, tinted ground", colour: "#5EC7DC", weight: "700" },
+        { label: "5 Cash price / advance payment", note: "£19,999.00 / £5,000.00 in one row, as the rule pairs them", colour: "#FFFFFF", weight: "400" },
+        { label: "6 Duration of agreement", note: "48 months", colour: "#FFFFFF", weight: "400" },
+        { label: "7 Total amount payable", note: "£18,000.00", colour: "#FFFFFF", weight: "400" },
+        { label: "8 Amount of each repayment", note: "48 × £375.00", colour: "#FFFFFF", weight: "400" }
+      ],
+      build: [
+        "One component, four variants. There is no other code path that can render a monthly payment, a rate or an APR — anywhere on the site, in an email, or in a PDF.",
+        "It cannot render without a valid, in-date, approved representative example record. No example, no figures: it falls through to the absent variant automatically rather than throwing.",
+        "The eight items come from the example record as an ordered array. Order is fixed in the data layer, not in the template, so a designer cannot reorder them by moving markup.",
+        "Every figure is computed server-side in pence as integers against the lender's live rates. Nothing is calculated in the browser, ever.",
+        "Lender name, FRN, commission statement, \"credit broker, not a lender\", \"subject to status\" and the initial-disclosure link are part of the component, not the page. They cannot be omitted by a tenant's theme.",
+        "The initial disclosure and complaints procedure are routed web pages, never PDFs.",
+        "Storybook must carry all four variants in both modes, plus the expired-example case, and axe-core must pass on each."
+      ],
+      jsNotes: [
+        { icon: "✓", dot: "#0CA30C", name: "Calculator", verdict: "no JS needed", detail: "Radios and selects in a GET form; the response is a new page with a new example. Each combination is a cacheable URL, which also means a buyer can share or bookmark their own quote." },
+        { icon: "✓", dot: "#0CA30C", name: "Example in a results card", verdict: "no JS needed", detail: "A closed <details>. The eight items are in the served HTML beside the figure, so the promotion is compliant with scripting off and in a text-only reader." },
+        { icon: "✓", dot: "#0CA30C", name: "Absent state", verdict: "no JS needed", detail: "Chosen server-side when no approved example exists. There is no client-side hiding of figures — the numbers are never sent to the browser at all." },
+        { icon: "!", dot: "#FAB219", name: "Live payment as you drag", verdict: "would not ship even with JS", detail: "A figure that changes while the example beneath it lags is a breach in the milliseconds between. If we ever add it, the whole block must re-render atomically from a server response." },
+        { icon: "✕", dot: "#D03B3B", name: "Eligibility check in the page", verdict: "separate journey", detail: "A soft-search decision needs identity data and belongs on its own page with its own consent, not inline on a car listing." }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

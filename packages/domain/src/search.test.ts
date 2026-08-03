@@ -13,10 +13,19 @@ import {
   searchIndexability, robotsContent, facetLinkRel, buildFacets, toggleFilter, appliedFilters,
   paginate, relaxationLadder, firstNonEmpty, demandSignal, resultBadges, filterCount,
   MULTI_DIMENSIONS, PRICE_BANDS, PER_PAGE,
-  type SearchQuery,
+  type SearchQuery, type MultiDimension,
 } from './search.js';
 
-const q = (over: Partial<SearchQuery> = {}): SearchQuery => ({
+/**
+ * `filters` is a full Record on SearchQuery, so a naive `Partial<SearchQuery>`
+ * makes every partial `{ make: [...] }` in these tests a type error. Overriding
+ * the filters type is what lets the helper be used the way it reads.
+ */
+type QueryOverride = Omit<Partial<SearchQuery>, 'filters'> & {
+  filters?: Partial<Record<MultiDimension, string[]>>;
+};
+
+const q = (over: QueryOverride = {}): SearchQuery => ({
   ...EMPTY_QUERY,
   ...over,
   filters: { ...EMPTY_QUERY.filters, ...(over.filters ?? {}) },
@@ -71,9 +80,13 @@ describe('parsing a search URL', () => {
 
   // ---- the compliance gate
   it.each(['monthly', 'ppm', 'payment', 'per_month', 'apr'])(
-    'refuses a %s filter until M8 supplies a representative example', (key) => {
+    'refuses a %s filter without an approved representative example', (key) => {
+      // M8 supplies the unlock: an ApprovedPromotion, which can only be built
+      // from a signed-off, in-date, arithmetically sound example. No promotion
+      // is the safe default, so a caller that has not thought about it is
+      // blocked. The unlocked path is asserted in rendered-finance.test.ts.
       expect(() => assertNoPaymentFilter({ [key]: '250' })).toThrow(/CONC 3\.5\.3R/);
-      expect(() => parseSearchQuery({ [key]: '250' })).toThrow(/blocked until M8/);
+      expect(() => parseSearchQuery({ [key]: '250' })).toThrow(/representative example/);
     });
 });
 

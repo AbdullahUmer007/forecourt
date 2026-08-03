@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #E9EDF2; font-family: Inter, system-ui, sans-serif; color: #0F172A; }
+  a { color: #0E5A6B; }
+  a:hover { color: #0B4553; }
+</style>
+</helmet>
+
+<section style="padding:48px clamp(16px,3vw,56px) 96px;display:flex;flex-direction:column;gap:40px">
+  <header style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;max-width:1100px">
+    <div>
+      <p style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.08em;color:#64748B">FORECOURT · PUBLIC DEALER SITE</p>
+      <h1 style="margin:8px 0 0;font-size:40px;line-height:1.04;letter-spacing:-0.028em;font-weight:600">Stock list</h1>
+      <p style="margin:10px 0 0;font-size:16px;line-height:24px;color:#475569;max-width:74ch;text-wrap:pretty">Same masthead, type scale and card treatment as the vehicle detail page. Every facet, sort option, view toggle and page link is a plain <code style="font-family:'JetBrains Mono',monospace">&lt;a href&gt;</code> that reloads the page — no JavaScript anywhere. Scroll inside each frame.</p>
+    </div>
+    <p style="margin:0;font-size:13px;line-height:18px;color:#64748B;font-family:'JetBrains Mono',monospace">turn 2 · 2a–2h</p>
+  </header>
+
+  <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+    <div id="2a" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">2a</span>
+        <span style="font-size:15px;font-weight:600">Mobile · light · filter collapsed</span>
+      </div>
+      <div style="width:375px;height:820px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+        <dc-import name="Stock" mode="light" state="results" view="grid" facetsOpen="{{ false }}" sticky="{{ true }}" hint-size="375px,820px"></dc-import>
+      </div>
+      <p style="margin:0;width:375px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">The whole facet panel is one <code style="font-family:'JetBrains Mono',monospace">&lt;details&gt;</code>: 52px closed, showing the applied count. Tap it open and each facet group is its own nested details. Works with scripting off, and keyboard-operable for free.</p>
+    </div>
+
+    <div id="2b" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">2b</span>
+        <span style="font-size:15px;font-weight:600">Mobile · light · filter open</span>
+      </div>
+      <div style="width:375px;height:820px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+        <dc-import name="Stock" mode="light" state="results" view="grid" facetsOpen="{{ true }}" sticky="{{ true }}" hint-size="375px,820px"></dc-import>
+      </div>
+      <p style="margin:0;width:375px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">Zero-match options stay in place, greyed, with a 0 count and <code style="font-family:'JetBrains Mono',monospace">pointer-events:none</code> — the list never reshuffles under your thumb.</p>
+    </div>
+
+    <div id="2c" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">2c</span>
+        <span style="font-size:15px;font-weight:600">Mobile · dark · zero results</span>
+      </div>
+      <div style="width:375px;height:820px;overflow:auto;border-radius:10px;border:1px solid #2A2E36;box-shadow:0 1px 3px rgba(15,23,42,0.16)">
+        <dc-import name="Stock" mode="dark" state="zero" facetsOpen="{{ false }}" sticky="{{ true }}" hint-size="375px,820px"></dc-import>
+      </div>
+      <p style="margin:0;width:375px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">Three moves, in order: say plainly what we do not have · show the four closest real cars with what we widened · offer the alert with an unticked consent box and the unsubscribe promise in the wording.</p>
+    </div>
+
+    <div id="2d" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">2d</span>
+        <span style="font-size:15px;font-weight:600">Desktop · light · grid, 118 in stock</span>
+      </div>
+      <div style="width:1280px;height:900px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+        <dc-import name="Stock" mode="light" state="results" view="grid" hint-size="1280px,900px"></dc-import>
+      </div>
+    </div>
+
+    <div id="2e" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">2e</span>
+        <span style="font-size:15px;font-weight:600">Desktop · dark · list view</span>
+      </div>
+      <div style="width:1280px;height:900px;overflow:auto;border-radius:10px;border:1px solid #2A2E36;box-shadow:0 1px 3px rgba(15,23,42,0.16)">
+        <dc-import name="Stock" mode="dark" state="results" view="list" dense="{{ true }}" hint-size="1280px,900px"></dc-import>
+      </div>
+      <p style="margin:0;max-width:1280px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">List view earns its place with no JS because it is a different URL, not a different stylesheet: <code style="font-family:'JetBrains Mono',monospace">?view=list</code> renders denser markup with a 220px photograph, four spec columns and the price right-aligned — the shape a buyer comparing 118 cars on a laptop actually wants.</p>
+    </div>
+
+    <div id="2f" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#B45309;color:#fff;border-radius:4px;padding:3px 7px">2f</span>
+        <span style="font-size:15px;font-weight:600">Desktop · light · only 12 cars in stock</span>
+      </div>
+      <div style="width:1280px;height:900px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+        <dc-import name="Stock" mode="light" state="few" view="grid" hint-size="1280px,900px"></dc-import>
+      </div>
+      <p style="margin:0;max-width:1280px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">A twelve-car dealer gets no pagination, no filter chips, and a closing panel that turns a short list into a deliberate one — "that is all 12, you have seen the whole forecourt" — plus four proof figures where a 118-car dealer would have page links.</p>
+    </div>
+
+    <div id="2g" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0E5A6B;color:#fff;border-radius:4px;padding:3px 7px">2g</span>
+        <span style="font-size:15px;font-weight:600">Loading and error</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+        <div style="width:620px;height:640px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+          <dc-import name="Stock" mode="light" state="loading" facetsOpen="{{ false }}" hint-size="620px,640px"></dc-import>
+        </div>
+        <div style="width:620px;height:640px;overflow:auto;border-radius:10px;border:1px solid #2A2E36;box-shadow:0 1px 3px rgba(15,23,42,0.16)">
+          <dc-import name="Stock" mode="dark" state="error" facetsOpen="{{ false }}" hint-size="620px,640px"></dc-import>
+        </div>
+      </div>
+    </div>
+
+    <div id="2h" style="display:flex;flex-direction:column;gap:10px;max-width:1280px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0E5A6B;color:#fff;border-radius:4px;padding:3px 7px">2h</span>
+        <span style="font-size:15px;font-weight:600">Implementation notes</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:20px">
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">Inherited from the vehicle detail page</h2>
+          <p style="margin:0 0 16px;font-size:13px;line-height:18px;color:#475569">Nothing new was invented for this page. Deltas only:</p>
+          <dl style="margin:0">
+            <sc-for list="{{ inherited }}" as="i" hint-placeholder-count="7">
+              <div style="display:grid;grid-template-columns:minmax(120px,1fr) minmax(180px,1.7fr);gap:12px;padding:10px 0;border-bottom:1px solid #E2E8F0;align-items:baseline">
+                <dt style="font-size:14px;line-height:20px;font-weight:600">{{ i.name }}</dt>
+                <dd style="margin:0;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty">{{ i.value }}</dd>
+              </div>
+            </sc-for>
+          </dl>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">URLs — one shape, four uses</h2>
+          <p style="margin:0 0 16px;font-size:13px;line-height:18px;color:#475569">The heading is generated from the path and the applied facets, never a generic "Used cars".</p>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ urls }}" as="u" hint-placeholder-count="4">
+              <li style="padding-bottom:12px;border-bottom:1px solid #E2E8F0">
+                <p style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:18px;color:#0E5A6B;word-break:break-all">{{ u.path }}</p>
+                <p style="margin:4px 0 0;font-size:14px;line-height:20px;font-weight:600;text-wrap:pretty">{{ u.heading }}</p>
+                <p style="margin:2px 0 0;font-size:13px;line-height:18px;color:#64748B;text-wrap:pretty">{{ u.note }}</p>
+              </li>
+            </sc-for>
+          </ul>
+        </div>
+
+        <div style="background:#0F172A;color:#fff;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600;color:#fff">Card anatomy and density</h2>
+          <p style="margin:0 0 16px;font-size:13px;line-height:18px;color:#94A3B8">One card, two densities, both driven by the grid rather than a breakpoint.</p>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ cardNotes }}" as="c" hint-placeholder-count="7">
+              <li style="display:grid;grid-template-columns:minmax(110px,1fr) minmax(170px,1.6fr);gap:12px;padding-bottom:12px;border-bottom:1px solid #2A2E36">
+                <span style="font-size:14px;line-height:20px;font-weight:600">{{ c.name }}</span>
+                <span style="font-size:13px;line-height:19px;color:#94A3B8;text-wrap:pretty">{{ c.value }}</span>
+              </li>
+            </sc-for>
+          </ul>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">Zero-JS mechanics, and what JS would buy</h2>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px">
+            <sc-for list="{{ jsNotes }}" as="j" hint-placeholder-count="6">
+              <li>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span aria-hidden="true" style="color:{{ j.dot }};font-weight:700">{{ j.icon }}</span>
+                  <span style="font-size:14px;line-height:20px;font-weight:600">{{ j.name }}</span>
+                  <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:12px;color:#64748B">{{ j.verdict }}</span>
+                </div>
+                <p style="margin:4px 0 0 22px;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty">{{ j.detail }}</p>
+              </li>
+            </sc-for>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      inherited: [
+        { name: "Masthead", value: "Identical: 60px sticky utility bar plus a non-sticky horizontally scrolling nav. The active nav item gains a 2px brand rule under it here." },
+        { name: "h1", value: "clamp(26, 3.1cqw, 44) / 1.06 / 600 — same slot the vehicle name uses, so the two pages feel like one site." },
+        { name: "Card price", value: "26px / 700 / -0.025em in grid, 24px in list. The detail page keeps the clamp up to 76px; a list must never shout as loud as the car's own page." },
+        { name: "Card ground", value: "surface-1 with a hairline border on the surface-2 page plane. Hover moves the border to brand-600 — no lift, no shadow." },
+        { name: "Badges", value: "Max two, stacked top-left, 26px, radius 4. accent-500 for reduced, brand-600 for just arrived, brand-50 for low mileage, surface-1 for reserved. Each carries an icon and a label." },
+        { name: "Sections", value: "Same weighting logic: facets and cards are furniture on the page plane, the zero-result alert form takes the full dark plane, the 12-car closer takes the brand-50 well." },
+        { name: "Spacing", value: "Same 4px scale, clamp(16, 3cqw, 32) gutter, 1280px cap. Grid gap clamp(12–16), column gap clamp(16–32)." }
+      ],
+      urls: [
+        { path: "/used-cars", heading: "Used cars for sale in Milton Keynes", note: "No make facet applied; model facet is not rendered at all." },
+        { path: "/used-cars/tesla", heading: "Used Tesla for sale in Milton Keynes", note: "Model facet appears, listing only Teslas we hold or have held." },
+        { path: "/used-cars/tesla/model-x", heading: "Used Tesla Model X for sale in Milton Keynes", note: "Canonical, indexable. Chips show Tesla and Model X." },
+        { path: "/used-cars/tesla/model-x?colour=black&price_max=50000&sort=price_asc&view=list&page=2", heading: "Used black Tesla Model X for sale in Milton Keynes", note: "Filtered views carry noindex, follow; every chip removes exactly one query key." }
+      ],
+      cardNotes: [
+        { name: "Photograph", value: "4/3, aspect-ratio reserved, the only element allowed to be full-width on the card. First eight cards eager, the rest lazy." },
+        { name: "Title", value: "17/22/600 with the year inline — one line at 290px, two at 250px, and the derivative sits beneath in 14px muted." },
+        { name: "Specs", value: "Mileage · fuel · gearbox as a wrapping 13px row. Year lives in the title, so it is never repeated." },
+        { name: "Price", value: "26px bottom-left, monthly payment beneath in 13px subtle, distance bottom-right. The eye lands photo → price → distance." },
+        { name: "Shortlist", value: "44px heart, top-right of the photo, a real link to /shortlist/add?v=… that 303-redirects back. No JS, no localStorage." },
+        { name: "Roomy density", value: "minmax(290px, 1fr) — 3 across at 1280, 2 at 768, 1 at 375. The default, and what a 12-car dealer always gets." },
+        { name: "Scannable density", value: "minmax(250px, 1fr) — 4 across at 1280. Server picks it above ~60 cars, or the buyer picks list view." }
+      ],
+      jsNotes: [
+        { icon: "✓", dot: "#0CA30C", name: "Mobile filter panel", verdict: "no JS needed", detail: "One outer <details> with nested per-facet <details>. In production a single media query forces the panel open above 900px and hides the summary, so desktop shows a sidebar and mobile a collapsed panel from identical markup." },
+        { icon: "✓", dot: "#0CA30C", name: "Facets, sort, paging, view toggle", verdict: "no JS needed", detail: "All plain links that change query keys. Each response is cacheable at the CDN, which is why this page can hit LCP under 2s on 4G." },
+        { icon: "✓", dot: "#0CA30C", name: "Disabled options", verdict: "no JS needed", detail: "Counts come from the same aggregation as the results. Zero-count options render greyed with aria-disabled and pointer-events:none — present, explained, and never reordered." },
+        { icon: "!", dot: "#FAB219", name: "Shortlist counter in the masthead", verdict: "1KB, worth it later", detail: "Server-side needs a session cookie and busts the CDN cache on every stock page. Ship the link-based shortlist first; add the counter as a cookie-read at the edge, not client JS." },
+        { icon: "!", dot: "#FAB219", name: "Distance from postcode", verdict: "server round trip", detail: "The postcode form is a GET that re-renders with a distance on each card. A live geolocation prompt would need JS and permission, for a number most buyers can work out from a town name." },
+        { icon: "✕", dot: "#D03B3B", name: "Price slider, infinite scroll, instant filtering", verdict: "not shipping", detail: "Two number inputs beat a slider without JS and are more precise with it. Infinite scroll costs pagination, shareable URLs and Google's crawl of every car." }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

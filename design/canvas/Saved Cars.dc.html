@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #E9EDF2; font-family: Inter, system-ui, sans-serif; color: #0F172A; }
+  a { color: #0E5A6B; }
+  a:hover { color: #0B4553; }
+</style>
+</helmet>
+
+<section style="padding:48px clamp(16px,3vw,56px) 96px;display:flex;flex-direction:column;gap:40px">
+  <header style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;max-width:1100px">
+    <div>
+      <p style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.08em;color:#64748B">FORECOURT · PUBLIC DEALER SITE</p>
+      <h1 style="margin:8px 0 0;font-size:40px;line-height:1.04;letter-spacing:-0.028em;font-weight:600">Saved cars</h1>
+      <p style="margin:10px 0 0;font-size:16px;line-height:24px;color:#475569;max-width:76ch;text-wrap:pretty">Anonymous by default, a comparison tool rather than a bookmarks folder. Saving is a form POST, comparing is a URL, and a sold car keeps its place on the list with the closest live alternative attached. Scroll inside each frame.</p>
+    </div>
+    <p style="margin:0;font-size:13px;line-height:18px;color:#64748B;font-family:'JetBrains Mono',monospace">turn 5 · 5a–5g</p>
+  </header>
+
+  <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+    <div id="5a" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">5a</span>
+        <span style="font-size:15px;font-weight:600">Mobile · light · 3 saved</span>
+      </div>
+      <div style="width:375px;height:820px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+        <dc-import name="Saved" mode="light" state="list" sticky="{{ true }}" hint-size="375px,820px"></dc-import>
+      </div>
+      <p style="margin:0;width:375px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">Each row carries the six figures a buyer actually compares — price, monthly payment, year, mileage, MOT expiry, declared marks — so the list is already half a comparison before you press the button.</p>
+    </div>
+
+    <div id="5b" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">5b</span>
+        <span style="font-size:15px;font-weight:600">Mobile · dark · comparison</span>
+      </div>
+      <div style="width:375px;height:820px;overflow:auto;border-radius:10px;border:1px solid #2A2E36;box-shadow:0 1px 3px rgba(15,23,42,0.16)">
+        <dc-import name="Saved" mode="dark" state="compare" sticky="{{ true }}" hint-size="375px,820px"></dc-import>
+      </div>
+      <p style="margin:0;width:375px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">On a phone the table scrolls sideways with the row labels pinned by <code style="font-family:'JetBrains Mono',monospace">position:sticky</code>. Three columns is the cap — a fourth makes every figure too narrow to read.</p>
+    </div>
+
+    <div id="5c" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#B45309;color:#fff;border-radius:4px;padding:3px 7px">5c</span>
+        <span style="font-size:15px;font-weight:600">Mobile · light · one has sold</span>
+      </div>
+      <div style="width:375px;height:820px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+        <dc-import name="Saved" mode="light" state="sold" sticky="{{ true }}" hint-size="375px,820px"></dc-import>
+      </div>
+      <p style="margin:0;width:375px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">The sold car keeps its figures, drops to 45% photo opacity and ink-subtle titling, loses its checkbox and its Remove button, and gains a named alternative with the three reasons it is close — price, mileage, shape.</p>
+    </div>
+
+    <div id="5d" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">5d</span>
+        <span style="font-size:15px;font-weight:600">Desktop · light · list</span>
+      </div>
+      <div style="width:1280px;height:900px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+        <dc-import name="Saved" mode="light" state="list" hint-size="1280px,900px"></dc-import>
+      </div>
+    </div>
+
+    <div id="5e" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">5e</span>
+        <span style="font-size:15px;font-weight:600">Desktop · dark · comparison, with a sold column</span>
+      </div>
+      <div style="width:1280px;height:900px;overflow:auto;border-radius:10px;border:1px solid #2A2E36;box-shadow:0 1px 3px rgba(15,23,42,0.16)">
+        <dc-import name="Saved" mode="dark" state="compare-sold" hint-size="1280px,900px"></dc-import>
+      </div>
+    </div>
+
+    <div id="5f" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#B45309;color:#fff;border-radius:4px;padding:3px 7px">5f</span>
+        <span style="font-size:15px;font-weight:600">Empty state · light and dark</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+        <div style="width:640px;height:720px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+          <dc-import name="Saved" mode="light" state="empty" hint-size="640px,720px"></dc-import>
+        </div>
+        <div style="width:640px;height:720px;overflow:auto;border-radius:10px;border:1px solid #2A2E36;box-shadow:0 1px 3px rgba(15,23,42,0.16)">
+          <dc-import name="Saved" mode="dark" state="empty" hint-size="640px,720px"></dc-import>
+        </div>
+      </div>
+      <p style="margin:0;max-width:1280px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">The empty state teaches the mechanism ("tap the heart"), states the payoff ("save two or three and this page lays them side by side"), and gives six real entry points with live counts. The saved-searches panel stays visible, so a buyer with nothing saved can still leave with a watched search — which is the lead the dealer actually wants.</p>
+    </div>
+
+    <div id="5g" style="display:flex;flex-direction:column;gap:10px;max-width:1280px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0E5A6B;color:#fff;border-radius:4px;padding:3px 7px">5g</span>
+        <span style="font-size:15px;font-weight:600">Implementation notes</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:20px">
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">How it works with no JavaScript</h2>
+          <dl style="margin:0">
+            <sc-for list="{{ mechanics }}" as="m" hint-placeholder-count="6">
+              <div style="display:grid;grid-template-columns:minmax(110px,1fr) minmax(180px,1.9fr);gap:12px;padding:10px 0;border-bottom:1px solid #E2E8F0;align-items:baseline">
+                <dt style="font-size:14px;line-height:20px;font-weight:600">{{ m.name }}</dt>
+                <dd style="margin:0;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty">{{ m.value }}</dd>
+              </div>
+            </sc-for>
+          </dl>
+        </div>
+
+        <div style="background:#0F172A;color:#fff;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600;color:#fff">Identification without hostage-taking</h2>
+          <p style="margin:0 0 16px;font-size:13px;line-height:18px;color:#94A3B8">The dealer's CRM wants a name against three saved cars. The buyer owes us nothing. Both are true at once.</p>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ identity }}" as="i" hint-placeholder-count="6">
+              <li style="display:grid;grid-template-columns:minmax(100px,1fr) minmax(170px,1.7fr);gap:12px;padding-bottom:12px;border-bottom:1px solid #2A2E36">
+                <span style="font-size:14px;line-height:20px;font-weight:600">{{ i.name }}</span>
+                <span style="font-size:13px;line-height:19px;color:#94A3B8;text-wrap:pretty">{{ i.value }}</span>
+              </li>
+            </sc-for>
+          </ul>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">The sold car, and the comparison table</h2>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ rules }}" as="r" hint-placeholder-count="7">
+              <li style="display:flex;gap:10px;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty"><span aria-hidden="true" style="color:#0CA30C;font-weight:700;flex:none">✓</span>{{ r }}</li>
+            </sc-for>
+          </ul>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">What JavaScript would buy</h2>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px">
+            <sc-for list="{{ jsNotes }}" as="j" hint-placeholder-count="5">
+              <li>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span aria-hidden="true" style="color:{{ j.dot }};font-weight:700">{{ j.icon }}</span>
+                  <span style="font-size:14px;line-height:20px;font-weight:600">{{ j.name }}</span>
+                  <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:12px;color:#64748B">{{ j.verdict }}</span>
+                </div>
+                <p style="margin:4px 0 0 22px;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty">{{ j.detail }}</p>
+              </li>
+            </sc-for>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      mechanics: [
+        { name: "Saving", value: "The heart on a card is a submit button inside a tiny form posting to /saved/add, which 303-redirects back to the page it came from with the heart filled. No JavaScript, no localStorage, and it works on the stock list, the vehicle page and here." },
+        { name: "Identity", value: "A first-party cookie holding an opaque list id, 90 days. No account, no password, no email required. Give an email and the same list id is attached to it server-side, so the list survives a cleared cookie." },
+        { name: "Comparing", value: "Checkboxes in one form; submit produces /saved/compare?v=1,2,3 — a shareable, bookmarkable URL. Two or three only; the button label states how many are ticked because the server knows." },
+        { name: "Sticky labels", value: "The comparison is a real <table> with scope=col and scope=row. The label column uses position:sticky, so it stays put during horizontal scroll with no script and reads correctly in a screen reader." },
+        { name: "Saved searches", value: "Each is a stored query plus a frequency and a consent record. The frequency select and the consent tick post together; nothing is saved until the button is pressed." },
+        { name: "Removing", value: "A submit button, not a link — removal must not be reachable by a crawler or a prefetch. Every removal is reversible from the flash message on the next page." }
+      ],
+      identity: [
+        { name: "Never blocked", value: "Nothing on this page is behind identification. The list, the comparison and the searches all work with no email, forever." },
+        { name: "Asked once", value: "One quiet panel at the top, phrased as a benefit to the buyer — keeping the list if they clear cookies — not as a signup." },
+        { name: "Two consents, separate", value: "Emailing the list is the transactional action of the button. Being told about price drops is a separate, unticked box with its own wording." },
+        { name: "Never pre-ticked", value: "Both boxes ship unticked, and the wording names the channel, the purpose and the unsubscribe. Consent is stored as a record with the wording version, not a boolean." },
+        { name: "What the CRM sees", value: "Saved cars, saved searches and their timestamps land against the lead as soon as an email exists. Before that the dealer sees an anonymous session with a count — enough to know demand, not enough to ring anyone." },
+        { name: "Re-checked at send", value: "Consent is verified at send time, not at schedule time, so a withdrawal between the two stops the email." }
+      ],
+      rules: [
+        "A sold car is never removed. It keeps its price, mileage, MOT and marks, because those figures are what tell us what the buyer wanted.",
+        "It is marked in three ways at once — a Sold badge, 45% photo opacity, and ink-subtle titling — so colour is never carrying the meaning alone.",
+        "It loses its comparison checkbox and its Remove button, and its enquiry CTA becomes \"See the closest live car\".",
+        "The alternative is named with its reasons — £1,050 less, 2,400 fewer miles, same shape — not offered as a generic \"similar cars\" rail.",
+        "The comparison table highlights the best figure per row with a tick and a bold value, never with colour alone; a sold column is greyed but its figures stay legible.",
+        "Rows are ordered by what a buyer decides on: price, monthly payment, APR, year, mileage, MOT, marks, battery, provenance.",
+        "Any figure of cost of credit in the table — the monthly payments and the APR row — comes from the finance component, so the representative example travels with it."
+      ],
+      jsNotes: [
+        { icon: "✓", dot: "#0CA30C", name: "Saving and un-saving", verdict: "no JS needed", detail: "Form POST plus redirect. With JS it becomes a fetch and the page does not reload — worth about 1KB later, and the no-JS path must keep working underneath it." },
+        { icon: "✓", dot: "#0CA30C", name: "Comparison", verdict: "no JS needed", detail: "A server-rendered table at its own URL. This is better than a client-side compare drawer: it is shareable, it prints, and it survives a refresh." },
+        { icon: "!", dot: "#FAB219", name: "Saved-cars counter in the masthead", verdict: "cookie read at the edge", detail: "Rendering a count on every page defeats CDN caching. Read the cookie at the edge and stamp the number in, rather than shipping client JS." },
+        { icon: "!", dot: "#FAB219", name: "Reordering the list by drag", verdict: "not worth it", detail: "Three to six items sorted by save date is enough. A sort select would be a GET link if anyone ever asked for it." },
+        { icon: "✕", dot: "#D03B3B", name: "Live price-drop notifications in the page", verdict: "email only", detail: "Polling for price changes on an anonymous session costs requests and tells the buyer nothing they will not see on their next visit. The alert email is the honest version." }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

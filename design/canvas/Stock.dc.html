@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  summary::-webkit-details-marker { display: none; }
+  summary { list-style: none; cursor: pointer; }
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }
+</style>
+</helmet>
+<div style="{{ theme }}">
+<header>
+  <div style="position:sticky;top:0;z-index:30;background:var(--s1,#fff);border-bottom:1px solid var(--bd,#E2E8F0)">
+    <div style="max-width:1280px;margin:0 auto;padding:8px clamp(16px,3cqw,32px);display:flex;align-items:center;gap:12px">
+      <a href="#" style="display:flex;flex-direction:column;justify-content:center;min-height:44px;min-width:0;flex:1 1 auto" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">
+        <span style="font-size:clamp(15px,1.7cqw,21px);font-weight:700;letter-spacing:-0.022em;color:var(--ink,#0F172A);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Kennington Car Sales</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;line-height:15px;font-weight:500;color:var(--sub,#64748B);white-space:nowrap">
+          <span aria-hidden="true" style="width:7px;height:7px;border-radius:999px;background:var(--good,#0CA30C);flex:none"></span>Open until 6pm · Bletchley
+        </span>
+      </a>
+      <a href="tel:01908123456" style="flex:none;display:flex;align-items:center;gap:6px;min-height:44px;padding:0 11px;border-radius:6px;background:var(--b600,#0E5A6B);color:#FFFFFF;font-size:15px;font-weight:600;white-space:nowrap;transition:background 100ms cubic-bezier(0.2,0,0,1)" style-hover="background:var(--b700,#0B4553);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">
+        <span aria-hidden="true" style="font-size:15px">✆</span>01908 123 456
+      </a>
+    </div>
+  </div>
+  <nav aria-label="Main" style="background:var(--s1,#fff);border-bottom:1px solid var(--bd,#E2E8F0)">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px);display:flex;gap:clamp(14px,1.6cqw,24px);overflow-x:auto;scrollbar-width:none">
+      <sc-for list="{{ nav }}" as="item" hint-placeholder-count="5">
+        <a href="#" style="display:flex;align-items:center;min-height:40px;font-size:14px;font-weight:500;white-space:nowrap;color:{{ item.colour }};border-bottom:2px solid {{ item.rule }};transition:color 100ms cubic-bezier(0.2,0,0,1)" style-hover="color:var(--link,#0E5A6B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ item.label }}</a>
+      </sc-for>
+    </div>
+  </nav>
+</header>
+
+<main style="background:var(--s2,#F8FAFC);color:var(--ink,#0F172A)">
+  <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px)">
+    <nav aria-label="Breadcrumb" style="display:flex;gap:8px;align-items:center;padding:12px 0;font-size:13px;line-height:18px;color:var(--sub,#64748B)">
+      <a href="#" style="min-height:24px;display:flex;align-items:center" style-hover="color:var(--link,#0E5A6B)">Cars in stock</a><span aria-hidden="true">/</span>
+      <a href="#" style="min-height:24px;display:flex;align-items:center" style-hover="color:var(--link,#0E5A6B)">Tesla</a><span aria-hidden="true">/</span>
+      <span style="color:var(--mut,#475569)">Model X</span>
+    </nav>
+  </div>
+
+  <!-- HEADING + SEARCH -->
+  <section style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px) clamp(16px,2cqw,24px);display:flex;flex-wrap:wrap;gap:clamp(16px,2.5cqw,40px);align-items:flex-end">
+    <div style="flex:1 1 min(100%,520px)">
+      <h1 style="margin:0;font-size:clamp(26px,3.1cqw,44px);line-height:1.06;letter-spacing:-0.022em;font-weight:600;text-wrap:balance">{{ heading }}</h1>
+      <p style="margin:10px 0 0;font-size:clamp(15px,1.4cqw,17px);line-height:1.45;color:var(--mut,#475569);max-width:62ch;text-wrap:pretty">{{ subheading }}</p>
+    </div>
+    <form role="search" style="flex:1 1 min(100%,320px);display:flex;gap:8px">
+      <label style="flex:1 1 auto;display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Search stock or type a reg</span>
+        <input type="search" name="q" placeholder="Model X, 7 seats, WN22 HNL" style="min-height:48px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);padding:0 14px;font-size:16px" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px;border-color:var(--link,#0E5A6B)" />
+      </label>
+      <button type="submit" style="align-self:flex-end;min-height:48px;padding:0 18px;border:none;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:background 100ms cubic-bezier(0.2,0,0,1)" style-hover="background:var(--b700,#0B4553)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Search</button>
+    </form>
+  </section>
+
+  <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px) clamp(28px,3.5cqw,56px);display:flex;flex-wrap:wrap;gap:clamp(16px,2.5cqw,32px);align-items:flex-start">
+
+    <!-- FACETS -->
+    <details open="{{ facetsOpen }}" style="flex:1 1 min(100%,268px);background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;overflow:hidden">
+      <summary style="display:flex;align-items:center;gap:10px;min-height:52px;padding:0 16px;background:var(--s1,#fff);border-bottom:1px solid var(--bd,#E2E8F0)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:-2px">
+        <span style="font-size:16px;font-weight:600">Filter</span>
+        <span style="font-size:13px;font-weight:600;color:#fff;background:var(--b600,#0E5A6B);border-radius:999px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;padding:0 7px">{{ appliedCount }}</span>
+        <span aria-hidden="true" style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--sub,#64748B)">{{ facetHint }}<span style="font-size:12px">▾</span></span>
+      </summary>
+      <div>
+        <div style="padding:14px 16px;border-bottom:1px solid var(--bd,#E2E8F0);display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+          <sc-for list="{{ chips }}" as="chip" hint-placeholder-count="4">
+            <a href="#" style="flex:none;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:0 8px 0 10px;border-radius:4px;background:var(--well,#E6F4F1);border:1px solid var(--chipBd,#CFE6E1);font-size:13px;font-weight:600;color:var(--ink,#0F172A)" style-hover="text-decoration:none;border-color:var(--link,#0E5A6B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ chip }}<span aria-hidden="true" style="font-size:14px;color:var(--mut,#475569)">✕</span></a>
+          </sc-for>
+          <a href="#" style="display:inline-flex;align-items:center;min-height:32px;padding:0 4px;font-size:13px;font-weight:600;color:var(--link,#0E5A6B);text-decoration:underline" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Clear all</a>
+        </div>
+
+        <div style="padding:14px 16px;border-bottom:1px solid var(--bd,#E2E8F0)">
+          <p style="margin:0 0 8px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Price</p>
+          <div style="display:flex;gap:8px">
+            <label style="flex:1;display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:12px;color:var(--sub,#64748B)">From</span>
+              <input type="text" inputmode="numeric" value="£20,000" style="min-height:44px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);padding:0 10px;font-family:'JetBrains Mono',monospace;font-size:14px" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px" />
+            </label>
+            <label style="flex:1;display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:12px;color:var(--sub,#64748B)">To</span>
+              <input type="text" inputmode="numeric" value="£50,000" style="min-height:44px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);padding:0 10px;font-family:'JetBrains Mono',monospace;font-size:14px" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px" />
+            </label>
+          </div>
+        </div>
+
+        <sc-for list="{{ facets }}" as="facet" hint-placeholder-count="5">
+          <details open="{{ facet.open }}" style="border-bottom:1px solid var(--bd,#E2E8F0)">
+            <summary style="display:flex;align-items:center;gap:8px;min-height:48px;padding:0 16px" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:-2px">
+              <span style="font-size:15px;font-weight:600">{{ facet.name }}</span>
+              <span style="font-size:13px;color:var(--sub,#64748B)">{{ facet.summary }}</span>
+              <span aria-hidden="true" style="margin-left:auto;color:var(--sub,#64748B);font-size:12px">▾</span>
+            </summary>
+            <ul style="list-style:none;margin:0;padding:0 8px 10px">
+              <sc-for list="{{ facet.options }}" as="opt" hint-placeholder-count="5">
+                <li>
+                  <a href="#" aria-disabled="{{ opt.disabled }}" style="display:flex;align-items:center;gap:10px;min-height:44px;padding:0 8px;border-radius:4px;color:{{ opt.colour }};cursor:{{ opt.cursor }};pointer-events:{{ opt.events }};transition:background 100ms cubic-bezier(0.2,0,0,1)" style-hover="background:var(--s3,#F1F5F9);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:-2px">
+                    <span aria-hidden="true" style="width:18px;height:18px;border-radius:4px;border:1.5px solid {{ opt.boxBd }};background:{{ opt.boxBg }};color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">{{ opt.tick }}</span>
+                    <span style="font-size:14px;line-height:20px;font-weight:{{ opt.weight }}">{{ opt.label }}</span>
+                    <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:12px;color:{{ opt.countColour }};font-variant-numeric:tabular-nums">{{ opt.count }}</span>
+                  </a>
+                </li>
+              </sc-for>
+            </ul>
+          </details>
+        </sc-for>
+
+        <p style="margin:0;padding:12px 16px;font-size:12px;line-height:17px;color:var(--sub,#64748B);text-wrap:pretty">Greyed options are still listed but have nothing matching your current filters. Clear a filter above to bring them back.</p>
+      </div>
+    </details>
+
+    <!-- RESULTS -->
+    <div style="flex:1 1 min(100%,600px);min-width:0;display:flex;flex-direction:column;gap:clamp(12px,1.5cqw,20px)">
+
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+        <p style="margin:0;font-size:15px;line-height:22px;font-weight:600">{{ resultLine }}</p>
+        <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+          <div style="display:flex;border:1px solid var(--bd,#E2E8F0);border-radius:6px;overflow:hidden;background:var(--s1,#fff)">
+            <a href="?view=grid" aria-current="{{ gridCurrent }}" style="display:flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;font-size:14px;font-weight:600;background:{{ gridBg }};color:{{ gridInk }}" style-hover="text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:-2px"><span aria-hidden="true">▦</span>Grid</a>
+            <a href="?view=list" aria-current="{{ listCurrent }}" style="display:flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;font-size:14px;font-weight:600;border-left:1px solid var(--bd,#E2E8F0);background:{{ listBg }};color:{{ listInk }}" style-hover="text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:-2px"><span aria-hidden="true">☰</span>List</a>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px">
+        <span style="flex:none;display:inline-flex;align-items:center;min-height:38px;font-size:12px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B);padding-right:4px">Sort</span>
+        <sc-for list="{{ sorts }}" as="s" hint-placeholder-count="6">
+          <a href="#" aria-current="{{ s.current }}" style="flex:none;display:inline-flex;align-items:center;min-height:38px;padding:0 12px;border-radius:999px;border:1px solid {{ s.bd }};background:{{ s.bg }};color:{{ s.ink }};font-size:14px;font-weight:600;white-space:nowrap" style-hover="text-decoration:none;border-color:var(--link,#0E5A6B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ s.label }}</a>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+        <div>
+          <div role="status" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:6px;background:var(--well,#E6F4F1);margin-bottom:12px">
+            <span aria-hidden="true" style="width:10px;height:10px;border-radius:999px;background:var(--b600,#0E5A6B);flex:none"></span>
+            <span style="font-size:14px;line-height:20px;font-weight:600">Loading 7 cars…</span>
+          </div>
+          <ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:clamp(12px,1.5cqw,16px)">
+            <sc-for list="{{ skeletons }}" as="sk" hint-placeholder-count="3">
+              <li aria-hidden="true" style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;overflow:hidden">
+                <div style="aspect-ratio:4/3;background:var(--s3,#F1F5F9)"></div>
+                <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+                  <span style="display:block;height:14px;width:78%;border-radius:4px;background:var(--s3,#F1F5F9)"></span>
+                  <span style="display:block;height:14px;width:52%;border-radius:4px;background:var(--s3,#F1F5F9)"></span>
+                  <span style="display:block;height:28px;width:40%;border-radius:4px;background:var(--s3,#F1F5F9)"></span>
+                  <span style="display:block;height:40px;border-radius:6px;background:var(--s3,#F1F5F9)"></span>
+                </div>
+              </li>
+            </sc-for>
+          </ul>
+          <p style="margin:12px 0 0;font-size:12px;line-height:17px;color:var(--sub,#64748B);text-wrap:pretty">The page itself is server-rendered, so this only shows while photographs stream in on a slow connection. Every box is the exact size of the card it becomes — nothing moves when the photo lands.</p>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-top:3px solid var(--critical,#D03B3B);border-radius:10px;padding:clamp(20px,2.5cqw,32px)">
+          <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px">
+            <span aria-hidden="true" style="color:var(--critical,#D03B3B);font-weight:700">✕</span>
+            <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--mut,#475569)">Stock could not be loaded</span>
+          </div>
+          <h2 style="margin:0;font-size:clamp(20px,2.1cqw,28px);line-height:1.2;letter-spacing:-0.015em;font-weight:600;text-wrap:pretty">We could not load the cars just now.</h2>
+          <p style="margin:10px 0 0;font-size:15px;line-height:22px;color:var(--mut,#475569);max-width:60ch;text-wrap:pretty">Our stock feed timed out — the cars are all still here, our website just cannot see them for a moment. Try again in a few seconds, or ring the forecourt and we will tell you exactly what is on the pitch today.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:18px">
+            <a href="#" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:16px;font-weight:600" style-hover="background:var(--b700,#0B4553);text-decoration:none">Try again</a>
+            <a href="tel:01908123456" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:16px;font-weight:600" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none">Ring 01908 123 456</a>
+          </div>
+          <p style="margin:16px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--sub,#64748B)">ref STOCK-504 · 3 Aug 2026, 14:07</p>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isZero }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:clamp(12px,1.5cqw,20px)">
+          <div style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:clamp(20px,2.5cqw,32px)">
+            <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px">
+              <span aria-hidden="true" style="color:var(--serious,#EC835A);font-weight:700">◌</span>
+              <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--mut,#475569)">Nothing matches all four filters</span>
+            </div>
+            <h2 style="margin:0;font-size:clamp(22px,2.6cqw,34px);line-height:1.12;letter-spacing:-0.02em;font-weight:600;text-wrap:balance">We have no black Model X under £50,000 on the forecourt today.</h2>
+            <p style="margin:12px 0 0;font-size:15px;line-height:22px;color:var(--mut,#475569);max-width:62ch;text-wrap:pretty">We usually have two or three Model X in stock and they sell in about 26 days, so this changes weekly. Here is what we do have, and how to be first to know.</p>
+          </div>
+
+          <div style="background:var(--well,#E6F4F1);border-radius:10px;padding:clamp(16px,2cqw,24px)">
+            <p style="margin:0 0 4px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--accentInk,#B45309)">We widened your search</p>
+            <h3 style="margin:0;font-size:clamp(17px,1.8cqw,22px);line-height:1.25;font-weight:600;text-wrap:pretty">Here are 4 Model X we have in any colour, still under £50,000.</h3>
+            <ul style="list-style:none;margin:14px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px">
+              <sc-for list="{{ widened }}" as="c" hint-placeholder-count="4">
+                <li style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;overflow:hidden">
+                  <a href="#" style="display:block" style-hover="text-decoration:none">
+                    <div aria-hidden="true" style="aspect-ratio:4/3;background-color:var(--s3,#F1F5F9);background-image:repeating-linear-gradient(135deg,transparent 0 14px,var(--stripe,rgba(15,23,42,0.05)) 14px 15px)"></div>
+                    <div style="padding:12px 14px 14px">
+                      <p style="margin:0;font-size:15px;line-height:21px;font-weight:600;text-wrap:pretty">{{ c.name }}</p>
+                      <p style="margin:4px 0 0;font-size:13px;line-height:18px;color:var(--sub,#64748B)">{{ c.meta }}</p>
+                      <p style="margin:8px 0 0;font-size:20px;line-height:24px;font-weight:700;letter-spacing:-0.02em">{{ c.price }}</p>
+                    </div>
+                  </a>
+                </li>
+              </sc-for>
+            </ul>
+          </div>
+
+          <form style="background:var(--plane,#16181D);color:var(--planeInk,#fff);border-radius:10px;padding:clamp(20px,2.5cqw,32px);display:flex;flex-wrap:wrap;gap:clamp(16px,2cqw,32px)">
+            <div style="flex:1 1 min(100%,280px)">
+              <h3 style="margin:0;font-size:clamp(19px,2cqw,26px);line-height:1.2;font-weight:600;text-wrap:balance">Tell me when a black Model X arrives</h3>
+              <p style="margin:10px 0 0;font-size:14px;line-height:20px;color:var(--planeMut,#94A3B8);max-width:46ch;text-wrap:pretty">We buy 30–40 cars a month. Give us an email and we will send you one message the day a car matching these filters lands on the pitch — usually before it is photographed.</p>
+            </div>
+            <div style="flex:1 1 min(100%,300px);display:flex;flex-direction:column;gap:12px">
+              <label style="display:flex;flex-direction:column;gap:6px">
+                <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--planeMut,#94A3B8)">Your email</span>
+                <input type="email" placeholder="jane@example.co.uk" style="min-height:48px;border-radius:6px;border:1px solid var(--planeBd,#2A2E36);background:var(--planeWell,#1D2027);color:var(--planeInk,#fff);padding:0 14px;font-size:16px" style-focus="outline:2px solid var(--planeLink,#5EC7DC);outline-offset:2px;border-color:var(--planeLink,#5EC7DC)" />
+              </label>
+              <label style="display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--planeBd,#2A2E36);border-radius:6px;min-height:44px">
+                <input type="checkbox" style="width:20px;height:20px;margin:0;flex:none;accent-color:#0E5A6B" style-focus="outline:2px solid var(--planeLink,#5EC7DC);outline-offset:2px" />
+                <span style="font-size:13px;line-height:19px;color:var(--planeMut,#94A3B8);text-wrap:pretty">Yes, email me when a car matching this search arrives at Kennington Car Sales. Stock alerts only — no offers, no newsletter. One click unsubscribes, and every email has that link at the top.</span>
+              </label>
+              <button type="submit" style="min-height:52px;border:none;border-radius:6px;background:var(--accent,#F59E0B);color:#0F172A;font-size:16px;font-weight:600;cursor:pointer" style-hover="filter:brightness(0.94)" style-focus="outline:2px solid var(--planeLink,#5EC7DC);outline-offset:2px">Set up my alert</button>
+              <p style="margin:0;font-size:12px;line-height:16px;color:var(--planeMut,#94A3B8)">Or ring <a href="tel:01908123456" style="color:var(--planeLink,#5EC7DC);font-weight:600;text-decoration:underline">01908 123 456</a> and tell us what you are after — we will look for one at auction.</p>
+            </div>
+          </form>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showGrid }}" hint-placeholder-val="{{ true }}">
+        <ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,{{ cardMin }}),1fr));gap:clamp(12px,1.5cqw,16px)">
+          <sc-for list="{{ cars }}" as="car" hint-placeholder-count="6">
+            <li style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;transition:border-color 100ms cubic-bezier(0.2,0,0,1)" style-hover="border-color:var(--link,#0E5A6B)">
+              <div style="position:relative">
+                <div aria-hidden="true" style="aspect-ratio:4/3;background-color:var(--s3,#F1F5F9);background-image:repeating-linear-gradient(135deg,transparent 0 14px,var(--stripe,rgba(15,23,42,0.05)) 14px 15px);display:flex;align-items:flex-end;padding:10px">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--sub,#64748B)">{{ car.shot }}</span>
+                </div>
+                <div style="position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+                  <sc-for list="{{ car.badges }}" as="b" hint-placeholder-count="1">
+                    <span style="display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:4px;background:{{ b.bg }};color:{{ b.ink }};font-size:12px;font-weight:600;letter-spacing:0.01em"><span aria-hidden="true">{{ b.icon }}</span>{{ b.label }}</span>
+                  </sc-for>
+                </div>
+                <a href="#" title="Save to shortlist" style="position:absolute;top:8px;right:8px;width:44px;height:44px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--mut,#475569)" style-hover="border-color:var(--link,#0E5A6B);color:var(--link,#0E5A6B);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px"><span aria-hidden="true">♡</span><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Save to shortlist</span></a>
+              </div>
+              <div style="padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;flex:1">
+                <div>
+                  <h3 style="margin:0;font-size:17px;line-height:22px;font-weight:600;letter-spacing:-0.01em;text-wrap:pretty"><a href="#" style-hover="color:var(--link,#0E5A6B)">{{ car.name }}</a></h3>
+                  <p style="margin:3px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty">{{ car.derivative }}</p>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px 14px">
+                  <sc-for list="{{ car.specs }}" as="s" hint-placeholder-count="4">
+                    <span style="font-size:13px;line-height:18px;color:var(--mut,#475569)">{{ s }}</span>
+                  </sc-for>
+                </div>
+                <div style="margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-top:4px">
+                  <div>
+                    <p style="margin:0;font-size:26px;line-height:30px;font-weight:700;letter-spacing:-0.025em">{{ car.price }}</p>
+                    <p style="margin:2px 0 0;font-size:13px;line-height:18px;color:var(--sub,#64748B)">{{ car.finance }}</p>
+                  </div>
+                  <span style="font-size:12px;line-height:16px;color:var(--sub,#64748B);text-align:right;white-space:nowrap">{{ car.distance }}</span>
+                </div>
+              </div>
+            </li>
+          </sc-for>
+        </ul>
+      </sc-if>
+
+      <sc-if value="{{ showList }}" hint-placeholder-val="{{ false }}">
+        <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ cars }}" as="car" hint-placeholder-count="6">
+            <li style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;overflow:hidden;display:flex;flex-wrap:wrap;transition:border-color 100ms cubic-bezier(0.2,0,0,1)" style-hover="border-color:var(--link,#0E5A6B)">
+              <div aria-hidden="true" style="flex:0 0 min(100%,220px);aspect-ratio:4/3;background-color:var(--s3,#F1F5F9);background-image:repeating-linear-gradient(135deg,transparent 0 14px,var(--stripe,rgba(15,23,42,0.05)) 14px 15px)"></div>
+              <div style="flex:1 1 min(100%,320px);padding:14px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+                <div style="flex:1 1 min(100%,220px)">
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:6px">
+                    <sc-for list="{{ car.badges }}" as="b" hint-placeholder-count="1">
+                      <span style="display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 8px;border-radius:4px;background:{{ b.bg }};color:{{ b.ink }};font-size:12px;font-weight:600"><span aria-hidden="true">{{ b.icon }}</span>{{ b.label }}</span>
+                    </sc-for>
+                  </div>
+                  <h3 style="margin:0;font-size:17px;line-height:22px;font-weight:600;letter-spacing:-0.01em"><a href="#" style-hover="color:var(--link,#0E5A6B)">{{ car.name }}</a></h3>
+                  <p style="margin:3px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569)">{{ car.derivative }}</p>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px 14px;padding-top:6px">
+                    <sc-for list="{{ car.specs }}" as="s" hint-placeholder-count="4">
+                      <span style="font-size:13px;line-height:18px;color:var(--mut,#475569)">{{ s }}</span>
+                    </sc-for>
+                    <span style="font-size:13px;line-height:18px;color:var(--sub,#64748B)">{{ car.distance }}</span>
+                  </div>
+                </div>
+                <div style="flex:0 0 auto;display:flex;align-items:center;gap:12px;margin-left:auto">
+                  <div style="text-align:right">
+                    <p style="margin:0;font-size:24px;line-height:28px;font-weight:700;letter-spacing:-0.025em">{{ car.price }}</p>
+                    <p style="margin:2px 0 0;font-size:13px;line-height:18px;color:var(--sub,#64748B)">{{ car.finance }}</p>
+                  </div>
+                  <a href="#" title="Save to shortlist" style="width:44px;height:44px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--mut,#475569);flex:none" style-hover="border-color:var(--link,#0E5A6B);color:var(--link,#0E5A6B);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px"><span aria-hidden="true">♡</span></a>
+                </div>
+              </div>
+            </li>
+          </sc-for>
+        </ul>
+      </sc-if>
+
+      <sc-if value="{{ isFew }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--well,#E6F4F1);border-radius:10px;padding:clamp(18px,2.2cqw,28px);display:flex;flex-wrap:wrap;gap:clamp(16px,2cqw,32px);align-items:center">
+          <div style="flex:1 1 min(100%,300px)">
+            <h2 style="margin:0;font-size:clamp(19px,2cqw,26px);line-height:1.2;font-weight:600;text-wrap:balance">That is all 12 — you have seen the whole forecourt.</h2>
+            <p style="margin:10px 0 0;font-size:15px;line-height:22px;color:var(--mut,#475569);max-width:56ch;text-wrap:pretty">We keep the pitch deliberately small: 12 cars we have driven, prepped and would put our own name to. Two more are in prep this week, and we will find you something specific at auction if none of these fit.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:16px">
+              <a href="#" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:16px;font-weight:600" style-hover="background:var(--b700,#0B4553);text-decoration:none">Tell us what you want</a>
+              <a href="#" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:16px;font-weight:600" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none">See the 2 in prep</a>
+            </div>
+          </div>
+          <dl style="flex:1 1 min(100%,240px);margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px">
+            <sc-for list="{{ fewStats }}" as="f" hint-placeholder-count="4">
+              <div style="background:var(--s1,#fff);border-radius:6px;padding:12px 14px">
+                <dd style="margin:0;font-size:26px;line-height:30px;font-weight:700;letter-spacing:-0.025em">{{ f.value }}</dd>
+                <dt style="font-size:13px;line-height:18px;color:var(--mut,#475569);padding-top:2px">{{ f.label }}</dt>
+              </div>
+            </sc-for>
+          </dl>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showPaging }}" hint-placeholder-val="{{ false }}">
+        <nav aria-label="Pagination" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-top:8px">
+          <span style="font-size:14px;line-height:20px;color:var(--mut,#475569);margin-right:auto">Showing 1–24 of 118</span>
+          <sc-for list="{{ pages }}" as="p" hint-placeholder-count="6">
+            <a href="#" aria-current="{{ p.current }}" style="display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:0 12px;border-radius:6px;border:1px solid {{ p.bd }};background:{{ p.bg }};color:{{ p.ink }};font-size:15px;font-weight:600;font-variant-numeric:tabular-nums" style-hover="text-decoration:none;border-color:var(--link,#0E5A6B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ p.label }}</a>
+          </sc-for>
+        </nav>
+      </sc-if>
+
+      <div style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;overflow:hidden;display:flex;flex-wrap:wrap;margin-top:8px">
+        <div aria-hidden="true" style="flex:1 1 min(100%,280px);aspect-ratio:16/9;background-color:var(--s3,#F1F5F9);background-image:repeating-linear-gradient(135deg,transparent 0 14px,var(--stripe,rgba(15,23,42,0.05)) 14px 15px);display:flex;align-items:center;justify-content:center">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--sub,#64748B)">static map · MK1 1AA</span>
+        </div>
+        <div style="flex:1 1 min(100%,300px);padding:clamp(16px,2cqw,24px)">
+          <h2 style="margin:0;font-size:clamp(18px,1.9cqw,24px);line-height:1.25;font-weight:600;text-wrap:pretty">Every car is on one site in Bletchley</h2>
+          <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty">Watling Street, Milton Keynes MK1 1AA — 4 minutes from the M1 J14, 12 minutes' walk from Bletchley station. Open Mon–Sat 9am–6pm, Sun 10am–4pm.</p>
+          <form style="display:flex;gap:8px;flex-wrap:wrap;padding-top:14px">
+            <label style="flex:1 1 160px;display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Your postcode</span>
+              <input type="text" name="postcode" placeholder="LU1 2AB" style="min-height:44px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);padding:0 12px;font-family:'JetBrains Mono',monospace;font-size:15px;text-transform:uppercase" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px" />
+            </label>
+            <button type="submit" style="align-self:flex-end;min-height:44px;padding:0 16px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);color:var(--link,#0E5A6B);font-size:15px;font-weight:600;cursor:pointer" style-hover="border-color:var(--link,#0E5A6B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Show distance</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer style="background:var(--s1,#fff);border-top:1px solid var(--bd,#E2E8F0);padding:24px 0 96px">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px);display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;font-size:12px;line-height:16px;color:var(--sub,#64748B)">
+      <p style="margin:0;max-width:70ch;text-wrap:pretty">Kennington Car Sales Ltd · Watling Street, Bletchley, Milton Keynes MK1 1AA · FRN 302947, a credit broker not a lender · Prices include VAT under the margin scheme where applicable.</p>
+      <p style="margin:0">Site by Forecourt</p>
+    </div>
+  </footer>
+</main>
+
+<sc-if value="{{ sticky }}" hint-placeholder-val="{{ false }}">
+  <div style="position:sticky;bottom:0;z-index:40;background:var(--s1,#fff);border-top:1px solid var(--bd,#E2E8F0);padding:10px 12px;display:flex;gap:8px;align-items:center;box-shadow:0 -1px 12px rgba(15,23,42,0.08)">
+    <a href="#" style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:15px;font-weight:600" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none"><span aria-hidden="true">⚟</span>Filter · {{ appliedCount }}</a>
+    <a href="#" style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:15px;font-weight:600" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none"><span aria-hidden="true">⇅</span>Sort</a>
+    <a href="tel:01908123456" style="flex:none;display:flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:15px;font-weight:600;gap:6px" style-hover="background:var(--b700,#0B4553);text-decoration:none"><span aria-hidden="true">✆</span>Call</a>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light' | 'dark'&quot;},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;results&quot;,&quot;few&quot;,&quot;zero&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;results&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;States&quot;},&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;grid&quot;,&quot;list&quot;],&quot;default&quot;:&quot;grid&quot;,&quot;tsType&quot;:&quot;'grid' | 'list'&quot;},&quot;dense&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;States&quot;},&quot;facetsOpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;States&quot;},&quot;sticky&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;States&quot;}}">
+class Component extends DCLogic {
+  tokens(dark) {
+    const light = {
+      "--s1": "#FFFFFF", "--s2": "#F8FAFC", "--s3": "#F1F5F9", "--bd": "#E2E8F0",
+      "--ink": "#0F172A", "--mut": "#475569", "--sub": "#64748B",
+      "--b600": "#0E5A6B", "--b700": "#0B4553", "--b300": "#5EC7DC",
+      "--link": "#0E5A6B", "--well": "#E6F4F1", "--chipBd": "#C9E2DC",
+      "--accent": "#F59E0B", "--accentInk": "#B45309",
+      "--good": "#0CA30C", "--warn": "#FAB219", "--serious": "#EC835A", "--critical": "#D03B3B",
+      "--plane": "#16181D", "--planeWell": "#1D2027", "--planeInk": "#FFFFFF",
+      "--planeMut": "#94A3B8", "--planeBd": "#2A2E36", "--planeLink": "#5EC7DC",
+      "--stripe": "rgba(15,23,42,0.05)"
+    };
+    const dk = {
+      "--s1": "#16181D", "--s2": "#0E1013", "--s3": "#1D2027", "--bd": "#2A2E36",
+      "--ink": "#FFFFFF", "--mut": "#94A3B8", "--sub": "#7A8598",
+      "--b600": "#0E5A6B", "--b700": "#0B4553", "--b300": "#5EC7DC",
+      "--link": "#5EC7DC", "--well": "#1D2027", "--chipBd": "#2A2E36",
+      "--accent": "#F59E0B", "--accentInk": "#F59E0B",
+      "--good": "#0CA30C", "--warn": "#FAB219", "--serious": "#EC835A", "--critical": "#D03B3B",
+      "--plane": "#0E1013", "--planeWell": "#1D2027", "--planeInk": "#FFFFFF",
+      "--planeMut": "#94A3B8", "--planeBd": "#2A2E36", "--planeLink": "#5EC7DC",
+      "--stripe": "rgba(255,255,255,0.06)"
+    };
+    return dark ? dk : light;
+  }
+
+  opt(label, count, selected) {
+    const disabled = count === 0;
+    return {
+      label, count: disabled ? "0" : String(count),
+      disabled: disabled ? "true" : "false",
+      colour: disabled ? "var(--sub,#64748B)" : "var(--ink,#0F172A)",
+      countColour: disabled ? "var(--sub,#64748B)" : "var(--mut,#475569)",
+      cursor: disabled ? "not-allowed" : "pointer",
+      events: disabled ? "none" : "auto",
+      weight: selected ? "600" : "400",
+      tick: selected ? "✓" : "",
+      boxBg: selected ? "var(--b600,#0E5A6B)" : "transparent",
+      boxBd: disabled ? "var(--bd,#E2E8F0)" : (selected ? "var(--b600,#0E5A6B)" : "var(--sub,#64748B)")
+    };
+  }
+
+  badge(kind) {
+    const map = {
+      reduced: { label: "Price reduced", icon: "↓", bg: "var(--accent,#F59E0B)", ink: "#0F172A" },
+      arrived: { label: "Just arrived", icon: "★", bg: "var(--b600,#0E5A6B)", ink: "#FFFFFF" },
+      reserved: { label: "Reserved", icon: "●", bg: "var(--s1,#fff)", ink: "var(--ink,#0F172A)" },
+      low: { label: "Low mileage", icon: "◆", bg: "var(--well,#E6F4F1)", ink: "var(--ink,#0F172A)" }
+    };
+    return map[kind];
+  }
+
+  renderVals() {
+    const dark = (this.props.mode ?? "light") === "dark";
+    const state = this.props.state ?? "results";
+    const view = this.props.view ?? "grid";
+    const dense = this.props.dense ?? false;
+    const isZero = state === "zero", isFew = state === "few", isLoading = state === "loading", isError = state === "error";
+    const hasCars = state === "results" || isFew;
+
+    const theme = Object.assign({}, this.tokens(dark), {
+      containerType: "inline-size",
+      background: dark ? "#0E1013" : "#F8FAFC",
+      color: dark ? "#FFFFFF" : "#0F172A",
+      fontFamily: "Inter, system-ui, sans-serif"
+    });
+
+    const pool = [
+      { name: "2022 Tesla Model X", derivative: "Dual Motor Long Range · 7 seats", price: "£45,999", finance: "£649 a month · 9.9% APR rep.", specs: ["40,470 miles", "Electric", "Automatic"], badges: ["reduced"], shot: "WN22 HNL · front 3/4" },
+      { name: "2023 Tesla Model X", derivative: "Plaid · 6 seats", price: "£61,250", finance: "£862 a month · 9.9% APR rep.", specs: ["18,640 miles", "Electric", "Automatic"], badges: ["low"], shot: "LR23 XPL · front 3/4" },
+      { name: "2021 Tesla Model X", derivative: "Long Range · 7 seats", price: "£38,995", finance: "£549 a month · 9.9% APR rep.", specs: ["52,180 miles", "Electric", "Automatic"], badges: [], shot: "MK21 TSX · front 3/4" },
+      { name: "2022 Tesla Model X", derivative: "Dual Motor · 5 seats", price: "£44,450", finance: "£627 a month · 9.9% APR rep.", specs: ["36,910 miles", "Electric", "Automatic"], badges: ["arrived", "low"], shot: "BD22 KLM · front 3/4" },
+      { name: "2020 Tesla Model X", derivative: "Performance · 6 seats", price: "£34,750", finance: "£489 a month · 9.9% APR rep.", specs: ["61,340 miles", "Electric", "Automatic"], badges: ["reduced"], shot: "GK70 PRF · front 3/4" },
+      { name: "2023 Tesla Model X", derivative: "Long Range · 7 seats", price: "£49,995", finance: "£704 a month · 9.9% APR rep.", specs: ["12,220 miles", "Electric", "Automatic"], badges: ["reserved", "low"], shot: "OU23 HNM · front 3/4" },
+      { name: "2021 Tesla Model X", derivative: "Long Range · 6 seats", price: "£41,200", finance: "£580 a month · 9.9% APR rep.", specs: ["44,050 miles", "Electric", "Automatic"], badges: [], shot: "FY21 MDX · front 3/4" },
+      { name: "2022 Kia EV6", derivative: "GT-Line S · 77.4kWh", price: "£28,950", finance: "£408 a month · 9.9% APR rep.", specs: ["27,880 miles", "Electric", "Automatic"], badges: ["arrived"], shot: "VU22 EV6 · front 3/4" },
+      { name: "2021 Audi Q7", derivative: "55 TFSI e S line quattro", price: "£39,995", finance: "£563 a month · 9.9% APR rep.", specs: ["38,410 miles", "Plug-in hybrid", "Automatic"], badges: [], shot: "YD21 AUQ · front 3/4" },
+      { name: "2022 BMW iX", derivative: "xDrive40 M Sport", price: "£43,880", finance: "£618 a month · 9.9% APR rep.", specs: ["29,760 miles", "Electric", "Automatic"], badges: ["reduced"], shot: "RE22 BMX · front 3/4" },
+      { name: "2020 Volvo XC90", derivative: "T8 Recharge Inscription", price: "£33,495", finance: "£472 a month · 9.9% APR rep.", specs: ["58,120 miles", "Plug-in hybrid", "Automatic"], badges: [], shot: "PN20 XC9 · front 3/4" },
+      { name: "2023 Hyundai Ioniq 5", derivative: "Ultimate 73kWh AWD", price: "£31,750", finance: "£447 a month · 9.9% APR rep.", specs: ["16,430 miles", "Electric", "Automatic"], badges: ["low"], shot: "SJ23 ION · front 3/4" }
+    ];
+    const count = isFew ? 12 : 7;
+    const cars = pool.slice(0, count).map(c => Object.assign({}, c, {
+      distance: "At Bletchley,\n38 miles away",
+      badges: c.badges.slice(0, 2).map(b => this.badge(b))
+    }));
+
+    const pill = (label, current) => ({
+      label, current: current ? "page" : "false",
+      bg: current ? "var(--b600,#0E5A6B)" : "var(--s1,#fff)",
+      ink: current ? "#FFFFFF" : "var(--mut,#475569)",
+      bd: current ? "var(--b600,#0E5A6B)" : "var(--bd,#E2E8F0)"
+    });
+
+    return {
+      theme,
+      nav: [
+        { label: "Cars in stock", colour: "var(--link,#0E5A6B)", rule: "var(--link,#0E5A6B)" },
+        { label: "Finance", colour: "var(--mut,#475569)", rule: "transparent" },
+        { label: "Part-exchange", colour: "var(--mut,#475569)", rule: "transparent" },
+        { label: "About us", colour: "var(--mut,#475569)", rule: "transparent" },
+        { label: "Contact", colour: "var(--mut,#475569)", rule: "transparent" }
+      ],
+      heading: isFew ? "Used cars for sale in Milton Keynes" : (isZero ? "Used black Tesla Model X for sale in Milton Keynes" : "Used Tesla Model X for sale in Milton Keynes"),
+      subheading: isFew
+        ? "Twelve cars on the forecourt at Bletchley, every one driven, prepped and photographed by us — including every mark."
+        : (isZero
+          ? "Nothing in stock matches all of these filters today. Here is what we do have, and how to hear first when one lands."
+          : "Seven Model X on the forecourt at Bletchley. Every car has its MOT history, battery health and declared marks on the page before you ring."),
+      resultLine: isZero ? "0 cars match · 4 close matches below" : (isLoading ? "7 cars" : (isFew ? "12 cars in stock" : "7 cars · 118 in stock overall")),
+      appliedCount: isFew ? "0" : (isZero ? "4" : "3"),
+      chips: isZero ? ["Tesla", "Model X", "Black", "Under £50,000"] : ["Tesla", "Model X", "Under £50,000"],
+      facetsOpen: this.props.facetsOpen ?? true,
+      facetHint: (this.props.facetsOpen ?? true) ? "" : "tap to open",
+      facets: [
+        { name: "Make", summary: "Tesla", open: true, options: [this.opt("Tesla", 7, true), this.opt("BMW", 14, false), this.opt("Audi", 11, false), this.opt("Kia", 9, false), this.opt("Volvo", 6, false), this.opt("Porsche", 0, false)] },
+        { name: "Model", summary: "Model X", open: true, options: [this.opt("Model X", 7, true), this.opt("Model Y", 4, false), this.opt("Model 3", 6, false), this.opt("Model S", 0, false)] },
+        { name: "Fuel", summary: "Any", open: false, options: [this.opt("Electric", 7, false), this.opt("Plug-in hybrid", 0, false), this.opt("Petrol", 0, false), this.opt("Diesel", 0, false)] },
+        { name: "Gearbox", summary: "Any", open: false, options: [this.opt("Automatic", 7, false), this.opt("Manual", 0, false)] },
+        { name: "Body style", summary: "Any", open: false, options: [this.opt("SUV", 7, false), this.opt("Estate", 0, false), this.opt("Hatchback", 0, false), this.opt("Saloon", 0, false)] },
+        { name: "Colour", summary: isZero ? "Black" : "Any", open: isZero, options: [this.opt("Pearl White", 3, false), this.opt("Solid Black", isZero ? 0 : 2, isZero), this.opt("Midnight Silver", 2, false), this.opt("Deep Blue", 0, false), this.opt("Red Multi-Coat", 0, false)] }
+      ],
+      sorts: [pill("Most relevant", true), pill("Just arrived", false), pill("Price low to high", false), pill("Price high to low", false), pill("Lowest mileage", false), pill("Newest year", false)],
+      cars,
+      cardMin: dense ? "250px" : "290px",
+      showGrid: hasCars && view === "grid",
+      showList: hasCars && view === "list",
+      gridBg: view === "grid" ? "var(--b600,#0E5A6B)" : "transparent",
+      gridInk: view === "grid" ? "#FFFFFF" : "var(--mut,#475569)",
+      listBg: view === "list" ? "var(--b600,#0E5A6B)" : "transparent",
+      listInk: view === "list" ? "#FFFFFF" : "var(--mut,#475569)",
+      gridCurrent: view === "grid" ? "page" : "false",
+      listCurrent: view === "list" ? "page" : "false",
+      isZero, isFew, isLoading, isError,
+      skeletons: [1, 2, 3],
+      showPaging: state === "results",
+      pages: [pill("1", true), pill("2", false), pill("3", false), pill("4", false), pill("5", false), pill("Next →", false)],
+      widened: [
+        { name: "2022 Tesla Model X", meta: "Pearl White · 40,470 mi", price: "£45,999" },
+        { name: "2021 Tesla Model X", meta: "Midnight Silver · 52,180 mi", price: "£38,995" },
+        { name: "2022 Tesla Model X", meta: "Pearl White · 36,910 mi", price: "£44,450" },
+        { name: "2020 Tesla Model X", meta: "Midnight Silver · 61,340 mi", price: "£34,750" }
+      ],
+      fewStats: [
+        { value: "12", label: "cars on the pitch" },
+        { value: "2", label: "in prep this week" },
+        { value: "4.8", label: "from 252 reviews" },
+        { value: "28 yrs", label: "on Watling Street" }
+      ],
+      sticky: this.props.sticky ?? false
+    };
+  }
+}
+</script>
+</body>
+</html>

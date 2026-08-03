@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms !important; } }
+</style>
+</helmet>
+<div style="{{ theme }}">
+
+<sc-if value="{{ isPage }}" hint-placeholder-val="{{ true }}">
+  <header style="background:var(--s1,#fff);border-bottom:1px solid var(--bd,#E2E8F0)">
+    <div style="max-width:1280px;margin:0 auto;padding:8px clamp(16px,3cqw,32px);display:flex;align-items:center;gap:12px">
+      <a href="#" style="display:flex;flex-direction:column;justify-content:center;min-height:44px;min-width:0;flex:1 1 auto" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">
+        <span style="font-size:clamp(15px,1.7cqw,21px);font-weight:700;letter-spacing:-0.022em;line-height:1.15;text-wrap:balance">Kennington Car Sales</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;line-height:15px;font-weight:500;color:var(--sub,#64748B);white-space:nowrap">
+          <span aria-hidden="true" style="width:7px;height:7px;border-radius:999px;background:var(--good,#0CA30C);flex:none"></span>Open until 6pm
+        </span>
+      </a>
+      <a href="tel:01908993469" style="flex:none;display:flex;align-items:center;gap:6px;min-height:44px;padding:0 10px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:14px;font-weight:600;white-space:nowrap" style-hover="background:var(--b700,#0B4553);text-decoration:none"><span aria-hidden="true">✆</span>01908 993 469</a>
+    </div>
+  </header>
+</sc-if>
+
+<main style="background:{{ pageBg }};color:var(--ink,#0F172A);padding:{{ pagePad }}">
+  <div style="max-width:1280px;margin:0 auto;padding:{{ innerPad }};display:flex;flex-wrap:wrap;gap:clamp(16px,2.5cqw,32px);align-items:flex-start">
+
+    <div style="flex:1 1 min(100%,420px);min-width:0">
+      <sc-if value="{{ isPage }}" hint-placeholder-val="{{ true }}">
+        <a href="#" style="display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:14px;font-weight:600;color:var(--link,#0E5A6B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px"><span aria-hidden="true">←</span>Back to the Tesla Model X</a>
+      </sc-if>
+
+      <div style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:clamp(18px,2.2cqw,32px)">
+
+        <sc-if value="{{ showForm }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <p style="margin:0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">{{ eyebrow }}</p>
+            <h1 style="margin:8px 0 0;font-size:clamp(22px,2.6cqw,36px);line-height:1.12;letter-spacing:-0.02em;font-weight:600;text-wrap:balance">{{ title }}</h1>
+            <p style="margin:12px 0 0;font-size:15px;line-height:22px;color:var(--mut,#475569);max-width:56ch;text-wrap:pretty">{{ standfirst }}</p>
+
+            <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+              <div role="alert" style="margin-top:18px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-left:4px solid var(--critical,#D03B3B);border-radius:6px;padding:16px 18px">
+                <div style="display:flex;align-items:center;gap:8px;padding-bottom:8px">
+                  <span aria-hidden="true" style="color:var(--critical,#D03B3B);font-weight:700">✕</span>
+                  <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--mut,#475569)">{{ errorCountLine }}</span>
+                </div>
+                <p style="margin:0;font-size:15px;line-height:22px;font-weight:600;text-wrap:pretty">{{ errorHeading }}</p>
+                <p style="margin:6px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty">{{ errorBody }}</p>
+                <ul style="margin:10px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px">
+                  <sc-for list="{{ errorList }}" as="e" hint-placeholder-count="2">
+                    <li style="font-size:14px;line-height:20px"><a href="#" style="color:var(--link,#0E5A6B);font-weight:600;text-decoration:underline">{{ e }}</a></li>
+                  </sc-for>
+                </ul>
+              </div>
+            </sc-if>
+
+            <form style="margin-top:clamp(16px,2cqw,24px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:14px">
+              <sc-for list="{{ fields }}" as="f" hint-placeholder-count="4">
+                <label style="grid-column:{{ f.span }};display:flex;flex-direction:column;gap:6px">
+                  <span style="display:flex;flex-wrap:wrap;gap:8px;align-items:baseline">
+                    <span style="font-size:13px;line-height:18px;font-weight:600">{{ f.label }}</span>
+                    <span style="font-size:12px;line-height:16px;color:var(--sub,#64748B)">{{ f.optional }}</span>
+                  </span>
+                  <sc-if value="{{ f.isTextarea }}" hint-placeholder-val="{{ false }}">
+                    <textarea rows="4" placeholder="{{ f.placeholder }}" defaultValue="{{ f.value }}" style="border-radius:6px;border:1px solid {{ f.bd }};background:{{ f.bg }};padding:12px 14px;font-size:16px;line-height:22px;resize:vertical;min-height:96px" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px;border-color:var(--link,#0E5A6B)"></textarea>
+                  </sc-if>
+                  <sc-if value="{{ f.isSelect }}" hint-placeholder-val="{{ false }}">
+                    <select style="min-height:48px;border-radius:6px;border:1px solid {{ f.bd }};background:{{ f.bg }};padding:0 12px;font-size:16px;font-weight:500" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">
+                      <sc-for list="{{ f.options }}" as="o" hint-placeholder-count="4">
+                        <option>{{ o }}</option>
+                      </sc-for>
+                    </select>
+                  </sc-if>
+                  <sc-if value="{{ f.isInput }}" hint-placeholder-val="{{ true }}">
+                    <input type="{{ f.type }}" inputmode="{{ f.inputmode }}" autocomplete="{{ f.autocomplete }}" placeholder="{{ f.placeholder }}" defaultValue="{{ f.value }}" aria-invalid="{{ f.invalid }}" required="{{ f.required }}" style="min-height:48px;border-radius:6px;border:1px solid {{ f.bd }};background:{{ f.bg }};padding:0 14px;font-size:16px;font-family:{{ f.font }};letter-spacing:{{ f.tracking }};text-transform:{{ f.transform }}" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px;border-color:var(--link,#0E5A6B)" />
+                  </sc-if>
+                  <sc-if value="{{ f.hasError }}" hint-placeholder-val="{{ false }}">
+                    <span style="display:flex;gap:7px;align-items:flex-start;font-size:13px;line-height:19px;color:var(--ink,#0F172A)">
+                      <span aria-hidden="true" style="color:var(--critical,#D03B3B);font-weight:700;flex:none">✕</span>{{ f.error }}
+                    </span>
+                  </sc-if>
+                  <sc-if value="{{ f.hasHint }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size:12px;line-height:17px;color:var(--sub,#64748B);text-wrap:pretty">{{ f.hint }}</span>
+                  </sc-if>
+                </label>
+              </sc-for>
+
+              <sc-if value="{{ hasTerms }}" hint-placeholder-val="{{ false }}">
+                <div style="grid-column:1/-1;background:var(--well,#E6F4F1);border-radius:6px;padding:16px 18px">
+                  <p style="margin:0 0 10px;font-size:15px;line-height:21px;font-weight:600">{{ termsTitle }}</p>
+                  <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px">
+                    <sc-for list="{{ terms }}" as="t" hint-placeholder-count="4">
+                      <li style="display:flex;gap:9px;align-items:flex-start;font-size:14px;line-height:20px">
+                        <span aria-hidden="true" style="color:{{ t.dot }};font-weight:700;flex:none">{{ t.icon }}</span>{{ t.text }}
+                      </li>
+                    </sc-for>
+                  </ul>
+                </div>
+              </sc-if>
+
+              <sc-for list="{{ consents }}" as="c" hint-placeholder-count="1">
+                <label style="grid-column:1/-1;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:{{ c.bg }};border:1px solid {{ c.bd }};border-radius:6px;min-height:44px">
+                  <input type="checkbox" required="{{ c.required }}" style="width:20px;height:20px;margin:2px 0 0;flex:none;accent-color:#0E5A6B" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px" />
+                  <span>
+                    <span style="display:block;font-size:14px;line-height:20px;font-weight:600">{{ c.title }}</span>
+                    <span style="display:block;font-size:13px;line-height:19px;color:var(--mut,#475569);padding-top:2px;text-wrap:pretty">{{ c.body }}</span>
+                  </span>
+                </label>
+              </sc-for>
+
+              <div style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+                <button type="submit" style="flex:1 1 auto;min-height:52px;padding:0 22px;border:none;border-radius:6px;background:{{ ctaBg }};color:{{ ctaInk }};font-size:17px;font-weight:600;cursor:pointer;transition:background 100ms cubic-bezier(0.2,0,0,1)" style-hover="filter:brightness(0.95)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ cta }}</button>
+                <a href="tel:01908993469" style="flex:0 1 auto;display:flex;align-items:center;justify-content:center;min-height:52px;padding:0 20px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);color:var(--link,#0E5A6B);font-size:16px;font-weight:600;gap:8px" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none"><span aria-hidden="true">✆</span>Or just ring us</a>
+              </div>
+              <p style="grid-column:1/-1;margin:0;font-size:12px;line-height:17px;color:var(--sub,#64748B);text-wrap:pretty">{{ footnote }}</p>
+            </form>
+          </div>
+        </sc-if>
+
+        <!-- SUCCESS -->
+        <sc-if value="{{ isSuccess }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span aria-hidden="true" style="width:32px;height:32px;border-radius:999px;background:var(--good,#0CA30C);color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">✓</span>
+              <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--mut,#475569)">{{ successEyebrow }}</span>
+            </div>
+            <h1 style="margin:14px 0 0;font-size:clamp(22px,2.8cqw,38px);line-height:1.1;letter-spacing:-0.022em;font-weight:600;text-wrap:balance">{{ successTitle }}</h1>
+            <p style="margin:12px 0 0;font-size:16px;line-height:23px;color:var(--mut,#475569);max-width:58ch;text-wrap:pretty">{{ successBody }}</p>
+
+            <sc-if value="{{ hasReceipt }}" hint-placeholder-val="{{ false }}">
+              <dl style="margin:clamp(16px,2cqw,24px) 0 0;background:var(--well,#E6F4F1);border-radius:6px;padding:16px 18px">
+                <sc-for list="{{ receipt }}" as="r" hint-placeholder-count="4">
+                  <div style="display:flex;flex-wrap:wrap;gap:4px 16px;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--bd,#E2E8F0)">
+                    <dt style="font-size:14px;line-height:20px;color:var(--mut,#475569)">{{ r.label }}</dt>
+                    <dd style="margin:0;margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:{{ r.size }};line-height:1.3;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap">{{ r.value }}</dd>
+                  </div>
+                </sc-for>
+              </dl>
+            </sc-if>
+
+            <ol style="list-style:none;margin:clamp(16px,2cqw,24px) 0 0;padding:0;display:flex;flex-direction:column;gap:12px">
+              <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+                <li style="display:flex;gap:12px;align-items:flex-start">
+                  <span aria-hidden="true" style="flex:none;width:26px;height:26px;border-radius:999px;background:var(--s3,#F1F5F9);border:1px solid var(--bd,#E2E8F0);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ s.n }}</span>
+                  <span style="min-width:0">
+                    <span style="display:block;font-size:15px;line-height:21px;font-weight:600;text-wrap:pretty">{{ s.title }}</span>
+                    <span style="display:block;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty">{{ s.detail }}</span>
+                  </span>
+                </li>
+              </sc-for>
+            </ol>
+
+            <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:clamp(16px,2cqw,24px)">
+              <sc-for list="{{ successActions }}" as="a" hint-placeholder-count="2">
+                <a href="#" style="display:flex;align-items:center;min-height:48px;padding:0 18px;border-radius:6px;background:{{ a.bg }};border:1px solid {{ a.bd }};color:{{ a.ink }};font-size:16px;font-weight:600" style-hover="filter:brightness(0.96);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ a.label }}</a>
+              </sc-for>
+            </div>
+
+            <div style="margin-top:clamp(18px,2.2cqw,28px);padding-top:16px;border-top:1px solid var(--bd,#E2E8F0);display:flex;flex-wrap:wrap;gap:clamp(12px,2cqw,32px)">
+              <div style="flex:1 1 min(100%,240px)">
+                <p style="margin:0 0 8px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">While you are waiting</p>
+                <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px">
+                  <sc-for list="{{ waiting }}" as="w" hint-placeholder-count="3">
+                    <li><a href="#" style="display:flex;align-items:center;min-height:40px;font-size:14px;line-height:20px;color:var(--link,#0E5A6B);font-weight:500;text-decoration:underline" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ w }}</a></li>
+                  </sc-for>
+                </ul>
+              </div>
+              <div style="flex:1 1 min(100%,240px)">
+                <p style="margin:0 0 8px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Change something</p>
+                <p style="margin:0;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty">{{ changeCopy }}</p>
+                <p style="margin:8px 0 0;font-size:14px;line-height:20px;font-weight:600"><a href="tel:01908993469" style="color:var(--link,#0E5A6B);text-decoration:underline">01908 993 469</a> · ask for {{ person }}</p>
+                <p style="margin:8px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:16px;color:var(--sub,#64748B)">{{ reference }}</p>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+
+    <!-- SIDE RAIL: the car, and what we promise -->
+    <sc-if value="{{ isPage }}" hint-placeholder-val="{{ true }}">
+      <aside style="flex:1 1 min(100%,300px);display:flex;flex-direction:column;gap:clamp(10px,1.4cqw,16px)">
+        <div style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;overflow:hidden">
+          <div aria-hidden="true" style="aspect-ratio:4/3;background-color:var(--s3,#F1F5F9);background-image:repeating-linear-gradient(135deg,transparent 0 14px,var(--stripe,rgba(15,23,42,0.05)) 14px 15px)"></div>
+          <div style="padding:14px 16px 16px">
+            <h2 style="margin:0;font-size:17px;line-height:22px;font-weight:600;letter-spacing:-0.01em">2022 Tesla Model X</h2>
+            <p style="margin:3px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569)">Dual Motor Long Range · 7 seats</p>
+            <p style="margin:10px 0 0;font-size:24px;line-height:28px;font-weight:700;letter-spacing:-0.025em">£45,999</p>
+            <p style="margin:2px 0 0;font-size:13px;line-height:18px;color:var(--sub,#64748B)">£649 a month · 9.6% APR representative</p>
+            <p style="margin:10px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:16px;color:var(--sub,#64748B)">WN22 HNL · stock KCS-4417</p>
+          </div>
+        </div>
+        <div style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:16px 18px">
+          <p style="margin:0 0 12px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">What we will and will not do</p>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ promises }}" as="p" hint-placeholder-count="4">
+              <li style="display:flex;gap:9px;align-items:flex-start;font-size:14px;line-height:20px;text-wrap:pretty">
+                <span aria-hidden="true" style="color:{{ p.dot }};font-weight:700;flex:none">{{ p.icon }}</span>{{ p.text }}
+              </li>
+            </sc-for>
+          </ul>
+        </div>
+        <p style="margin:0;font-size:12px;line-height:17px;color:var(--sub,#64748B);text-wrap:pretty">Kennington Car Sales Ltd, FRN 993469, a credit broker not a lender. We use what you send us to answer you about this car and keep a record of the conversation. <a href="#" style="color:var(--link,#0E5A6B);font-weight:600;text-decoration:underline">Privacy policy</a></p>
+      </aside>
+    </sc-if>
+  </div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light' | 'dark'&quot;},&quot;form&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;enquire&quot;,&quot;reserve&quot;,&quot;testdrive&quot;,&quot;partex&quot;,&quot;video&quot;,&quot;notify&quot;],&quot;default&quot;:&quot;enquire&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;empty&quot;,&quot;filled&quot;,&quot;error&quot;,&quot;success&quot;],&quot;default&quot;:&quot;empty&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;States&quot;},&quot;placement&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;page&quot;,&quot;inline&quot;],&quot;default&quot;:&quot;page&quot;,&quot;tsType&quot;:&quot;'page' | 'inline'&quot;,&quot;section&quot;:&quot;States&quot;}}">
+class Component extends DCLogic {
+  tokens(dark) {
+    const light = {
+      "--s1": "#FFFFFF", "--s2": "#F8FAFC", "--s3": "#F1F5F9", "--bd": "#E2E8F0",
+      "--ink": "#0F172A", "--mut": "#475569", "--sub": "#64748B",
+      "--b600": "#0E5A6B", "--b700": "#0B4553", "--link": "#0E5A6B", "--well": "#E6F4F1",
+      "--accent": "#F59E0B", "--accentInk": "#B45309",
+      "--good": "#0CA30C", "--warn": "#FAB219", "--serious": "#EC835A", "--critical": "#D03B3B",
+      "--errWell": "#FDF1F1", "--stripe": "rgba(15,23,42,0.05)"
+    };
+    const dk = {
+      "--s1": "#16181D", "--s2": "#0E1013", "--s3": "#1D2027", "--bd": "#2A2E36",
+      "--ink": "#FFFFFF", "--mut": "#94A3B8", "--sub": "#7A8598",
+      "--b600": "#0E5A6B", "--b700": "#0B4553", "--link": "#5EC7DC", "--well": "#1D2027",
+      "--accent": "#F59E0B", "--accentInk": "#F59E0B",
+      "--good": "#0CA30C", "--warn": "#FAB219", "--serious": "#EC835A", "--critical": "#D03B3B",
+      "--errWell": "#1D2027", "--stripe": "rgba(255,255,255,0.06)"
+    };
+    return dark ? dk : light;
+  }
+
+  field(o, mode) {
+    const filled = mode !== "empty";
+    const err = mode === "error" ? (o.error || "") : "";
+    const isSelect = o.kind === "select", isTextarea = o.kind === "textarea";
+    return {
+      label: o.label,
+      optional: o.optional ? "optional" : "",
+      span: o.span || "auto",
+      isSelect, isTextarea, isInput: !isSelect && !isTextarea,
+      type: o.type || "text",
+      inputmode: o.inputmode || "text",
+      autocomplete: o.autocomplete || "off",
+      placeholder: o.placeholder || "",
+      options: o.options || [],
+      value: (mode === "error" && o.errorValue) ? o.errorValue : (filled ? (o.value || "") : ""),
+      required: !o.optional,
+      invalid: err ? "true" : "false",
+      hasError: !!err, error: err,
+      hasHint: !!o.hint && !err, hint: o.hint || "",
+      bd: err ? "var(--critical,#D03B3B)" : "var(--bd,#E2E8F0)",
+      bg: err ? "var(--errWell,#FDF1F1)" : "var(--s1,#fff)",
+      font: o.mono ? "'JetBrains Mono', monospace" : "inherit",
+      tracking: o.mono ? "0.04em" : "normal",
+      transform: o.upper ? "uppercase" : "none"
+    };
+  }
+
+  consent(title, body, required) {
+    return {
+      title, body, required: !!required,
+      bg: required ? "var(--well,#E6F4F1)" : "var(--s1,#fff)",
+      bd: required ? "var(--b600,#0E5A6B)" : "var(--bd,#E2E8F0)"
+    };
+  }
+
+  config(form, mode) {
+    const name = { label: "Your name", autocomplete: "name", placeholder: "Jane Whitmore", value: "Jane Whitmore", span: "1/-1" };
+    const email = { label: "Email", type: "email", inputmode: "email", autocomplete: "email", placeholder: "jane@example.co.uk", value: "jane@example.co.uk", errorValue: "jane.example.co.uk", error: "That email is missing an @ — we read it as \"jane.example.co.uk\". Correct it and we will send the reply there." };
+    const phone = { label: "Phone", type: "tel", inputmode: "tel", autocomplete: "tel", placeholder: "07700 900123", value: "07700 900123", errorValue: "07700 9001", error: "That number is 10 digits — UK mobiles have 11. Check it, or leave it blank and we will email instead." };
+
+    const c = {
+      enquire: {
+        eyebrow: "Enquire about this car",
+        title: "Ask us anything about this Model X",
+        standfirst: "A real person at the Bletchley forecourt answers these — usually within the hour, always the same day. If you are coming a distance, ask for a video walkaround and we will film it today.",
+        cta: "Send my enquiry", ctaAccent: false,
+        fields: [name, email, phone, { label: "Your question", kind: "textarea", span: "1/-1", placeholder: "Is it available to view on Saturday morning?", value: "Is it available to view on Saturday morning? And would you take my 2018 Golf in part-exchange?", optional: true, hint: "Not required — a name and a number is enough if you would rather we rang you." }],
+        consents: [this.consent("Tell me about cars like this one", "Email me when a similar seven-seat electric car arrives, and if this one drops in price. Stock only — no newsletter, no offers. One click unsubscribes and the link is at the top of every email.", false)],
+        footnote: "We answer enquiries between 9am and 6pm, Monday to Saturday. Anything sent on Sunday is answered first thing Monday.",
+        person: "Dan",
+        successEyebrow: "Enquiry sent · 14:07 today",
+        successTitle: "Your question is with Dan at Bletchley.",
+        successBody: "Dan Whitworth handles the electric stock and is on the forecourt until 6pm. He has the car's file open — MOT history, prep sheet, battery test — and will answer the part-exchange question with a real figure, not a range.",
+        steps: [
+          { n: "1", title: "Dan replies by about 3pm", detail: "By email to jane@example.co.uk, and he will ring 07700 900123 if it is quicker to explain." },
+          { n: "2", title: "He will send the two things you asked about", detail: "Saturday viewing times, and what we would allow for a 2018 Golf against this car." },
+          { n: "3", title: "Nothing happens unless you say so", detail: "No follow-up sequence, no automated chasing. If you go quiet, we leave you alone." }
+        ],
+        actions: [
+          { label: "Reserve it for £99", accent: true },
+          { label: "Book a test drive", accent: false }
+        ],
+        waiting: ["Read the full MOT history and mileage chart", "See both declared marks, photographed", "Get directions to the Bletchley forecourt"],
+        changeCopy: "Rung the wrong number, or thought of another question? Reply to the confirmation email or ring us — we will add it to the same enquiry rather than starting a new one."
+      },
+      reserve: {
+        eyebrow: "Reserve this car",
+        title: "Hold this Model X for 48 hours for £99",
+        standfirst: "A £99 deposit takes the car off sale for 48 hours so nobody else can buy it while you arrange a viewing, a part-exchange or your finance.",
+        cta: "Continue to secure payment · £99", ctaAccent: true,
+        fields: [name, email, phone, { label: "When could you come in?", kind: "select", options: ["Tomorrow", "This Saturday", "Within 48 hours", "I need to arrange finance first"], span: "1/-1" }],
+        terms: {
+          title: "What £99 does, and what it does not do",
+          list: [
+            { icon: "✓", dot: "var(--good,#0CA30C)", text: "Takes the car off sale for 48 hours. We stop advertising it and turn away other viewings." },
+            { icon: "✓", dot: "var(--good,#0CA30C)", text: "Comes off the price if you buy it. It is a deposit, not a fee." },
+            { icon: "✓", dot: "var(--good,#0CA30C)", text: "Fully refundable for any reason, including changing your mind, back to the same card within 3 working days." },
+            { icon: "✕", dot: "var(--critical,#D03B3B)", text: "Does not commit you to buying it, and does not form a sale contract." },
+            { icon: "✕", dot: "var(--critical,#D03B3B)", text: "Does not include finance approval or a part-exchange figure — both are separate and neither is affected if you walk away." }
+          ]
+        },
+        consents: [
+          this.consent("I have read what the deposit does and does not do", "Required. You are paying £99 to hold the car for 48 hours. It is fully refundable, it comes off the price if you buy, and it does not commit you to the purchase.", true),
+          this.consent("Tell me about cars like this one", "Optional, and separate from this reservation. Email me when a similar car arrives. One click unsubscribes.", false)
+        ],
+        footnote: "Payment is taken by Stripe on their own page — we never see or store your card details. Your reservation is confirmed the moment the payment clears.",
+        person: "Dan",
+        successEyebrow: "Reserved · payment received 14:07",
+        successTitle: "The Model X is yours until 6pm on Wednesday.",
+        successBody: "It is off sale, off the website and out of the advertising. Dan has moved it to the front of the pitch and put it on charge for you.",
+        receipt: [
+          { label: "Deposit paid", value: "£99.00", size: "20px" },
+          { label: "Comes off the price", value: "£99.00", size: "14px" },
+          { label: "Balance if you buy", value: "£45,900.00", size: "14px" },
+          { label: "Held until", value: "Wed 6pm", size: "14px" },
+          { label: "Refundable until", value: "Any time", size: "14px" }
+        ],
+        steps: [
+          { n: "1", title: "A receipt is on its way to your email", detail: "It states the refund position in the same words as this page, and it is a web page, not an attachment." },
+          { n: "2", title: "Dan rings you before 5pm to fix a time", detail: "Bring your licence and, if you are part-exchanging, the V5C and both keys." },
+          { n: "3", title: "Cancel in one click, no reason needed", detail: "The link is in the receipt email and at the bottom of this page. Money back to the same card within 3 working days." }
+        ],
+        actions: [
+          { label: "Book my viewing time", accent: true },
+          { label: "Value my part-exchange", accent: false }
+        ],
+        waiting: ["Read the MOT history before you come", "See both declared marks, photographed", "Get directions and parking"],
+        changeCopy: "Need longer than 48 hours, or want to cancel? Ring and ask for Dan — we would rather extend it than lose you, and cancelling costs you nothing."
+      },
+      testdrive: {
+        eyebrow: "Book a test drive",
+        title: "Drive this Model X before you decide anything",
+        standfirst: "Half an hour on the road, on your own route, with no salesperson in the passenger seat unless you want one. We will have it charged to at least 80% and taxed for the drive.",
+        cta: "Request this test drive", ctaAccent: false,
+        fields: [
+          name, email, phone,
+          { label: "Preferred date", type: "date", inputmode: "numeric", autocomplete: "off", value: "2026-08-08", hint: "We are open Mon–Sat 10–6 and Sunday 11–4." },
+          { label: "Time of day", kind: "select", options: ["Morning, 10am–12pm", "Early afternoon, 12pm–3pm", "Late afternoon, 3pm–6pm", "Saturday if possible"] },
+          { label: "Anything we should know?", kind: "textarea", span: "1/-1", optional: true, placeholder: "I want to try fitting a child seat in the third row.", value: "I want to try fitting a child seat in the third row.", hint: "Tell us what you need to test and we will set it up before you arrive." }
+        ],
+        consents: [
+          this.consent("I hold a full UK licence and will bring it with me", "Required by our insurance. A photocard licence is enough — you do not need the paper counterpart or a share code.", true),
+          this.consent("Tell me about cars like this one", "Optional and separate. Email me when a similar car arrives. One click unsubscribes.", false)
+        ],
+        footnote: "This is a request, not a confirmed booking — we will come back within the hour with a time. Drives are insured by us; there is no charge and no obligation.",
+        person: "Sam",
+        successEyebrow: "Requested · 14:07 today",
+        successTitle: "Saturday 10am is pencilled in — Sam will confirm within the hour.",
+        successBody: "Sam runs the diary and will ring to confirm the slot. The car will be charged to 80% and a child seat will be in the third row so you can try it properly.",
+        steps: [
+          { n: "1", title: "Sam confirms by phone within the hour", detail: "If Saturday 10am has gone she will offer the two nearest slots, not a form to fill in again." },
+          { n: "2", title: "Bring your photocard licence", detail: "That is all. Our insurance covers the drive; there is no charge and no deposit." },
+          { n: "3", title: "Half an hour, your route", detail: "Take it on the A5 and the M1 if you want to — a car park circuit tells you nothing about a seven-seater." }
+        ],
+        actions: [
+          { label: "Reserve it for £99 as well", accent: true },
+          { label: "Get directions", accent: false }
+        ],
+        waiting: ["Read the MOT history and mileage chart", "See the battery health test", "See what we allow for part-exchanges"],
+        changeCopy: "Plans changed? Ring and ask for Sam, or reply to the confirmation email. Cancelling a drive costs nothing and we will not chase you about it."
+      },
+      partex: {
+        eyebrow: "Part-exchange valuation",
+        title: "What is your car worth against this one?",
+        standfirst: "Give us the reg and the mileage and we will come back with a real figure the same day — not an online guess that halves when you arrive. We settle outstanding finance directly with your lender.",
+        cta: "Get my part-exchange figure", ctaAccent: false,
+        fields: [
+          { label: "Your registration", mono: true, upper: true, autocomplete: "off", placeholder: "WN22 HNL", value: "GK18 VWG", span: "1/-1", hint: "We look up the make, model and MOT history from the DVLA so you do not have to type them." },
+          { label: "Mileage", inputmode: "numeric", autocomplete: "off", placeholder: "48,000", value: "62,400", errorValue: "62,4O0", error: "That mileage has a letter O in it where a zero should be. Type it again — digits only, no commas needed." },
+          { label: "Condition", kind: "select", span: "1/-1", options: ["Good — usual age-related marks", "Very good — barely marked", "Fair — a few dents or scuffs", "Poor — needs work"] },
+          name, email, phone
+        ],
+        consents: [this.consent("Tell me about cars like this one", "Optional, and separate from this valuation. Email me when a car matching what I am after arrives. One click unsubscribes.", false)],
+        footnote: "A valuation is not an offer until we have seen the car — mileage, service history and condition all move the figure. We will tell you what moved it and why.",
+        person: "Marek",
+        successEyebrow: "Valuation in progress · 14:07",
+        successTitle: "Your 2018 Golf is worth about £8,400 to £9,100 to us today.",
+        successBody: "That is our indicative trade figure from the DVLA and cap hpi data for a GK18 VWG with around 62,400 miles. Marek will confirm the exact number the same day, and it holds for 7 days once he has seen the car.",
+        receipt: [
+          { label: "Indicative figure", value: "£8,400–£9,100", size: "20px" },
+          { label: "Against this Model X", value: "£45,999.00", size: "14px" },
+          { label: "You would pay about", value: "£36,899.00", size: "14px" },
+          { label: "Figure holds for", value: "7 days", size: "14px" }
+        ],
+        steps: [
+          { n: "1", title: "Marek rings you before 6pm with the exact figure", detail: "He will tell you what pushed it up or down — service history, tyres, that kerbed alloy." },
+          { n: "2", title: "Send three photos if you want it firmed up now", detail: "Front three-quarter, dashboard with the mileage showing, and anything damaged. Reply to the email with them." },
+          { n: "3", title: "Nothing is committed", detail: "You can take the figure to another dealer. We would rather you knew it was fair than felt cornered." }
+        ],
+        actions: [
+          { label: "Send photos of my Golf", accent: true },
+          { label: "Book an appraisal on the forecourt", accent: false }
+        ],
+        waiting: ["See what this Model X would cost with £9,000 down", "Read how we settle outstanding finance", "See the 123 cars in stock"],
+        changeCopy: "Typed the mileage wrong, or found the service book? Reply to the email with the correction and Marek will re-run it — it takes him two minutes."
+      },
+      video: {
+        eyebrow: "Request a video walkaround",
+        title: "We will film this Model X for you today",
+        standfirst: "Two or three minutes, filmed on a phone by whoever is on the forecourt — walking round the outside, both declared marks close up, the interior, and the boot with the third row up and down. Unedited, and yours to keep.",
+        cta: "Request my video", ctaAccent: false,
+        fields: [
+          name,
+          Object.assign({}, email, { span: "auto" }),
+          phone,
+          { label: "Anything specific to film?", kind: "textarea", span: "1/-1", optional: true, placeholder: "The kerbed alloy, and the boot with all seven seats up.", value: "The kerbed alloy close up, and the boot with all seven seats up.", hint: "The more specific the better — we would rather film the thing you are worried about than the thing that looks good." },
+          { label: "Send it by", kind: "select", options: ["WhatsApp", "Email", "Either is fine"], span: "1/-1" }
+        ],
+        consents: [this.consent("Tell me about cars like this one", "Optional and separate. Email me when a similar car arrives. One click unsubscribes.", false)],
+        footnote: "Filmed the same day if you ask before 4pm, otherwise first thing the next working day. No charge, and asking for one does not put you under any obligation.",
+        person: "Dan",
+        successEyebrow: "Requested · 14:07 today",
+        successTitle: "Dan is filming it this afternoon — with you by about 4pm.",
+        successBody: "He will cover the kerbed alloy close up and the boot with all seven seats up, plus the usual walkaround, the interior and the charge port. Filmed on a phone, unedited, sent by WhatsApp.",
+        steps: [
+          { n: "1", title: "Video by WhatsApp to 07700 900123", detail: "About 4pm today. Two to three minutes; you can keep it and send it to whoever you are deciding with." },
+          { n: "2", title: "Ask for more and we will film more", detail: "Reply to the message. Underside, tyre tread depth, boot with the seats down — whatever you need." },
+          { n: "3", title: "No sales call after it", detail: "We send the video and leave it with you. If you want to talk, you ring us." }
+        ],
+        actions: [
+          { label: "Reserve it for £99 while you watch", accent: true },
+          { label: "Book a test drive", accent: false }
+        ],
+        waiting: ["See the 14 photographs we have already", "Read both declared marks", "Read the MOT history"],
+        changeCopy: "Thought of something else to film, or want it by email instead? Reply to the WhatsApp or ring and ask for Dan."
+      },
+      notify: {
+        eyebrow: "No matches today",
+        title: "Tell me when a black Model X arrives",
+        standfirst: "We buy 30–40 cars a month and Model X sell in about 26 days, so this changes weekly. Give us an email and we will send one message the day a car matching your search lands — usually before it is photographed.",
+        cta: "Set up my alert", ctaAccent: true,
+        fields: [
+          { label: "What you are after", span: "1/-1", autocomplete: "off", value: "Black Tesla Model X under £50,000", placeholder: "Black Tesla Model X under £50,000", hint: "Taken from your search. Edit it in plain words — we will show you what we understood before saving it." },
+          Object.assign({}, email, { span: "1/-1" }),
+          { label: "How often", kind: "select", options: ["The day one arrives", "Once a week, if there is anything", "Once a month"], span: "1/-1" }
+        ],
+        consents: [this.consent("Email me when a car matching this search arrives", "Required — it is the whole point of the alert. This search only: no newsletter, no offers, no other cars. One click unsubscribes, and the link is at the top of every email. We delete the alert after six months if you have not opened one.", true)],
+        footnote: "One email per matching car, at most. If three arrive in a week you get three messages, and you can turn it off from any of them.",
+        person: "Dan",
+        successEyebrow: "Alert set · 14:07 today",
+        successTitle: "You will hear the day a black Model X lands.",
+        successBody: "We have also put your search in front of our buyer — Marek is at Milton Keynes auction on Tuesday and Thursday and now has \"black Model X, under £50,000\" on his list.",
+        steps: [
+          { n: "1", title: "One email, the day it arrives", detail: "Usually before it is photographed, which means you see it before the website does." },
+          { n: "2", title: "Marek will look for one at auction", detail: "If he finds one he rings you before he bids, so you can tell him your ceiling." },
+          { n: "3", title: "Turn it off in one click", detail: "The unsubscribe link is at the top of every email, not buried at the bottom." }
+        ],
+        actions: [
+          { label: "See the 4 Model X we do have", accent: true },
+          { label: "Watch a different search", accent: false }
+        ],
+        waiting: ["See all 4 Model X in any colour", "See the 18 electric cars in stock", "Read how we buy at auction"],
+        changeCopy: "Want to widen it to any colour, or add a second search? Reply to the confirmation email — it has both links in it."
+      }
+    };
+    return c[form];
+  }
+
+  renderVals() {
+    const dark = (this.props.mode ?? "light") === "dark";
+    const form = this.props.form ?? "enquire";
+    const state = this.props.state ?? "empty";
+    const page = (this.props.placement ?? "page") === "page";
+    const cfg = this.config(form, state);
+    const isSuccess = state === "success";
+
+    const theme = Object.assign({}, this.tokens(dark), {
+      containerType: "inline-size",
+      fontFamily: "Inter, system-ui, sans-serif",
+      color: dark ? "#FFFFFF" : "#0F172A"
+    });
+
+    const errorHeadings = {
+      enquire: "We could not send your enquiry — the email address and the phone number both look wrong.",
+      reserve: "We have not taken any payment — the email address and the phone number both look wrong.",
+      testdrive: "We could not request the drive — the email address and the phone number both look wrong.",
+      partex: "We could not value your Golf — the mileage has a letter in it and the email is missing an @.",
+      video: "We could not request the video — the email address and the phone number both look wrong.",
+      notify: "We could not set the alert up — that email address is missing an @."
+    };
+    const errorLists = {
+      partex: ["Mileage — remove the letter O and type 62,400 with digits", "Email — add the @ before example.co.uk"],
+      notify: ["Email — add the @ before example.co.uk"]
+    };
+
+    const errs = errorLists[form] || ["Email — add the @ before example.co.uk", "Phone — that number is one digit short"];
+
+    return {
+      theme,
+      isPage: page,
+      pageBg: page ? "var(--s2,#F8FAFC)" : "transparent",
+      pagePad: page ? "clamp(20px,2.5cqw,40px) 0 clamp(28px,3.5cqw,56px)" : "0",
+      innerPad: page ? "0 clamp(16px,3cqw,32px)" : "0",
+      showForm: !isSuccess,
+      isSuccess,
+      isError: state === "error",
+      eyebrow: cfg.eyebrow,
+      title: cfg.title,
+      standfirst: cfg.standfirst,
+      cta: cfg.cta,
+      ctaBg: cfg.ctaAccent ? "var(--accent,#F59E0B)" : "var(--b600,#0E5A6B)",
+      ctaInk: cfg.ctaAccent ? "#0F172A" : "#FFFFFF",
+      footnote: cfg.footnote,
+      fields: (cfg.fields || []).map(f => this.field(f, state)),
+      consents: cfg.consents || [],
+      hasTerms: !!cfg.terms,
+      termsTitle: cfg.terms ? cfg.terms.title : "",
+      terms: cfg.terms ? cfg.terms.list : [],
+      errorHeading: errorHeadings[form],
+      errorList: errs,
+      errorCountLine: "Not sent — " + (errs.length === 1 ? "1 thing" : errs.length + " things") + " to fix",
+      errorBody: "Nothing has been sent and nothing you typed has been lost. Fix the "
+        + (errs.length === 1 ? "field" : (errs.length === 2 ? "two fields" : errs.length + " fields"))
+        + " marked below and press the button again.",
+      successEyebrow: cfg.successEyebrow,
+      successTitle: cfg.successTitle,
+      successBody: cfg.successBody,
+      hasReceipt: !!cfg.receipt,
+      receipt: cfg.receipt || [],
+      steps: cfg.steps,
+      successActions: (cfg.actions || []).map(a => ({
+        label: a.label,
+        bg: a.accent ? "var(--b600,#0E5A6B)" : "var(--s1,#fff)",
+        bd: a.accent ? "var(--b600,#0E5A6B)" : "var(--bd,#E2E8F0)",
+        ink: a.accent ? "#FFFFFF" : "var(--link,#0E5A6B)"
+      })),
+      waiting: cfg.waiting,
+      changeCopy: cfg.changeCopy,
+      person: cfg.person,
+      reference: "ref " + ({ enquire: "ENQ", reserve: "RES", testdrive: "DRV", partex: "PEX", video: "VID", notify: "ALT" })[form] + "-4417-2608",
+      promises: [
+        { icon: "✓", dot: "var(--good,#0CA30C)", text: "A named person answers, from the forecourt, within the hour on a working day." },
+        { icon: "✓", dot: "var(--good,#0CA30C)", text: "One reply, then silence unless you answer. No sequences, no drip campaign." },
+        { icon: "✓", dot: "var(--good,#0CA30C)", text: "Your details go to us and our CRM. Never sold, never passed to a lead broker." },
+        { icon: "✕", dot: "var(--critical,#D03B3B)", text: "No newsletter unless you tick the box, and ticking it is never required to get an answer." }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

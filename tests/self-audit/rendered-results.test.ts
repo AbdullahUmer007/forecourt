@@ -11,7 +11,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { renderResultsPage, resultsHeading, type ResultsInput, type ResultVehicle } from '../../apps/site/src/render/results.js';
-import { EMPTY_QUERY, searchUrlPath, type SearchQuery } from '../../packages/domain/src/search.js';
+import { EMPTY_QUERY, searchUrlPath, type SearchQuery, type MultiDimension } from '../../packages/domain/src/search.js';
 
 const ORIGIN = 'https://www.kenningtoncarsales.co.uk';
 const NOW = new Date('2026-08-02T09:00:00Z');
@@ -39,7 +39,11 @@ const vehicle = (over: Partial<ResultVehicle> = {}): ResultVehicle => ({
   ...over,
 });
 
-const q = (over: Partial<SearchQuery> = {}): SearchQuery => ({
+type QueryOverride = Omit<Partial<SearchQuery>, 'filters'> & {
+  filters?: Partial<Record<MultiDimension, string[]>>;
+};
+
+const q = (over: QueryOverride = {}): SearchQuery => ({
   ...EMPTY_QUERY, ...over,
   filters: { ...EMPTY_QUERY.filters, ...(over.filters ?? {}) },
 });

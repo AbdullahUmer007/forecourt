@@ -19,6 +19,8 @@
 
 import { html, raw, when, esc } from './html.js';
 import { criticalCss, DEFAULT_THEME, type BrandTheme } from './theme.js';
+import { masthead, siteFooter, type OpeningHoursView } from './chrome.js';
+import { renderFinancePromotion, renderFinanceUnavailable, type FinancePromotionInput } from './finance.js';
 import {
   vehicleTitle, vehicleDescription, canonicalUrl, vehicleUrlPath,
 } from '../../../../packages/domain/src/seo.js';
@@ -90,6 +92,13 @@ export interface PriceContextView {
   changedOn: string;
 }
 
+/**
+ * Everything the finance section needs. `promotion` is the proof; `quote` is
+ * the figure it legitimises. A quote without a promotion is unrenderable by
+ * construction — `FinancePromotionInput` requires both.
+ */
+export type FinanceBlock = FinancePromotionInput;
+
 export interface VdpInput {
   vehicle: StructuredVehicle & {
     stockNumber: string;
@@ -98,7 +107,15 @@ export interface VdpInput {
     motExpiresOn: string | null;
     warranty: string | null;
   };
-  dealer: StructuredDealer & { whatsapp: string | null };
+  dealer: StructuredDealer & {
+    whatsapp: string | null;
+    openingHours?: readonly OpeningHoursView[];
+    fcaReference?: string | null;
+    companyNumber?: string | null;
+    legalName?: string | null;
+    tradeBodies?: readonly string[];
+    yearsTrading?: number | null;
+  };
   media: readonly MediaView[];
   mot: readonly MotTestView[];
   provenanceCheckedAt: string | null;
@@ -107,12 +124,34 @@ export interface VdpInput {
   batteryHealth?: BatteryHealthView | null;
   priceContext?: PriceContextView | null;
   /**
-   * Rendered finance block. Built ONLY by <FinancePromotion> in M8, which
-   * cannot produce output without a valid representative example. Until then
-   * this is null and no payment figure appears anywhere on the page.
+   * The finance block.
+   *
+   * M8: this is no longer a string. It is an `ApprovedPromotion` — a type that
+   * can only be constructed by `approvePromotion()`, which refuses unless the
+   * rule is signed off, the example is approved, in date, and reconciles. Pass
+   * null and no cost-of-credit figure appears anywhere on the page.
+   *
+   * Making it a token rather than pre-rendered HTML is the point: it is not
+   * possible to hand this page a payment figure that did not come with its
+   * representative example, and the compiler says so.
    */
-  financeHtml: string | null;
+  finance: FinanceBlock | null;
   theme?: BrandTheme;
+  /**
+   * Injected so the opening status ("Open until 6pm") is deterministic in
+   * tests and in the golden files. Defaults to now in production.
+   */
+  now?: Date;
+  /** Similar live stock, for the rail at the foot of the page. */
+  similar?: readonly SimilarVehicleView[];
+}
+
+export interface SimilarVehicleView {
+  name: string;
+  href: string;
+  pricePence: bigint | null;
+  meta: string;
+  thumbUrl: string | null;
 }
 
 const fmtPrice = (pence: bigint | null): string =>
@@ -197,8 +236,8 @@ function priceBlock(pricePence: bigint | null, ctx: PriceContextView | null | un
 function factsSection(input: VdpInput): string {
   const facts: string[] = [];
   const fact = (mark: 'good' | 'warn', glyph: string, head: string, note: string): string =>
-    html`<div class="fact">
-      <p class="fact-head"><span class="fact-mark mark-${mark}" aria-hidden="true">${glyph}</span>${head}</p>
+    html`<div class="card fact">
+      <h2 class="fact-head"><span class="fact-mark mark-${mark}" aria-hidden="true">${glyph}</span>${head}</h2>
       <p class="fact-note">${note}</p>
     </div>`;
 
@@ -246,9 +285,16 @@ function factsSection(input: VdpInput): string {
     const typical = low !== null && high !== null
       ? ` Typical is ${low}–${high}%${bh.ageYears !== null ? ` at ${bh.ageYears} years` : ''}.`
       : '';
-    facts.push(fact(below ? 'warn' : 'good', below ? '!' : '✓',
-      `Battery health ${bh.percentOfNew}%`,
-      `Tested ${fmtDate(bh.testedOn)}.${typical}`));
+    // The big figure with its meter and its typical range. A battery
+    // percentage means nothing to a buyer without the context of what is
+    // normal at that age — 93.2% reads as a fail to anyone who expects 100.
+    facts.push(html`<div class="well">
+      <h2>Battery health ${bh.percentOfNew}%</h2>
+      <p class="big-figure" aria-hidden="true">${bh.percentOfNew}%</p>
+      <p class="fact-head"><span class="fact-mark mark-${below ? 'warn' : 'good'}" aria-hidden="true">${below ? '!' : '✓'}</span>${below ? 'Below typical for its age' : 'Healthy for its age'}</p>
+      <p class="meter" aria-hidden="true"><b style="width:${Math.max(0, Math.min(100, bh.percentOfNew))}%"></b></p>
+      <p class="fact-note">Tested ${fmtDate(bh.testedOn)}.${typical}</p>
+    </div>`);
   }
 
   return facts.length === 0 ? '' : html`<div class="facts">${raw(facts.join(''))}</div>`;
@@ -305,28 +351,46 @@ export function mileageChart(mot: readonly MotTestView[]): string {
 
 function motSection(mot: readonly MotTestView[]): string {
   if (mot.length === 0) {
-    return html`<section class="card" id="mot">
-      <h2>MOT history</h2>
-      <p>No MOT tests recorded yet for this vehicle.</p>
+    return html`<section class="band" id="mot">
+      <div class="wrap">
+        <h2>MOT history</h2>
+        <p class="mot-none">No MOT tests recorded yet — a car under three years old has not needed one. We publish every DVSA test here the day it happens.</p>
+      </div>
     </section>`;
   }
   const latest = mot[0]!;
-  return html`<section class="card" id="mot">
-    <h2>MOT history</h2>
-    <p>Every test, every mileage reading, straight from the DVSA. Latest test ${fmtDate(latest.testDate)}.</p>
-    ${raw(mileageChart(mot))}
-    <table class="mot-table">
-      <caption class="visually-hidden">MOT test history with recorded mileage</caption>
-      <thead><tr><th scope="col">Date</th><th scope="col">Result</th><th scope="col">Mileage</th><th scope="col">Advisories</th></tr></thead>
-      <tbody>
-        ${raw(mot.map((t) => html`<tr>
-          <td>${fmtDate(t.testDate)}</td>
-          <td>${t.result === 'PASSED' ? 'Pass' : t.result === 'FAILED' ? 'Fail' : '—'}</td>
-          <td>${t.odometerMiles === null ? '—' : t.odometerMiles.toLocaleString('en-GB')}</td>
-          <td>${t.advisories.length === 0 ? 'None' : t.advisories.join('; ')}</td>
-        </tr>`).join(''))}
-      </tbody>
-    </table>
+  const chart = mileageChart(mot);
+  return html`<section class="band" id="mot">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>MOT history and mileage</h2>
+        <span class="section-note">Straight from the DVSA · latest test ${fmtDate(latest.testDate)}</span>
+      </div>
+      <div class="mot-split">
+        ${raw(chart ? `<figure class="chart-card">
+          <figcaption>Recorded mileage over time</figcaption>
+          <p class="section-note">Miles at each MOT test. Every reading higher than the last means no anomaly.</p>
+          ${chart}
+        </figure>` : '')}
+        <div class="mot-list">
+          ${raw(mot.map((t) => {
+            const pass = t.result === 'PASSED';
+            const adv = t.advisories.length;
+            return `<div class="mot-item">
+              <div class="mot-top">
+                <span class="badge ${pass ? 'badge-good' : 'badge-bad'}"><span aria-hidden="true">${pass ? '✓' : '✕'}</span>${pass ? 'Pass' : t.result === 'FAILED' ? 'Fail' : '—'}</span>
+                <span class="mot-date">${esc(fmtDate(t.testDate))}</span>
+                <span class="mot-miles">${t.odometerMiles === null ? '—' : esc(t.odometerMiles.toLocaleString('en-GB'))} miles</span>
+              </div>
+              <p class="mot-adv">
+                <span aria-hidden="true" class="${adv ? 'adv-mark' : 'adv-none'}">${adv ? '!' : '✓'}</span>
+                <span><b>${adv ? `${adv} advisor${adv === 1 ? 'y' : 'ies'}:</b> ` : 'No advisories</b>'}${adv ? esc(t.advisories.join('; ')) : ''}</span>
+              </p>
+            </div>`;
+          }).join(''))}
+        </div>
+      </div>
+    </div>
   </section>`;
 }
 
@@ -346,8 +410,8 @@ function specSection(v: VdpInput['vehicle']): string {
     ['MOT expires', v.motExpiresOn ? fmtDate(v.motExpiresOn) : null],
     ['Stock number', v.stockNumber],
   ];
-  return html`<section class="card" id="specification">
-    <h2>Specification</h2>
+  return html`<section class="section" id="specification">
+    <h2>Full specification</h2>
     <dl class="spec-grid">
       ${raw(rows.filter(([, value]) => value).map(([label, value]) =>
         html`<div><dt>${label}</dt><dd>${value}</dd></div>`).join(''))}
@@ -360,15 +424,211 @@ function trustSection(input: VdpInput): string {
   // the fact block above the fold, where a buyer sees it before they decide to
   // keep reading. Saying it twice made neither instance feel like a fact.
   const { dealer, vehicle } = input;
-  return html`<section class="card" id="trust">
-    <h2>Why buy from ${dealer.name}</h2>
-    ${when(vehicle.warranty, `<p><span class="badge">${esc(vehicle.warranty ?? '')}</span></p>`)}
-    ${when(dealer.ratingValue !== null && (dealer.reviewCount ?? 0) > 0,
-      `<p>Rated ${dealer.ratingValue} out of 5 from ${dealer.reviewCount} reviews.</p>`)}
-    <p>
-      ${dealer.street}, ${dealer.locality}, ${dealer.postcode}.
-      ${when(dealer.telephone, `<a href="tel:${esc(dealer.telephone ?? '')}">${esc(dealer.telephone ?? '')}</a>`)}
-    </p>
+  const rated = dealer.ratingValue !== null && (dealer.reviewCount ?? 0) > 0;
+  // Shown, not written in a sentence. "Rated 4.8 from 252 reviews" buried in a
+  // paragraph is the finding the design review opened with.
+  const cards: string[] = [];
+  if (vehicle.warranty) {
+    cards.push(`<div class="trust-card">
+      <p class="trust-figure">✓</p>
+      <p class="trust-title">${esc(vehicle.warranty)}</p>
+      <p class="trust-detail">Included with this car, not an upsell at the desk.</p>
+    </div>`);
+  }
+  if (dealer.yearsTrading) {
+    cards.push(`<div class="trust-card">
+      <p class="trust-figure">${dealer.yearsTrading}</p>
+      <p class="trust-title">Years on this forecourt</p>
+      <p class="trust-detail">Same family, same site, same people.</p>
+    </div>`);
+  }
+  cards.push(`<div class="trust-card">
+    <p class="trust-figure">✓</p>
+    <p class="trust-title">Every car history checked</p>
+    <p class="trust-detail">Finance, theft and write-off markers checked before it goes on sale.</p>
+  </div>`);
+
+  const addr = [dealer.street, dealer.locality, dealer.postcode].filter(Boolean).join(', ');
+  return html`<section class="band-3" id="trust">
+    <div class="wrap">
+      <h2>Buying from ${dealer.name}</h2>
+      <div class="trust-grid">
+        ${raw(rated ? `<div class="trust-card">
+          <p class="trust-figure trust-figure-lg">${esc(String(dealer.ratingValue))}</p>
+          <p class="stars" aria-hidden="true">★★★★★</p>
+          <p class="trust-detail">${esc(String(dealer.ratingValue))} out of 5 from ${esc(String(dealer.reviewCount))} reviews</p>
+        </div>` : '')}
+        ${raw(cards.join(''))}
+      </div>
+      <div class="trust-foot">
+        ${raw(dealer.tradeBodies && dealer.tradeBodies.length > 0 ? `<div class="trust-card">
+          <p class="trust-label">Approved and accountable</p>
+          <div class="bodies">${dealer.tradeBodies.map((b) => `<span>${esc(b)}</span>`).join('')}</div>
+        </div>` : '')}
+        <div class="trust-card">
+          <p class="trust-label">Where to find us</p>
+          <p class="trust-addr">${esc(addr)}</p>
+          ${when(dealer.telephone, `<p><a href="tel:${esc(dealer.telephone ?? '')}">${esc(dealer.telephone ?? '')}</a></p>`)}
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+
+/**
+ * The hero gallery: a scroll-snap rail, swipeable with no JavaScript.
+ *
+ * Only the first photograph is eager and `fetchpriority="high"` — it is the
+ * LCP element and the budget is 2.0s at p75 on mobile. The rest are lazy, so a
+ * fourteen-photograph gallery does not cost fourteen requests above the fold.
+ */
+function galleryFrame(
+  media: readonly MediaView[],
+  hero: MediaView | undefined,
+  ctx: PriceContextView | null | undefined,
+  pricePence: bigint | null,
+): string {
+  if (!hero) {
+    return html`<div class="gallery-empty">
+      <p class="gallery-empty-head">Photographs are being taken today.</p>
+      <p class="gallery-empty-note">Ring us and we will send you photos and a walkaround video within the hour, before this car goes on the website.</p>
+    </div>`;
+  }
+  // Show the presentable shots in the rail. Declared marks have their own
+  // section — leading a listing with a scuffed bumper loses the click the
+  // disclosure was meant to protect.
+  const shots = media.filter((m) => !m.isDamage);
+  const rail = (shots.length > 0 ? shots : [hero]).slice(0, 6);
+  const dropped = ctx && pricePence !== null && ctx.previousPence > pricePence;
+  const drop = dropped ? fmtPrice(ctx.previousPence - pricePence) : null;
+  return html`<div>
+    <div class="gallery-frame">
+      <div class="gallery-rail">
+        ${raw(rail.map((m, i) => `<figure>${picture(m, { hero: i === 0 })}</figure>`).join(''))}
+      </div>
+      ${raw(drop
+        ? `<p class="gallery-badges"><span class="badge badge-accent"><span aria-hidden="true">↓</span>Reduced by ${esc(drop)}</span></p>`
+        : '')}
+      ${raw(media.length > 1 ? `<a class="gallery-all" href="#gallery">View all ${media.length} photos</a>` : '')}
+    </div>
+    ${raw(rail.length > 1
+      ? `<div class="gallery-dots" aria-hidden="true">${rail.map(() => '<span></span>').join('')}</div>`
+      : '')}
+  </div>`;
+}
+
+/** The six facts a buyer scans before anything else. */
+function keySpecs(v: VdpInput['vehicle']): [string, string][] {
+  const out: [string, string][] = [];
+  if (v.mileage !== null) out.push(['Mileage', v.mileage.toLocaleString('en-GB')]);
+  if (v.fuelType) out.push(['Fuel', v.fuelType]);
+  if (v.transmission) out.push(['Gearbox', v.transmission]);
+  if (v.bodyStyle) out.push(['Body', v.bodyStyle]);
+  if (v.seats !== null) out.push(['Seats', String(v.seats)]);
+  if (v.formerKeepers !== null) out.push(['Owners', String(v.formerKeepers)]);
+  return out;
+}
+
+/** Short reassurances in the buy column — shown, not written in a sentence. */
+function reassuranceList(input: VdpInput): string {
+  const items: string[] = [];
+  if (input.vehicle.warranty) items.push(input.vehicle.warranty);
+  // The stored value may already read "Full Tesla service history" — appending
+  // the words again gives "…service history service history".
+  if (input.vehicle.serviceHistory) {
+    const sh = input.vehicle.serviceHistory;
+    items.push(/service history/i.test(sh) ? sh : `${sh} service history`);
+  }
+  if (input.vehicle.motExpiresOn) items.push(`MOT to ${fmtDate(input.vehicle.motExpiresOn)}`);
+  if (input.vehicle.keyCount !== null && input.vehicle.keyCount > 1) items.push(`${input.vehicle.keyCount} keys`);
+  if (items.length === 0) return '';
+  return html`<ul class="reassure">
+    ${raw(items.map((i) => `<li><span class="tick" aria-hidden="true">✓</span>${esc(i)}</li>`).join(''))}
+  </ul>`;
+}
+
+/**
+ * Declared condition, on the dark plane.
+ *
+ * No competitor shows damage voluntarily, so this is the page's strongest
+ * trust signal and it is designed to read as confidence: a count, each mark
+ * named, each photographed. Naming matters — "3 photos" is not a trust signal,
+ * "kerbed nearside front alloy" is.
+ */
+function declaredConditionSection(damage: readonly MediaView[]): string {
+  if (damage.length === 0) return '';
+  const n = damage.length;
+  return html`<section class="plane" id="condition">
+    <div class="wrap">
+      <div class="declared-head">
+        <div class="declared-intro">
+          <p class="plane-eyebrow">Declared condition</p>
+          <h2 class="h2-lg">Every mark on this car, photographed and named.</h2>
+          <p class="declared-lead">A used car has history. We photograph and caption all of it before you drive here, so nothing on the forecourt is a surprise.</p>
+        </div>
+        <p class="declared-count">
+          <b>${n}</b><span>mark${n === 1 ? '' : 's'} declared</span>
+        </p>
+      </div>
+      <ul class="marks">
+        ${raw(damage.map((m) => `<li class="mark">
+          ${picture(m)}
+          <div class="mark-body">
+            <h3>${esc(m.damageLabel ?? 'Declared mark')}</h3>
+            <p>${esc(m.alt)}</p>
+          </div>
+        </li>`).join(''))}
+      </ul>
+    </div>
+  </section>`;
+}
+
+/**
+ * Provenance and battery health, side by side.
+ *
+ * Both are stated outcomes rather than badges. Provenance is tri-state: only an
+ * explicit `false` produces "no outstanding finance"; an unknown produces
+ * silence, because rendering a missing field as good news is how a provenance
+ * badge becomes a misrepresentation.
+ */
+function provenanceSection(input: VdpInput): string {
+  const facts = factsSection(input);
+  if (!facts) return '';
+  return html`<div class="split">${raw(facts)}</div>`;
+}
+
+/** The full gallery grid, below the fold. */
+function gallerySection(media: readonly MediaView[]): string {
+  const shots = media.filter((m) => !m.isDamage);
+  if (shots.length < 2) return '';
+  return html`<section class="section" id="gallery">
+    <div class="section-head">
+      <h2>Photographs <span class="section-count">${shots.length}</span></h2>
+      <span class="section-note">Swipe or scroll to see more</span>
+    </div>
+    <div class="photo-grid">
+      ${raw(shots.map((m) => picture(m)).join(''))}
+    </div>
+  </section>`;
+}
+
+/** Similar live stock — the rail at the foot of the page. */
+function similarSection(similar: readonly SimilarVehicleView[] | undefined): string {
+  if (!similar || similar.length === 0) return '';
+  return html`<section class="section" id="similar">
+    <h2>Similar in stock</h2>
+    <ul class="rail">
+      ${raw(similar.map((s) => `<li class="v-card"><a class="v-card-link" href="${esc(s.href)}">
+        ${s.thumbUrl
+          ? `<img class="v-thumb" src="${esc(s.thumbUrl)}" alt="${esc(s.name)}" loading="lazy" decoding="async" width="800" height="600">`
+          : '<span class="v-thumb-empty" aria-hidden="true"></span>'}
+        <div class="v-card-body">
+          <p class="v-name">${esc(s.name)}</p>
+          <p class="v-deriv">${esc(s.meta)}</p>
+          <p class="v-price">${esc(fmtPrice(s.pricePence))}</p>
+        </div>
+      </a></li>`).join(''))}
+    </ul>
   </section>`;
 }
 
@@ -415,73 +675,96 @@ ${hero ? `<meta property="og:image" content="${esc(hero.variants.at(-1)?.url ?? 
 </head>
 <body>
 <a class="visually-hidden" href="#main">Skip to content</a>
-<header class="wrap">
-  <nav aria-label="Breadcrumb">
-    <a href="/">Home</a> › <a href="/used-cars">Used cars</a>${v.make ? ` › <a href="/used-cars/${esc(v.make.toLowerCase().replace(/\s+/g, '-'))}">${esc(v.make)}</a>` : ''}
-  </nav>
-</header>
+${masthead(dealer, input.now ? { now: input.now } : {})}
 
 <main id="main">
-  <!-- 1. Gallery -->
-  <div class="vdp-gallery">${hero ? picture(hero, { hero: true }) : ''}</div>
-
   <div class="wrap">
-    <!-- 2. Make / model / derivative -->
-    <div class="vdp-head">
-      <h1 class="vdp-title">${esc(name)}</h1>
-      ${regPlate(v.registration)}
-
-      <!-- 3. Price, and finance only if it is compliant -->
-      ${priceBlock(v.pricePence, input.priceContext)}
-      ${input.financeHtml ?? ''}
-
-      <!-- 4. Key specs -->
-      <ul class="vdp-specs">
-        ${v.year ? `<li><b>${esc(v.year)}</b></li>` : ''}
-        <li><b>${esc(fmtMiles(v.mileage))}</b></li>
-        ${v.fuelType ? `<li><b>${esc(v.fuelType)}</b></li>` : ''}
-        ${v.transmission ? `<li><b>${esc(v.transmission)}</b></li>` : ''}
-      </ul>
-    </div>
-
-    <!-- 5. CTA row -->
-    <div class="cta-row">
-      ${dealer.telephone ? `<a class="btn btn-primary" href="tel:${esc(dealer.telephone)}">Call us</a>` : ''}
-      ${dealer.whatsapp ? `<a class="btn" href="https://wa.me/${esc(dealer.whatsapp)}?text=${encodeURIComponent(`Hi, I'm interested in the ${name} (${v.registration})`)}">WhatsApp</a>` : ''}
-      <a class="btn" href="#enquire">Enquire</a>
-      <a class="btn" href="#reserve">Reserve</a>
-    </div>
-
-    <!-- 6. The facts that decide whether they get in the car and drive over -->
-    ${factsSection(input)}
-
-    ${v.description ? `<section class="card"><h2>About this ${esc(v.make ?? 'car')}</h2><p>${esc(v.description)}</p></section>` : ''}
-
-    ${specSection(v)}
-    ${motSection(input.mot)}
-
-    ${damage.length > 0 ? `<section class="card" id="condition">
-      <h2>Declared condition</h2>
-      <p>We photograph anything worth knowing about before you travel.</p>
-      ${damage.map((m) => m.damageLabel
-        ? `<figure class="declared"><figcaption>${esc(m.damageLabel)}</figcaption>${picture(m)}</figure>`
-        : picture(m)).join('')}
-    </section>` : ''}
-
-    ${trustSection(input)}
-
-    <section class="card" id="enquire">
-      <h2>Enquire about this ${esc(v.make ?? 'vehicle')}</h2>
-      <form method="post" action="/enquiries">
-        <input type="hidden" name="vehicle" value="${esc(v.registration)}">
-        <p><label for="name">Your name</label><br><input id="name" name="name" required autocomplete="name"></p>
-        <p><label for="email">Email</label><br><input id="email" name="email" type="email" required autocomplete="email"></p>
-        <p><label for="phone">Phone</label><br><input id="phone" name="phone" type="tel" autocomplete="tel"></p>
-        <p><label for="message">Message</label><br><textarea id="message" name="message" rows="4"></textarea></p>
-        <p><button class="btn btn-primary" type="submit">Send enquiry</button></p>
-      </form>
-    </section>
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span aria-hidden="true">/</span><a href="/used-cars">Used cars</a>${v.make ? `<span aria-hidden="true">/</span><a href="/used-cars/${esc(v.make.toLowerCase().replace(/\s+/g, '-'))}">${esc(v.make)}</a>` : ''}
+    </nav>
   </div>
+
+  <!-- HERO. The above-fold order is fixed by the design brief:
+       gallery → name → price → key specs → CTA row. -->
+  <section class="hero">
+    <div class="hero-media">${galleryFrame(media, hero, input.priceContext, v.pricePence)}</div>
+
+    <div class="hero-buy">
+      <div>
+        <h1 class="vdp-title">${v.year ? `<span class="yr">${esc(String(v.year))}</span> ` : ''}${esc([v.make, v.model].filter(Boolean).join(' '))}</h1>
+        ${v.derivative ? `<p class="vdp-deriv">${esc(v.derivative)}</p>` : ''}
+        <div class="vdp-ids">
+          ${regPlate(v.registration)}
+          <span class="stock-no">Stock ${esc(v.stockNumber)}</span>
+        </div>
+      </div>
+
+      <!-- Price. The finance figure lives with its representative example,
+           further down — a payment figure above the fold with the example
+           below it is not "clear, concise and prominent" (CONC 3.5.4R). -->
+      <div>${priceBlock(v.pricePence, input.priceContext)}</div>
+
+      <ul class="key-specs">
+        ${keySpecs(v).map((s) =>
+          `<li><span class="k">${esc(s[0])}</span><span class="v">${esc(s[1])}</span></li>`).join('')}
+      </ul>
+
+      <div class="cta-row">
+        ${dealer.telephone ? `<a class="btn btn-primary" href="tel:${esc(dealer.telephone)}">Call the forecourt</a>` : ''}
+        <a class="btn btn-accent" href="#reserve">Reserve</a>
+        <a class="btn" href="#enquire">Enquire</a>
+        ${dealer.whatsapp ? `<a class="btn" href="https://wa.me/${esc(dealer.whatsapp)}?text=${encodeURIComponent(`Hi, I'm interested in the ${name} (${v.registration})`)}">WhatsApp</a>` : ''}
+      </div>
+
+      ${reassuranceList(input)}
+    </div>
+  </section>
+
+  <!-- DECLARED CONDITION — full-bleed dark plane.
+       Our biggest differentiator, so it is not a grey box halfway down. -->
+  ${declaredConditionSection(damage)}
+
+  <!-- The facts that decide whether they get in the car and drive over -->
+  ${provenanceSection(input)}
+
+  ${gallerySection(media)}
+
+  ${motSection(input.mot)}
+
+  ${specSection(v)}
+
+  ${v.description ? `<section class="section"><h2>About this ${esc(v.make ?? 'car')}</h2><p class="prose">${esc(v.description)}</p></section>` : ''}
+
+  <section class="band-3" id="finance">
+    <div class="wrap">
+      ${input.finance
+        ? renderFinancePromotion(input.finance)
+        : renderFinanceUnavailable({ name: dealer.name, fcaReference: dealer.fcaReference ?? null })}
+    </div>
+  </section>
+
+  ${trustSection(input)}
+
+  <section class="plane" id="enquire">
+    <div class="enq">
+      <div>
+        <h2 class="h2-lg">Ask us anything about this ${esc(v.make ?? 'car')}</h2>
+        <p>A real person at the forecourt answers these — usually within the hour, always the same day. Ask for a video walkaround if you are coming a distance.</p>
+        ${dealer.telephone ? `<p>Or ring <a href="tel:${esc(dealer.telephone)}">${esc(dealer.telephone)}</a></p>` : ''}
+      </div>
+      <form class="enq-form" method="post" action="/enquiries">
+        <input type="hidden" name="vehicle" value="${esc(v.registration)}">
+        <label><span>Your name</span><input name="name" required autocomplete="name" autocapitalize="words"></label>
+        <label><span>Email</span><input name="email" type="email" required autocomplete="email" inputmode="email"></label>
+        <label><span>Phone</span><input name="phone" type="tel" autocomplete="tel" inputmode="tel"></label>
+        <label class="full"><span>Your question</span><textarea name="message" rows="3" placeholder="Is it available to view on Saturday morning?"></textarea></label>
+        <button class="full" type="submit">Send my enquiry</button>
+        <p class="enq-note">We will only use this to answer you about this car. No marketing unless you tick to ask for it.</p>
+      </form>
+    </div>
+  </section>
+
+  ${similarSection(input.similar)}
 </main>
 
 <!-- Sticky on mobile so a buyer never scrolls back up to find the phone number -->
@@ -490,10 +773,7 @@ ${hero ? `<meta property="og:image" content="${esc(hero.variants.at(-1)?.url ?? 
   <a class="btn" href="#enquire">Enquire</a>
 </div>
 
-<footer class="wrap">
-  <p>${esc(dealer.name)} · ${esc(dealer.street)}, ${esc(dealer.locality)}, ${esc(dealer.postcode)}</p>
-  <p><a href="/initial-disclosure">Initial disclosure</a> · <a href="/complaints-procedure">Complaints procedure</a> · <a href="/privacy-policy">Privacy policy</a> · <a href="/terms">Terms</a></p>
-</footer>
+${siteFooter(dealer)}
 <style>.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}</style>
 </body>
 </html>`;

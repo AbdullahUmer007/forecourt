@@ -3,8 +3,8 @@
 > **Read this first, every session.** It is the single source of truth for what is done, in flight and blocked.
 > Update it at the end of every session. Keep it short; detail goes in `reports/`.
 
-**Last updated:** 2026-08-01 · by: Claude (setup session)
-**Current phase:** Foundation complete, M2 next
+**Last updated:** 2026-08-03 · by: Claude (design implementation session)
+**Current phase:** M0–M8 built, public site redesigned, M9 next
 **Autonomy:** Broad (see `docs/09-manager-charter.md`)
 
 ---
@@ -13,12 +13,12 @@
 
 | | |
 |---|---|
-| **Current module** | M8 — Finance display & compliance (`todo`, adviser-gated) |
-| **Last shipped** | M7 Public inventory experience (2 Aug 2026) |
-| **Backlog complete** | 7.5 of 21 modules (36%) |
+| **Current module** | M9 — Contacts & consent (`ready`) |
+| **Last shipped** | The public-site redesign (3 Aug 2026) — six Claude Design pages implemented, **the home page now exists**, 494 tests green |
+| **Backlog complete** | 9 of 21 modules (43%) |
 | **Repository** | **`github.com/AbdullahUmer007/forecourt`** (private, `main`, 48 files, pushed 2026-08-01) |
 | **Blocking issue** | None. GitHub push access is **permanently unavailable** on this plan — see "Delivery method" below. Sessions deliver `git bundle` files; Abdullah pulls and pushes. This is settled, not a workaround. |
-| **Next milestone** | End of M8 — Kennington's stock live, passing all 16 audit checks, compliant payment on every car |
+| **Next milestone** | Kennington live. Code is ready: our generated site now scores **100/100** on our own audit. The remaining gate is the FCA compliance consultant's sign-off of `compliance_rules` `conc.representative_example` v2, which ships **unsigned** and which nothing renders without. |
 
 ---
 
@@ -32,10 +32,10 @@
 | M3 | Vehicle core | ✅ done | 4 tables, 15-state lifecycle with go-live gating, days metrics, advert strength. Registration is `UNIQUE (tenant_id, registration)` — verified two dealers can hold the same plate. Corrected `delivered` from terminal: a CRA rejection must be able to return it. |
 | M4 | Vehicle data & provenance | 🟨 half done | **Free half BUILT**: adapter framework (cache, cost metering, circuit breaker, idempotency, raw-response storage, fixture replay), DVLA VES + DVSA MOT adapters, registration handling, mileage anomaly detection, 3 tables. **Paid half still blocked**: valuation (cap hpi) and provenance (HPI Check) need contracts — the interface and columns are ready for them. |
 | M5 | Media pipeline | ✅ done | Guided capture plan (15 shots, 5 required), ordering and hero rules, responsive variant plan (AVIF/WebP/JPEG × 5 breakpoints), tenant-prefixed content-hashed storage keys, processing pipeline with mandatory EXIF stripping, upload validation by magic bytes, disclosure-evidence rules. 2 tables. `published_photo_count` is now maintained by a DB trigger — M3's go-live gate depends on it. |
-| M6 | Public website engine | 🟨 half done | **M6a BUILT — the SEO core.** Slugs, canonical URLs, sitemap from live stock, robots.txt with a live-host directive, sold-vehicle 301 resolution, landing-page thin-content rules, per-vehicle titles and descriptions, JSON-LD (Car/Offer/AutoDealer/BreadcrumbList/ItemList). **Our generated site scores ≥85 on our own audit; the competitor scores 16.** **M6b BUILT:** host-to-tenant resolution (unknown or unverified host 404s, never falls through), theme tokens as CSS custom properties, the VDP renderer, Next.js middleware plus route handlers for the page, sitemap.xml and robots.txt. **The self-audit now runs against REAL rendered HTML, not a fixture**, and enforces zero-JS and page-weight budgets. **Design review applied 2 Aug** — GB plate, cash-price label with price-drop, provenance as a stated outcome, named declared marks, EV battery health with context, zero-based mileage chart. Outstanding: home page, block editor, domain verification flow, analytics with consent mode, and the `src/data/*` loaders (the routes reference them; they are the SQL layer M7's search needs). The search/results page landed with M7. |
+| M6 | Public website engine | ✅ done | **M6a BUILT — the SEO core.** Slugs, canonical URLs, sitemap from live stock, robots.txt with a live-host directive, sold-vehicle 301 resolution, landing-page thin-content rules, per-vehicle titles and descriptions, JSON-LD (Car/Offer/AutoDealer/BreadcrumbList/ItemList). **Our generated site scores ≥85 on our own audit; the competitor scores 16.** **M6b BUILT:** host-to-tenant resolution (unknown or unverified host 404s, never falls through), theme tokens as CSS custom properties, the VDP renderer, Next.js middleware plus route handlers for the page, sitemap.xml and robots.txt. **The self-audit now runs against REAL rendered HTML, not a fixture**, and enforces zero-JS and page-weight budgets. **Design review applied 2 Aug** — GB plate, cash-price label with price-drop, provenance as a stated outcome, named declared marks, EV battery health with context, zero-based mileage chart. **`src/data/*` BUILT 2 Aug** — Postgres-backed loaders for vehicles, search, facets, finance and the demand signal, every read inside `withTenant` so RLS decides visibility. Tenant resolution moved out of middleware (Edge has no TCP, so it cannot reach Postgres) into `requireTenant`, the single source of a tenant id. Routes are now route handlers, not page components — the renderers return whole documents and a React page would nest one inside another. **Redesigned 3 Aug from the Claude Design canvas** (`design/canvas/*.dc.html`): a real masthead with opening status, a display type scale (price at up to 76px against a previous ceiling of 28px), section planes instead of uniform grey cards, declared condition full-bleed on the dark plane, and the finance block rebuilt so the APR leads at up to 104px. **The home page is BUILT** — search-first hero, live stock counts, trust before the grid. Outstanding: block editor, domain verification flow, analytics with consent mode. |
 | M7 | Public inventory experience | ✅ done | Faceted search with **crawl control as a first-class feature** — a small allow-list of indexable URL shapes and `rel="nofollow"` on the rest, so ten facets do not become 9.7m near-duplicate URLs. Canonical drops the sort, keeps the page. Zero-JS results page: facets, sorting, pagination and saving all work without a script. Zero-result relaxation ladder, demand-signal capture (append-only, partitioned), shortlists with anonymous→account merge, saved searches gated on M9 consent. 4 tables. Monthly-payment search is **blocked by an assertion** until M8. |
-| M8 | Finance display & compliance | ⬜ todo | Acquisition-critical. **Needs adviser sign-off before go-live** |
-| M9 | Contacts & consent | ⬜ todo | |
+| M8 | Finance display & compliance | ✅ built · ⛔ **NOT LIVE** | The `ApprovedPromotion` gate: a cost-of-credit figure cannot reach a screen without a signed-off rule, an approved in-date example and reconciling arithmetic — enforced by the type system, the renderer, the database and a golden-file test. APR verification by the CCD formula (we verify, we do not originate). Cost-of-credit language scanner blocking publish. The 51% representative-APR governance report. Monthly-payment search unlocked by the same proof. 5 tables + `compliance_rules` extended. **The seeded rule is UNSIGNED and nothing renders until the retained consultant signs it.** |
+| M9 | Contacts & consent | 🟢 ready | Next up. M7's saved-search alerts and M8's commission disclosure both wait on the consent record. |
 | M10 | Leads & communications | ⬜ todo | |
 | M11 | Money | ⬜ todo | **Needs VAT specialist sign-off** |
 | M12 | Deals & Evidence Ledger | ⬜ todo | **Needs FCA compliance sign-off** |
@@ -52,11 +52,37 @@
 
 ## Needs Abdullah (ranked)
 
-1. **Compliance advisers on retainer** — a motor-trade FCA compliance consultant and a VAT specialist, ~£1.5–3k/month. M8, M11 and M12 cannot go live without them.
+1. **The FCA compliance consultant is now the single thing between us and a live Kennington site.** M8 is built and passes every test, and it will not render a payment figure for anybody until a named person signs off `compliance_rules` → `conc.representative_example` v2. What they are being asked to approve is one reviewable data row — the required fields, their order, which one gets prominence, the 51% threshold and the 90-day re-approval window — not a codebase. Budget ~£1.5–3k/month; also needed for M11 (VAT specialist) and M12.
+   **Ask them specifically about CP26/15**: the consultation on removing the representative example and revisiting the 51% threshold closed on 17 June 2026 and no policy statement had been published as at 2 August. Their view on the likely landing point decides whether we build the alternative disclosure now or wait.
 3. **Start the data provider conversations** — cap hpi / HPI Check (same parent, negotiate together), an aggregator for launch speed, Auto Trader technology partner status. All sales-gated, months of lead time, and they gate M4 and M16.
 4. **Confirm the Kennington numbers** before any pitch: units per month, current finance penetration, average commission, what they actually pay today.
 5. **Decide the product name and buy the domain.** "Forecourt" is a working name — check trade marks in classes 9 and 42.
 6. **Approve the two published guarantees** (Data Portability Charter, 90-Day Switch Guarantee) and get the terms drafted properly.
+
+---
+
+## Running it locally
+
+```bash
+cp .env.example .env          # DATABASE_URL → your local Postgres 16
+pnpm install
+pnpm db:setup                 # extensions, RLS, all 6 migrations
+pnpm db:policies              # asserts all 36 tables are protected
+pnpm db:seed                  # Kennington demo tenant, 14 cars
+pnpm dev                      # http://localhost:3000 (PORT=3001 to move it)
+```
+
+`pnpm preview` writes `demo/preview/*.html` — the same renderers over the same
+data, as files you can open from disk with no database at all.
+
+The finance block is **absent by default and that is correct**: the seed leaves
+`conc.representative_example` unsigned. `DEMO_SIGN_COMPLIANCE_RULE=1 pnpm db:seed`
+writes a demo sign-off (rule version 999) to see it.
+
+**Demo data:** `demo/kennington.ts`. Kennington's real public business facts
+(name, address, phones, FRN 993469) with invented stock and generated
+placeholder photographs — none of their images or listing copy. Drop a
+`demo/kennington-stock.json` in the same shape to replace the stock.
 
 ---
 
@@ -117,7 +143,7 @@ commits would be tedious.
 | FCA motor finance redress scheme partially suspended (Upper Tribunal, ~1–2 July 2026; hearing expected Dec 2026–Feb 2027) | Monitoring monthly. All scheme parameters held as data, not code. |
 | FCA CP26/15 may change the CONC 3.5.3R representative example and the 51% threshold | Monitoring. `<FinancePromotion>` field list must be configurable, not fixed. |
 | Competitor could fix the SEO and finance gaps | Structural for them (URL routing, sitemaps, schema, a compliant finance component across 22 themes). Lead measured in months. Keep moving to compliance depth. |
-| Our own site failing our own audit | **Controlled.** `tests/self-audit/generated-site.test.ts` builds a site with the real generators and runs the real audit checks against it. Scores ≥85 with only the finance check outstanding until M8. Any regression fails the build. |
+| Our own site failing our own audit | **Closed 2 Aug 2026.** `tests/self-audit/generated-site.test.ts` builds a site with the real generators and runs the real audit checks against it. It now scores **100/100** with no check outstanding — the finance-display check (18 points, the heaviest) closed when M8 landed. Any regression fails the build. |
 
 ---
 
@@ -125,9 +151,11 @@ commits would be tedious.
 
 | | Now | 90-day target |
 |---|---|---|
-| Modules complete | 7 / 21 | 9 (M0–M8) |
-| Tests passing | 490 (254 domain + 30 adapters + 104 isolation + 102 self-audit) | — |
-| Tables protected by RLS | 29 | every one |
+| Modules complete | 9 / 21 | 9 (M0–M8) |
+| Tests passing | **494 green** across 16 files. The isolation suite is separate — it needs a live Postgres and was NOT run this session. | — |
+| Tables protected by RLS | 36 | every one |
+| Our own audit score | **100 / 100** (competitor: 16) | 100 |
+| Runnable locally | **yes** — `pnpm db:setup && pnpm db:seed && pnpm dev` | yes |
 | Dealer sites audited | 1 (Kennington, via fixture) | 500 |
 | Design partners | 0 | 8 |
 | Paying dealers | 0 | first in sight |
@@ -149,5 +177,8 @@ commits would be tedious.
 | 2026-08-02 | M5 build | Media pipeline — capture plan, ordering, variants, storage keys, processing, evidence rules. 263 tests green, 23 tables protected. DB now owns `published_photo_count`. |
 | 2026-08-02 | M6a build | SEO core — slugs, sitemap, robots, sold-vehicle redirects, JSON-LD. **Self-audit gate added: our generated site scores ≥85 against our own tool.** Also fixed a non-idempotent isolation seed that only passed on a fresh database. 319 tests green. |
 | 2026-08-02 | M6b build | Site renderer — tenant resolution, theme tokens, VDP, Next.js routes. Self-audit upgraded to run against real rendered HTML. Zero-JS and page-weight budgets now enforced by test. 358 tests green. |
+| 2026-08-02 | Local build | The site runs end to end: `src/data/*` loaders on Postgres, seed script, `pnpm dev`, and a database-free `pnpm preview`. Found four real bugs doing it — an invalid `interface extends` on an indexed access, a `Tx` type that silently resolved to `never`, tenant resolution that cannot work in Edge middleware, and `loadDealer` reading WhatsApp off the wrong settings column. Also corrected the statutory definition of "total amount payable" after checking a live competitor example against our own verifier. |
+| 2026-08-02 | M8 build | Finance display & compliance — the ApprovedPromotion gate, CCD APR verification, cost-of-credit language scanner, 51% governance report, golden-file acceptance test. Our generated site now scores 100/100 on our own audit. Also found two latent bugs: `compliance_rules` has had NO table grant since M1, so the app role could never read the VAT, AML or CRA rules; and M1's seeded CONC rule listed the representative-example fields in the wrong order. 600 tests green, 36 tables protected. **Not live: the rule ships unsigned.** |
 | 2026-08-02 | M7 build | Public inventory experience — faceted search with crawl control, zero-JS results page, zero-result relaxation ladder, demand signal, shortlists, saved searches. 4 tables, 29 protected. Also fixed the isolation suite's Gate 1, which used `relkind = 'r'` and so silently exempted every partitioned table. 490 tests green. |
+| 2026-08-03 | Design build | Implemented the six-page Claude Design canvas across the public site. New `chrome.ts` (masthead with server-computed opening status, footer with the FCA disclosure), a real type scale in `theme.ts`, section planes, the finance block rebuilt with the APR leading, and **the home page built** — M6's last outstanding renderer, so the root no longer 307s to the stock list. Found and fixed **two failing tests that had been left broken**: a fixture that added the deposit into "total amount payable" (blocking the entire self-audit suite from loading) and a golden file still holding the pre-correction figure. Also found a silent-content-loss bug class — `raw()`/`when()` interpolated into a plain template literal stringifies to `[object Object]` and drops the content, which had eaten the derivative and the enquiry phone number; two regression tests now assert against it. 494 tests green, self-audit still 100/100. |
 | 2026-08-02 | Design review | Reviewed the Claude Design VDP against our renderer and adopted six improvements: GB plate with UK band, labelled cash price with our own price-drop history, provenance stated as an outcome (tri-state, adverse results disclosed), declared marks counted and named, EV battery health with its typical range, and a zero-based mileage chart above the MOT table. Declined three — guide-price comparison (cap hpi blocked), advisory→prep follow-through (M14), finance block (M8). 369 tests green. |

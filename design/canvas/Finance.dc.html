@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  button, input, select { font: inherit; color: inherit; }
+  summary::-webkit-details-marker { display: none; }
+  summary { list-style: none; cursor: pointer; }
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms !important; } }
+</style>
+</helmet>
+<div style="{{ theme }}">
+
+  <!-- FULL BLOCK -->
+  <sc-if value="{{ isFull }}" hint-placeholder-val="{{ true }}">
+    <section style="background:var(--well,#E6F4F1);border-radius:10px;padding:clamp(18px,2.2cqw,32px)">
+      <div style="display:flex;flex-wrap:wrap;gap:clamp(16px,2.5cqw,40px);align-items:flex-start">
+
+        <div style="flex:1 1 min(100%,300px)">
+          <p style="margin:0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Representative APR</p>
+          <p style="margin:2px 0 0;font-size:clamp(52px,7.4cqw,104px);line-height:0.86;font-weight:700;letter-spacing:-0.035em;font-variant-numeric:proportional-nums">9.6%</p>
+          <p style="margin:6px 0 0;font-size:clamp(17px,1.8cqw,22px);line-height:1.2;font-weight:600">APR representative</p>
+          <p style="margin:10px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);max-width:40ch;text-wrap:pretty">This is the rate at least 51% of buyers taking this deal will be offered. Yours depends on your circumstances, and we will tell you your own APR in writing before you sign.</p>
+
+          <div style="margin-top:clamp(16px,2cqw,24px);background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:6px;padding:14px 16px">
+            <p style="margin:0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Your likely monthly payment</p>
+            <p style="margin:2px 0 0;font-size:26px;line-height:30px;font-weight:600;letter-spacing:-0.02em">£375.00 <span style="font-size:15px;font-weight:500;color:var(--mut,#475569)">a month</span></p>
+            <p style="margin:4px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569)">Hire Purchase · 48 months · £5,000 deposit</p>
+            <p style="margin:8px 0 0;font-size:13px;line-height:18px;color:var(--sub,#64748B)">Provided by Blue Motor Finance</p>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:16px">
+            <a href="#" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:16px;font-weight:600" style-hover="background:var(--b700,#0B4553);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Apply for finance</a>
+            <a href="#calculator" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:16px;font-weight:600" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none">Change the figures</a>
+          </div>
+        </div>
+
+        <div style="flex:1 1 min(100%,340px);background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:clamp(14px,1.6cqw,20px)">
+          <p style="margin:0 0 4px;font-size:15px;line-height:21px;font-weight:600">Representative example</p>
+          <p style="margin:0 0 12px;font-size:13px;line-height:18px;color:var(--sub,#64748B);text-wrap:pretty">The whole cost of this agreement, in the order the FCA sets. Nothing here is hidden or abbreviated.</p>
+          <ol style="list-style:none;margin:0;padding:0;counter-reset:ex">
+            <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+              <li style="display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:space-between;align-items:baseline;padding:{{ r.pad }};border-bottom:1px solid var(--bd,#E2E8F0);background:{{ r.bg }};border-left:3px solid {{ r.rule }};padding-left:{{ r.indent }}">
+                <span style="flex:1 1 auto;min-width:0">
+                  <span style="display:block;font-size:{{ r.labelSize }};line-height:1.35;font-weight:{{ r.labelWeight }};color:{{ r.labelColour }}">{{ r.label }}</span>
+                  <span style="display:block;font-size:12px;line-height:16px;color:var(--sub,#64748B);text-wrap:pretty">{{ r.gloss }}</span>
+                </span>
+                <span style="flex:none;font-family:'JetBrains Mono',monospace;font-size:{{ r.valueSize }};line-height:1.25;font-weight:600;font-variant-numeric:tabular-nums;text-align:right">{{ r.value }}</span>
+              </li>
+            </sc-for>
+          </ol>
+          <p style="margin:12px 0 0;font-size:12px;line-height:17px;color:var(--sub,#64748B);text-wrap:pretty">Figures are for this car at this price today, on Hire Purchase. Change the deposit, term or product and every line above changes — we will show you the new example before anything is signed.</p>
+        </div>
+      </div>
+
+      <div style="margin-top:clamp(16px,2cqw,24px);padding-top:16px;border-top:1px solid var(--bd,#E2E8F0);display:flex;flex-wrap:wrap;gap:clamp(12px,2cqw,32px)">
+        <ul style="list-style:none;margin:0;padding:0;flex:1 1 min(100%,260px);display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ disclosures }}" as="d" hint-placeholder-count="4">
+            <li style="display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:19px;color:var(--ink,#0F172A)">
+              <span aria-hidden="true" style="color:var(--mut,#475569);font-weight:700;flex:none">•</span>{{ d }}
+            </li>
+          </sc-for>
+        </ul>
+        <p style="flex:1 1 min(100%,300px);margin:0;font-size:12px;line-height:17px;color:var(--sub,#64748B);text-wrap:pretty">{{ legal }} <a href="#" style="color:var(--link,#0E5A6B);font-weight:600;text-decoration:underline" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Read our initial disclosure</a> — a web page, not a download.</p>
+      </div>
+    </section>
+  </sc-if>
+
+  <!-- IN A RESULTS CARD -->
+  <sc-if value="{{ isCard }}" hint-placeholder-val="{{ false }}">
+    <div style="border-top:1px solid var(--bd,#E2E8F0);padding-top:10px;margin-top:10px">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:baseline">
+        <span style="font-size:22px;line-height:26px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:proportional-nums">9.6% APR</span>
+        <span style="font-size:13px;line-height:18px;font-weight:600;color:var(--mut,#475569)">representative</span>
+      </div>
+      <p style="margin:2px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569)">£375.00 a month · 48 months · £5,000 deposit · HP</p>
+      <details style="margin-top:8px">
+        <summary style="display:flex;align-items:center;gap:8px;min-height:36px;font-size:13px;line-height:18px;font-weight:600;color:var(--link,#0E5A6B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Representative example<span aria-hidden="true" style="font-size:11px">▾</span></summary>
+        <ol style="list-style:none;margin:8px 0 0;padding:0">
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+            <li style="display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--bd,#E2E8F0)">
+              <span style="flex:1 1 auto;min-width:0;font-size:12px;line-height:16px;font-weight:{{ r.labelWeight }};color:{{ r.labelColour }}">{{ r.label }}</span>
+              <span style="flex:0 1 auto;margin-left:auto;white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:{{ r.cardValueSize }};line-height:16px;font-weight:600;font-variant-numeric:tabular-nums">{{ r.value }}</span>
+            </li>
+          </sc-for>
+        </ol>
+        <p style="margin:8px 0 0;font-size:11px;line-height:16px;color:var(--sub,#64748B);text-wrap:pretty">{{ legal }}</p>
+      </details>
+    </div>
+  </sc-if>
+
+  <!-- ABSENT -->
+  <sc-if value="{{ isAbsent }}" hint-placeholder-val="{{ false }}">
+    <section style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:clamp(18px,2.2cqw,32px);display:flex;flex-wrap:wrap;gap:clamp(16px,2.5cqw,40px);align-items:center">
+      <div style="flex:1 1 min(100%,320px)">
+        <p style="margin:0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Finance on this car</p>
+        <h2 style="margin:8px 0 0;font-size:clamp(20px,2.3cqw,32px);line-height:1.14;letter-spacing:-0.02em;font-weight:600;text-wrap:balance">We will quote this one by hand, with the figures in writing.</h2>
+        <p style="margin:12px 0 0;font-size:15px;line-height:22px;color:var(--mut,#475569);max-width:52ch;text-wrap:pretty">We only publish a monthly payment when it comes with a full representative example we can stand behind. This car does not have one yet, so we are not going to put a number on the page — a figure without its example is exactly how people end up in the wrong agreement.</p>
+        <p style="margin:12px 0 0;font-size:15px;line-height:22px;color:var(--mut,#475569);max-width:52ch;text-wrap:pretty">Tell us your deposit and how long you want to pay over. We will come back the same day with the rate, the total, and what your part-exchange is worth against it.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:18px">
+          <a href="tel:01908993469" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:16px;font-weight:600" style-hover="background:var(--b700,#0B4553);text-decoration:none">Ring for figures</a>
+          <a href="#" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:16px;font-weight:600" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none">Ask for a written quote</a>
+        </div>
+      </div>
+      <div style="flex:1 1 min(100%,240px);background:var(--well,#E6F4F1);border-radius:6px;padding:18px">
+        <p style="margin:0 0 12px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">What you will get, in writing</p>
+        <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ absentList }}" as="a" hint-placeholder-count="4">
+            <li style="display:flex;gap:9px;align-items:flex-start;font-size:14px;line-height:20px"><span aria-hidden="true" style="color:var(--good,#0CA30C);font-weight:700;flex:none">✓</span>{{ a }}</li>
+          </sc-for>
+        </ul>
+        <p style="margin:14px 0 0;font-size:12px;line-height:17px;color:var(--sub,#64748B);text-wrap:pretty">{{ legal }}</p>
+      </div>
+    </section>
+  </sc-if>
+
+  <!-- CALCULATOR -->
+  <sc-if value="{{ isCalc }}" hint-placeholder-val="{{ false }}">
+    <section id="calculator" style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;overflow:hidden">
+      <form style="padding:clamp(18px,2.2cqw,28px);display:flex;flex-wrap:wrap;gap:clamp(16px,2.5cqw,40px);border-bottom:1px solid var(--bd,#E2E8F0)">
+        <div style="flex:1 1 min(100%,300px)">
+          <h2 style="margin:0;font-size:clamp(20px,2.1cqw,28px);line-height:1.2;letter-spacing:-0.015em;font-weight:600">Work out your own figures</h2>
+          <p style="margin:10px 0 0;font-size:15px;line-height:22px;color:var(--mut,#475569);max-width:48ch;text-wrap:pretty">Pick your deposit, term and mileage and press the button. The page reloads with a new quote and a new representative example — every figure is worked out on our servers against the lender's live rates, never guessed in your browser.</p>
+          <p style="margin:12px 0 0;font-size:13px;line-height:19px;color:var(--sub,#64748B);max-width:48ch;text-wrap:pretty">No sliders that move numbers as you drag. A payment that changes while you look at it is not a quote, and we are not allowed to show one without its example.</p>
+        </div>
+        <div style="flex:1 1 min(100%,320px);display:flex;flex-direction:column;gap:14px">
+          <fieldset style="margin:0;padding:0;border:none">
+            <legend style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B);padding:0 0 8px">Product</legend>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <sc-for list="{{ products }}" as="p" hint-placeholder-count="2">
+                <label style="flex:1 1 120px;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:6px;border:1px solid {{ p.bd }};background:{{ p.bg }};font-size:15px;font-weight:600;cursor:pointer">
+                  <input type="radio" name="product" checked="{{ p.checked }}" style="width:18px;height:18px;margin:0;accent-color:#0E5A6B" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px" />{{ p.label }}
+                </label>
+              </sc-for>
+            </div>
+          </fieldset>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:10px">
+            <sc-for list="{{ calcFields }}" as="f" hint-placeholder-count="3">
+              <label style="display:flex;flex-direction:column;gap:6px">
+                <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">{{ f.label }}</span>
+                <select style="min-height:48px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);padding:0 10px;font-size:16px;font-weight:500" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">
+                  <sc-for list="{{ f.options }}" as="o" hint-placeholder-count="4">
+                    <option>{{ o }}</option>
+                  </sc-for>
+                </select>
+              </label>
+            </sc-for>
+          </div>
+          <button type="submit" style="min-height:52px;border:none;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:17px;font-weight:600;cursor:pointer;transition:background 100ms cubic-bezier(0.2,0,0,1)" style-hover="background:var(--b700,#0B4553)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Show me this quote</button>
+          <p style="margin:0;font-size:12px;line-height:17px;color:var(--sub,#64748B)">Takes about a second. No credit search, no effect on your credit file.</p>
+        </div>
+      </form>
+      <div style="background:var(--well,#E6F4F1);padding:clamp(18px,2.2cqw,28px)">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-bottom:14px">
+          <span style="display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 10px;border-radius:4px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);font-size:13px;font-weight:600"><span aria-hidden="true" style="color:var(--good,#0CA30C)">✓</span>Quote updated</span>
+          <span style="font-size:13px;line-height:18px;color:var(--mut,#475569)">Hire Purchase · £5,000 deposit · 48 months · 10,000 miles a year</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:clamp(16px,2.5cqw,40px);align-items:flex-start">
+          <div style="flex:1 1 min(100%,260px)">
+            <p style="margin:0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Representative APR</p>
+            <p style="margin:2px 0 0;font-size:clamp(44px,6cqw,80px);line-height:0.88;font-weight:700;letter-spacing:-0.035em">9.6%</p>
+            <p style="margin:6px 0 0;font-size:16px;line-height:22px;font-weight:600">APR representative</p>
+            <div style="margin-top:14px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:6px;padding:12px 14px">
+              <p style="margin:0;font-size:12px;line-height:16px;color:var(--sub,#64748B)">Your monthly payment</p>
+              <p style="margin:2px 0 0;font-size:24px;line-height:28px;font-weight:600;letter-spacing:-0.02em">£375.00 <span style="font-size:14px;font-weight:500;color:var(--mut,#475569)">a month</span></p>
+            </div>
+          </div>
+          <div style="flex:1 1 min(100%,300px);background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:14px 16px">
+            <p style="margin:0 0 10px;font-size:15px;line-height:21px;font-weight:600">Representative example</p>
+            <ol style="list-style:none;margin:0;padding:0">
+              <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+                <li style="display:flex;gap:12px;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--bd,#E2E8F0)">
+                  <span style="font-size:13px;line-height:18px;font-weight:{{ r.labelWeight }};color:{{ r.labelColour }}">{{ r.label }}</span>
+                  <span style="flex:none;font-family:'JetBrains Mono',monospace;font-size:{{ r.cardValueSize }};line-height:18px;font-weight:600;font-variant-numeric:tabular-nums">{{ r.value }}</span>
+                </li>
+              </sc-for>
+            </ol>
+          </div>
+        </div>
+        <p style="margin:16px 0 0;font-size:12px;line-height:17px;color:var(--sub,#64748B);max-width:96ch;text-wrap:pretty">{{ legal }} <a href="#" style="color:var(--link,#0E5A6B);font-weight:600;text-decoration:underline">Read our initial disclosure</a>.</p>
+      </div>
+    </section>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light' | 'dark'&quot;},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;card&quot;,&quot;absent&quot;,&quot;calculator&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;embed&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Advanced&quot;}}">
+class Component extends DCLogic {
+  tokens(dark) {
+    const light = {
+      "--s1": "#FFFFFF", "--s2": "#F8FAFC", "--s3": "#F1F5F9", "--bd": "#E2E8F0",
+      "--ink": "#0F172A", "--mut": "#475569", "--sub": "#64748B",
+      "--b600": "#0E5A6B", "--b700": "#0B4553", "--link": "#0E5A6B", "--well": "#E6F4F1",
+      "--accent": "#F59E0B", "--accentInk": "#B45309", "--good": "#0CA30C",
+      "--stripe": "rgba(15,23,42,0.05)"
+    };
+    const dk = {
+      "--s1": "#16181D", "--s2": "#0E1013", "--s3": "#1D2027", "--bd": "#2A2E36",
+      "--ink": "#FFFFFF", "--mut": "#94A3B8", "--sub": "#7A8598",
+      "--b600": "#0E5A6B", "--b700": "#0B4553", "--link": "#5EC7DC", "--well": "#1D2027",
+      "--accent": "#F59E0B", "--accentInk": "#F59E0B", "--good": "#0CA30C",
+      "--stripe": "rgba(255,255,255,0.06)"
+    };
+    return dark ? dk : light;
+  }
+
+  row(label, value, gloss, apr) {
+    return {
+      label, value, gloss,
+      labelSize: apr ? "17px" : "14px",
+      labelWeight: apr ? "700" : "400",
+      labelColour: "var(--ink,#0F172A)",
+      valueSize: apr ? "26px" : "14px",
+      cardValueSize: apr ? "15px" : "12px",
+      pad: apr ? "12px 0" : "9px 0",
+      bg: apr ? "var(--well,#E6F4F1)" : "transparent",
+      rule: apr ? "var(--b600,#0E5A6B)" : "transparent",
+      indent: apr ? "12px" : "0"
+    };
+  }
+
+  renderVals() {
+    const dark = (this.props.mode ?? "light") === "dark";
+    const variant = this.props.variant ?? "full";
+    const embed = this.props.embed ?? false;
+    const theme = embed
+      ? { fontFamily: "Inter, system-ui, sans-serif" }
+      : Object.assign({}, this.tokens(dark), {
+          containerType: "inline-size",
+          fontFamily: "Inter, system-ui, sans-serif",
+          color: dark ? "#FFFFFF" : "#0F172A"
+        });
+
+    return {
+      theme,
+      isFull: variant === "full",
+      isCard: variant === "card",
+      isAbsent: variant === "absent",
+      isCalc: variant === "calculator",
+      rows: [
+        this.row("Rate of interest", "9.9% fixed", "Fixed for the whole agreement — it cannot go up."),
+        this.row("Other charges", "None", "No arrangement fee, no option-to-purchase fee, no admin fee."),
+        this.row("Total amount of credit", "£14,999.00", "What you are borrowing after your deposit."),
+        this.row("Representative APR", "9.6% APR", "The total cost of borrowing as a yearly rate — the one figure to compare lenders on.", true),
+        this.row("Cash price / advance payment", "£19,999.00 / £5,000.00", "The car's price, and the deposit you put down."),
+        this.row("Duration of agreement", "48 months", "Four years of payments, then the car is yours."),
+        this.row("Total amount payable", "£18,000.00", "Deposit plus every payment — the whole cost."),
+        this.row("Amount of each repayment", "48 × £375.00", "The same amount every month, first one a month after delivery.")
+      ],
+      disclosures: [
+        "Kennington Car Sales Ltd is a credit broker, not a lender — FCA reference number 993469.",
+        "This agreement would be with Blue Motor Finance, one of eight lenders on our panel.",
+        "We receive a commission from the lender for introducing you. It does not change what you pay, and we tell you the amount in writing before you sign.",
+        "Finance is subject to status and affordability. You must be 18 or over and a UK resident."
+      ],
+      legal: "Kennington Car Sales Ltd is authorised and regulated by the Financial Conduct Authority, FRN 993469, as a credit broker not a lender. Finance subject to status. We may receive a commission for introducing you, disclosed in writing before signing.",
+      absentList: [
+        "The rate, whether it is fixed, and the full representative example",
+        "Any charge, itemised — or a line saying there are none",
+        "The total amount payable, not just the monthly figure",
+        "What your part-exchange is worth against this car"
+      ],
+      products: [
+        { label: "Hire Purchase", checked: true, bg: "var(--well,#E6F4F1)", bd: "var(--b600,#0E5A6B)" },
+        { label: "PCP", checked: false, bg: "var(--s1,#fff)", bd: "var(--bd,#E2E8F0)" }
+      ],
+      calcFields: [
+        { label: "Deposit", options: ["£5,000", "£1,000", "£2,500", "£7,500", "£10,000"] },
+        { label: "Term", options: ["48 months", "24 months", "36 months", "60 months"] },
+        { label: "Miles a year", options: ["10,000", "6,000", "8,000", "15,000", "20,000"] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

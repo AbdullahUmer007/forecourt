@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #E9EDF2; font-family: Inter, system-ui, sans-serif; color: #0F172A; }
+  a { color: #0E5A6B; }
+  a:hover { color: #0B4553; }
+</style>
+</helmet>
+
+<section style="padding:48px clamp(16px,3vw,56px) 96px;display:flex;flex-direction:column;gap:40px">
+  <header style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;max-width:1100px">
+    <div>
+      <p style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.08em;color:#64748B">FORECOURT · PUBLIC DEALER SITE</p>
+      <h1 style="margin:8px 0 0;font-size:40px;line-height:1.04;letter-spacing:-0.028em;font-weight:600">Home page template</h1>
+      <p style="margin:10px 0 0;font-size:16px;line-height:24px;color:#475569;max-width:74ch;text-wrap:pretty">Search-first hero, no stock photograph, no slider, no motion at all. One action from landing to a filtered stock list; the trust answer sits in the hero band, above any marketing. Shown for a 123-car dealer and a 14-car dealer from identical markup. Scroll inside each frame.</p>
+    </div>
+    <p style="margin:0;font-size:13px;line-height:18px;color:#64748B;font-family:'JetBrains Mono',monospace">turn 3 · 3a–3f</p>
+  </header>
+
+  <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+    <div id="3a" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">3a</span>
+        <span style="font-size:15px;font-weight:600">Mobile · light · 123 cars</span>
+      </div>
+      <div style="width:375px;height:820px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+        <dc-import name="Home" mode="light" size="large" sticky="{{ true }}" hint-size="375px,820px"></dc-import>
+      </div>
+      <p style="margin:0;width:375px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">The search card sits directly under the headline, so the first screen is: are you open · what have you got · pick three things · go. The four proof lines close the hero band before any section can start selling.</p>
+    </div>
+
+    <div id="3b" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">3b</span>
+        <span style="font-size:15px;font-weight:600">Mobile · dark · 14 cars, poor logo</span>
+      </div>
+      <div style="width:375px;height:820px;overflow:auto;border-radius:10px;border:1px solid #2A2E36;box-shadow:0 1px 3px rgba(15,23,42,0.16)">
+        <dc-import name="Home" mode="dark" size="small" sticky="{{ true }}" hint-size="375px,820px"></dc-import>
+      </div>
+      <p style="margin:0;width:375px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">A wide, badly proportioned logo is boxed at 36px high and never allowed to set the masthead's height; the dealer's name is typeset beside it in Inter, so a bad logo cannot make the page look amateur.</p>
+    </div>
+
+    <div id="3c" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">3c</span>
+        <span style="font-size:15px;font-weight:600">Desktop · light · 123 cars, decent logo</span>
+      </div>
+      <div style="width:1280px;height:900px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+        <dc-import name="Home" mode="light" size="large" hint-size="1280px,900px"></dc-import>
+      </div>
+    </div>
+
+    <div id="3d" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">3d</span>
+        <span style="font-size:15px;font-weight:600">Desktop · dark · 123 cars</span>
+      </div>
+      <div style="width:1280px;height:900px;overflow:auto;border-radius:10px;border:1px solid #2A2E36;box-shadow:0 1px 3px rgba(15,23,42,0.16)">
+        <dc-import name="Home" mode="dark" size="large" hint-size="1280px,900px"></dc-import>
+      </div>
+    </div>
+
+    <div id="3e" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#B45309;color:#fff;border-radius:4px;padding:3px 7px">3e</span>
+        <span style="font-size:15px;font-weight:600">Desktop · light · 14 cars, poor logo</span>
+      </div>
+      <div style="width:1280px;height:900px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+        <dc-import name="Home" mode="light" size="small" hint-size="1280px,900px"></dc-import>
+      </div>
+      <p style="margin:0;max-width:1280px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">Fourteen cars is a position, not a shortfall: the headline owns the number, the budget bands and make chips re-scale to the real stock, and the four proof figures still fill the "why buy here" row because they count what the dealer does, not how much they hold. The layout never has an empty column to fill.</p>
+    </div>
+
+    <div id="3f" style="display:flex;flex-direction:column;gap:10px;max-width:1280px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0E5A6B;color:#fff;border-radius:4px;padding:3px 7px">3f</span>
+        <span style="font-size:15px;font-weight:600">Implementation notes</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:20px">
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">Section order, and why</h2>
+          <p style="margin:0 0 16px;font-size:13px;line-height:18px;color:#475569">Two buyers, one order. The buyer who knows what they want never scrolls; the buyer deciding whether to trust the dealer gets an answer inside the first screen.</p>
+          <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ order }}" as="o" hint-placeholder-count="8">
+              <li style="font-size:14px;line-height:20px"><span style="font-weight:600">{{ o.name }}</span> — <span style="color:#475569">{{ o.why }}</span></li>
+            </sc-for>
+          </ol>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">Designed for the template, not the example</h2>
+          <p style="margin:0 0 16px;font-size:13px;line-height:18px;color:#475569">What has to survive 400 dealers with their own logos, colours, stock and copy.</p>
+          <dl style="margin:0">
+            <sc-for list="{{ template }}" as="t" hint-placeholder-count="7">
+              <div style="display:grid;grid-template-columns:minmax(110px,1fr) minmax(180px,1.8fr);gap:12px;padding:10px 0;border-bottom:1px solid #E2E8F0;align-items:baseline">
+                <dt style="font-size:14px;line-height:20px;font-weight:600">{{ t.name }}</dt>
+                <dd style="margin:0;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty">{{ t.value }}</dd>
+              </div>
+            </sc-for>
+          </dl>
+        </div>
+
+        <div style="background:#0F172A;color:#fff;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600;color:#fff">Type scale — additions only</h2>
+          <p style="margin:0 0 16px;font-size:13px;line-height:18px;color:#94A3B8">Everything else is inherited unchanged from the vehicle detail page and stock list.</p>
+          <dl style="margin:0">
+            <sc-for list="{{ scale }}" as="s" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:minmax(110px,1fr) minmax(150px,1.2fr) minmax(130px,1.2fr);gap:12px;padding:10px 0;border-bottom:1px solid #2A2E36;align-items:baseline">
+                <dt style="font-size:14px;line-height:20px;font-weight:600">{{ s.name }}</dt>
+                <dd style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:18px">{{ s.spec }}</dd>
+                <dd style="margin:0;font-size:13px;line-height:18px;color:#94A3B8;text-wrap:pretty">{{ s.use }}</dd>
+              </div>
+            </sc-for>
+          </dl>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">Zero-JS, zero motion — and what JS would buy</h2>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px">
+            <sc-for list="{{ jsNotes }}" as="j" hint-placeholder-count="6">
+              <li>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span aria-hidden="true" style="color:{{ j.dot }};font-weight:700">{{ j.icon }}</span>
+                  <span style="font-size:14px;line-height:20px;font-weight:600">{{ j.name }}</span>
+                  <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:12px;color:#64748B">{{ j.verdict }}</span>
+                </div>
+                <p style="margin:4px 0 0 22px;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty">{{ j.detail }}</p>
+              </li>
+            </sc-for>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      order: [
+        { name: "Masthead", why: "opening status and the phone number before anything else; the nav strip scrolls, never wraps." },
+        { name: "Search-first hero", why: "budget, body style, fuel — three selects and one button lands the buyer in a filtered stock list. No photograph to load, so the LCP element is text." },
+        { name: "Proof band, still in the hero", why: "the four differentiators as one-line facts, inside the dark plane. This is the answer to \"can I trust these people\" without scrolling past marketing." },
+        { name: "Why buy here", why: "the same four claims with a number and a link to a real example each — 123/123 checked, every MOT test, 1,847 marks photographed, 12-month warranty. Shown, not told." },
+        { name: "Just arrived", why: "four real cars in the card treatment the buyer will meet again on the stock list, plus the total count as credibility." },
+        { name: "Browse the forecourt", why: "budget, body style, make, fuel as counted links — the second action for someone who ignored the hero form, and the site's internal link graph for Google." },
+        { name: "Reviews", why: "4.8 at 96px next to three quotes that each name a specific behaviour. Above finance, because trust decides whether finance matters." },
+        { name: "Part-exchange and finance", why: "the two questions a buyer with a car on the drive always asks. Part-ex is a two-field form, not a page link." },
+        { name: "Location, hours, open now", why: "the last thing before the footer, because it is the last thing checked before setting off." },
+        { name: "Footer", why: "FCA disclosure in full, and the initial disclosure, complaints procedure, privacy, cookie and terms pages as links — web pages, never PDFs." }
+      ],
+      template: [
+        { name: "Logo", value: "Boxed at 36px high with a max width, never setting the masthead height. The dealer's name is always typeset in Inter beside it, so a poor logo degrades to a wordmark rather than wrecking the page." },
+        { name: "Brand colour", value: "Only ever a fill (buttons, active chips) or a link colour, drawn from the constrained palette. Never a background wash, never a gradient, never text on a light ground below brand-600." },
+        { name: "Dark planes", value: "Hero and footer use the neutral plane, not the brand colour, so every tenant's hero looks composed whichever brand hue they picked." },
+        { name: "Stock counts", value: "Every count is real and generated. Bands with no stock are not rendered; the hero headline takes the total, so 14 reads as deliberate and 300 reads as choice." },
+        { name: "Copy length", value: "Headline balances to 2–3 lines at any length; standfirst caps at 52ch; every card body wraps to 3 lines at the narrowest column. Long dealer names ellipsise in the masthead only." },
+        { name: "Photography", value: "The page needs none. Car photographs come from stock, so a dealer with bad photos still gets a composed page — the hero is type and a form." },
+        { name: "Empty tenant", value: "A dealer mid-book-in with 0 live cars gets the hero form replaced by a \"cars arriving this week\" panel and the alert signup from the stock list's zero state. Same section order." }
+      ],
+      scale: [
+        { name: "hero h1", spec: "clamp(30, 4.2cqw, 60) / 1.02 / 600 / -0.03em", use: "The one place above 44px on this page." },
+        { name: "rating figure", spec: "clamp(56, 7cqw, 96) / 0.86 / 700", use: "4.8 only. The largest number on the site." },
+        { name: "section h2", spec: "clamp(20, 2.1cqw, 28) / 1.2 / 600", use: "Furniture headings, as everywhere else." },
+        { name: "argument h2", spec: "clamp(22, 2.6cqw, 36) / 1.12 / 600", use: "Why buy here, part-exchange, finance." },
+        { name: "proof figure", spec: "clamp(28, 3cqw, 40) / 1 / 700", use: "123/123, 1,847, 12 mth, hero stats." }
+      ],
+      jsNotes: [
+        { icon: "✓", dot: "#0CA30C", name: "Hero search", verdict: "no JS needed", detail: "A GET form of three selects posting to /used-cars. Options and their counts are server-rendered from live stock, so an empty band never appears in the list." },
+        { icon: "✓", dot: "#0CA30C", name: "Motion", verdict: "none shipped", detail: "No carousel, no fade-in, no parallax, no counting-up numbers. The only transitions are 100ms hover colour changes, and prefers-reduced-motion clamps even those." },
+        { icon: "✓", dot: "#0CA30C", name: "Open-now status", verdict: "server-rendered", detail: "Computed server-side from the tenant's hours in Europe/London and cached to the next opening boundary. A client-side clock would need JS and would lie in the wrong timezone." },
+        { icon: "!", dot: "#FAB219", name: "Part-exchange valuation", verdict: "server round trip", detail: "Reg plus mileage posts and returns a page with the figure. A live cap hpi lookup on keystroke would spend paid lookups on typos." },
+        { icon: "!", dot: "#FAB219", name: "Review carousel", verdict: "deliberately not built", detail: "Three quotes are shown at once in a wrapping grid. If a tenant has forty, the page links out — a slider hides two thirds of its content behind an interaction nobody performs." },
+        { icon: "✕", dot: "#D03B3B", name: "Interactive map, chat widget, cookie banner script", verdict: "not shipping", detail: "A static map, a phone number, and no third-party tags means the above-fold weight stays a long way under 500KB. Third-party JS is where dealer sites usually lose their LCP." }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

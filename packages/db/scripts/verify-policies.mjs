@@ -6,10 +6,18 @@
  *   DATABASE_URL=postgres://... node packages/db/scripts/verify-policies.mjs
  */
 import { readFileSync } from 'node:fs';
+import { loadEnv } from '../../../scripts/load-env.mjs';
+
+// Reads the root .env when run locally; in CI the variable is already set and
+// `loadEnv` leaves it alone.
+loadEnv();
 
 const url = process.env.DATABASE_URL;
 if (!url) {
-  console.error('DATABASE_URL is not set. This gate must run against a real Postgres.');
+  console.error(
+    'DATABASE_URL is not set, and no .env at the repository root supplied one.\n' +
+    'This gate must run against a real Postgres — locally: cp .env.example .env',
+  );
   process.exit(2);
 }
 

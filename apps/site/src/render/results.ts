@@ -13,6 +13,7 @@
 
 import { html, raw, when, esc } from './html.js';
 import { criticalCss, DEFAULT_THEME, type BrandTheme } from './theme.js';
+import { masthead, siteFooter } from './chrome.js';
 import { canonicalUrl, vehicleUrlPath } from '../../../../packages/domain/src/seo.js';
 import {
   searchResultsJsonLd, dealerJsonLd, breadcrumbJsonLd, renderJsonLd,
@@ -98,25 +99,36 @@ export function resultsHeading(
 function card(v: ResultVehicle, now: Date, returnPath: string): string {
   const badges = resultBadges(v, now);
   const path = vehicleUrlPath(v);
+  // Badges sit ON the photograph, not between the name and the price. With a
+  // variable number of them in the flow, every card in the grid started its
+  // price at a different height and the whole row read as broken.
   return html`<article class="v-card">
     <a class="v-card-link" href="${path}">
-      ${raw(v.thumbnail
-        ? `<img class="v-thumb" src="${esc(v.thumbnail.url)}" srcset="${esc(v.thumbnail.srcset)}"
-             sizes="(min-width:1024px) 300px, (min-width:640px) 45vw, 92vw"
-             alt="${esc(v.thumbnail.alt)}" width="600" height="450" loading="lazy" decoding="async">`
-        : `<div class="v-thumb v-thumb-empty" role="img" aria-label="No photograph yet"></div>`)}
-      <h3 class="v-name">${vehicleName(v)}</h3>
+      <div class="v-media">
+        ${raw(v.thumbnail
+          ? `<img class="v-thumb" src="${esc(v.thumbnail.url)}"${v.thumbnail.srcset ? ` srcset="${esc(v.thumbnail.srcset)}"` : ''}
+               sizes="(min-width:1024px) 300px, (min-width:640px) 45vw, 92vw"
+               alt="${esc(v.thumbnail.alt)}" width="600" height="450" loading="lazy" decoding="async">`
+          : `<div class="v-thumb v-thumb-empty" role="img" aria-label="No photograph yet"></div>`)}
+        ${when(badges.length > 0, `<p class="v-badges">${badges.map((b) =>
+          `<span class="badge badge-${esc(b)}">${esc(BADGE_LABELS[b])}</span>`).join('')}</p>`)}
+      </div>
+      <div class="v-card-body">
+        <!-- The derivative goes on its own line beneath, so it is not repeated
+             in the title. vehicleName() still includes it and is what the page
+             title and the JSON-LD use. -->
+        <h3 class="v-name">${[v.year, v.make, v.model].filter(Boolean).join(' ') || 'Used car'}</h3>
+        ${raw(v.derivative ? `<p class="v-deriv">${esc(v.derivative)}</p>` : '')}
+        <p class="v-price">${fmtPrice(v.pricePence)}</p>
+        <ul class="v-specs">
+          ${raw([
+            v.year ? String(v.year) : null,
+            v.mileage === null ? null : `${v.mileage.toLocaleString('en-GB')} miles`,
+            v.fuelType, v.transmission,
+          ].filter(Boolean).map((s) => `<li>${esc(s!)}</li>`).join(''))}
+        </ul>
+      </div>
     </a>
-    ${when(badges.length > 0, `<p class="v-badges">${badges.map((b) =>
-      `<span class="badge badge-${esc(b)}">${esc(BADGE_LABELS[b])}</span>`).join('')}</p>`)}
-    <p class="v-price">${fmtPrice(v.pricePence)}</p>
-    <ul class="v-specs">
-      ${raw([
-        v.year ? String(v.year) : null,
-        v.mileage === null ? null : `${v.mileage.toLocaleString('en-GB')} miles`,
-        v.fuelType, v.transmission,
-      ].filter(Boolean).map((s) => `<li>${esc(s!)}</li>`).join(''))}
-    </ul>
     <!-- Saving works without JavaScript: a POST, a redirect, a re-render. -->
     <form class="v-save" method="post" action="/saved-cars">
       <input type="hidden" name="vehicle" value="${v.id}">
@@ -270,11 +282,12 @@ ${page.nextHref ? `<link rel="next" href="${esc(canonicalUrl(dealer.url, page.ne
 </head>
 <body>
 <a class="visually-hidden" href="#results">Skip to results</a>
-<header class="wrap">
-  <nav aria-label="Breadcrumb">
-    <a href="/">Home</a> › <a href="/used-cars">Used cars</a>${
+${masthead(dealer, { now })}
+<div class="wrap">
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span aria-hidden="true">/</span><a href="/used-cars">Used cars</a>${
       q.filters.make.length === 1
-        ? ` › <a href="/used-cars/${esc(q.filters.make[0]!)}">${esc(label('make', q.filters.make[0]!))}</a>`
+        ? `<span aria-hidden="true">/</span><a href="/used-cars/${esc(q.filters.make[0]!)}">${esc(label('make', q.filters.make[0]!))}</a>`
         : ''}
   </nav>
   <h1 class="results-title">${esc(heading)}</h1>
@@ -283,7 +296,7 @@ ${page.nextHref ? `<link rel="next" href="${esc(canonicalUrl(dealer.url, page.ne
     <input id="q" name="q" type="search" placeholder="Reg, make or model" value="${esc(q.keyword ?? '')}">
     <button class="btn btn-primary" type="submit">Search</button>
   </form>
-</header>
+</div>
 
 <main class="wrap results-layout">
   ${facetSidebar(input)}
@@ -302,10 +315,7 @@ ${page.nextHref ? `<link rel="next" href="${esc(canonicalUrl(dealer.url, page.ne
   </div>
 </main>
 
-<footer class="wrap">
-  <p>${esc(dealer.name)} · ${esc(dealer.street)}, ${esc(dealer.locality)}, ${esc(dealer.postcode)}</p>
-  <p><a href="/saved-cars">Saved cars</a> · <a href="/initial-disclosure">Initial disclosure</a> · <a href="/complaints-procedure">Complaints procedure</a> · <a href="/privacy-policy">Privacy policy</a> · <a href="/terms">Terms</a></p>
-</footer>
+${siteFooter(dealer)}
 <style>.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}</style>
 </body>
 </html>`;

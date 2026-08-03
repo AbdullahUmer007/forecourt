@@ -25,6 +25,7 @@
  */
 
 import { slugify } from './seo.js';
+import type { ApprovedPromotion } from './finance.js';
 
 // ---------------------------------------------------------------- the query
 
@@ -102,19 +103,27 @@ const int = (raw: RawParams, key: string): number | null => {
   return Number.isFinite(n) && n >= 0 ? n : null;
 };
 
+export const PAYMENT_PARAMS = ['monthly', 'ppm', 'payment', 'per_month', 'apr'] as const;
+
 /**
- * A monthly-payment filter is not merely unbuilt — it is blocked.
+ * A monthly-payment filter may exist ONLY when a representative example does.
  *
- * If one ever appears in a URL it means someone added the facet without the
- * representative example that must accompany any cost-of-credit figure. Fail
- * loudly at the boundary rather than rendering a payment nobody signed off.
+ * Searching by monthly payment is one of the largest conversion wins available
+ * and the most dangerous facet on the site: the results grid then shows a
+ * payment against every car, and CONC 3.5.3R requires a representative example
+ * alongside it. M8 supplies the proof — an `ApprovedPromotion`, which can only
+ * be constructed from a signed-off, in-date, arithmetically sound example.
+ *
+ * Passing no promotion is the safe default, so every caller that has not
+ * thought about it gets the blocked behaviour.
  */
-export function assertNoPaymentFilter(raw: RawParams): void {
-  for (const key of ['monthly', 'ppm', 'payment', 'per_month', 'apr']) {
+export function assertNoPaymentFilter(raw: RawParams, promotion?: ApprovedPromotion | null): void {
+  if (promotion) return;
+  for (const key of PAYMENT_PARAMS) {
     if (raw[key] !== undefined) {
       throw new Error(
-        `Monthly-payment search is blocked until M8: a payment figure is a financial promotion ` +
-        `(CONC 3.5.3R) and cannot render without a representative example. Offending parameter: ${key}`,
+        `Monthly-payment search requires an approved representative example: a payment figure is a ` +
+        `financial promotion (CONC 3.5.3R) and cannot render without one. Offending parameter: ${key}`,
       );
     }
   }
@@ -134,11 +143,17 @@ export interface ParsedSearch {
  * parameter appended by a marketplace must not fork the cache or mint a new
  * indexable URL.
  */
-export function parseSearchQuery(raw: RawParams, pathSegments: readonly string[] = []): ParsedSearch {
-  assertNoPaymentFilter(raw);
+export function parseSearchQuery(
+  raw: RawParams,
+  pathSegments: readonly string[] = [],
+  promotion?: ApprovedPromotion | null,
+): ParsedSearch {
+  assertNoPaymentFilter(raw, promotion);
 
   const known = new Set<string>([
     ...MULTI_DIMENSIONS, 'price_min', 'price_max', 'year_min', 'mileage_max', 'q', 'site', 'sort', 'page',
+    // Only reachable with an approved promotion; otherwise the assert above threw.
+    ...(promotion ? PAYMENT_PARAMS : []),
   ]);
   const ignored = Object.keys(raw).filter((k) => !known.has(k) && raw[k] !== undefined).sort();
 
@@ -438,6 +453,42 @@ export function buildFacets(
     groups.push({ dimension, label: FACET_LABELS[dimension], options });
   }
   return groups;
+}
+
+/**
+ * Manufacturer paint names collapsed to the colour a buyer actually filters by.
+ *
+ * "Cosmos Black", "Frozen White", "Infra Red", "Moonstone Grey" — every marque
+ * invents its own names, so an un-normalised colour facet is a list of thirty
+ * options with one car behind each, which is not a filter. The full paint name
+ * still appears on the vehicle page, where it is what the buyer wants to read.
+ *
+ * Order matters: "Metallic Black" must not match "Metal", and "Grey" is checked
+ * before "Green" so "Greystone" cannot land in the wrong bucket.
+ */
+const BASE_COLOURS: readonly [string, readonly string[]][] = [
+  ['Black', ['black', 'ebony', 'onyx', 'obsidian', 'panther', 'carbon']],
+  ['White', ['white', 'alpine', 'polar', 'glacier', 'ice', 'pearl']],
+  ['Silver', ['silver', 'aluminium', 'platinum', 'chrome']],
+  ['Grey', ['grey', 'gray', 'graphite', 'granite', 'slate', 'gunmetal', 'anthracite', 'quartz', 'moonstone']],
+  ['Blue', ['blue', 'navy', 'cobalt', 'azure', 'indigo', 'sapphire', 'reef']],
+  ['Red', ['red', 'crimson', 'scarlet', 'burgundy', 'maroon', 'ruby', 'flame']],
+  ['Green', ['green', 'emerald', 'olive', 'jade', 'british racing']],
+  ['Silver', ['metallic']],
+  ['Brown', ['brown', 'bronze', 'chestnut', 'mocha', 'coffee', 'walnut']],
+  ['Beige', ['beige', 'sand', 'champagne', 'cream', 'ivory', 'gold']],
+  ['Orange', ['orange', 'copper', 'amber', 'sunset']],
+  ['Yellow', ['yellow', 'lime']],
+  ['Purple', ['purple', 'violet', 'plum', 'aubergine']],
+];
+
+export function baseColour(paintName: string | null | undefined): string | null {
+  if (!paintName) return null;
+  const name = paintName.toLowerCase();
+  for (const [base, words] of BASE_COLOURS) {
+    if (words.some((w) => name.includes(w))) return base;
+  }
+  return 'Other';
 }
 
 /** The "you have filtered by" chips, each removing exactly one constraint. */

@@ -9,7 +9,7 @@ import {
   canSendAlert, MAX_SHORTLIST_ITEMS, SHORTLIST_COOKIE,
   type Shortlist, type SavedSearch,
 } from './shortlist.js';
-import { EMPTY_QUERY, type SearchQuery } from './search.js';
+import { EMPTY_QUERY, type SearchQuery, type MultiDimension } from './search.js';
 
 const T = 't-kennington';
 const list = (items: Shortlist['items'] = []): Shortlist =>
@@ -131,7 +131,10 @@ describe('a car that sells while it is on a shortlist', () => {
 
 // ---------------------------------------------------------------- saved searches
 describe('saved searches', () => {
-  const q = (over: Partial<SearchQuery> = {}): SearchQuery => ({
+  type QueryOverride = Omit<Partial<SearchQuery>, 'filters'> & {
+    filters?: Partial<Record<MultiDimension, string[]>>;
+  };
+  const q = (over: QueryOverride = {}): SearchQuery => ({
     ...EMPTY_QUERY, ...over,
     filters: { ...EMPTY_QUERY.filters, ...(over.filters ?? {}) },
   });

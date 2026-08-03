@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #E9EDF2; font-family: Inter, system-ui, sans-serif; color: #0F172A; }
+  a { color: #0E5A6B; }
+  a:hover { color: #0B4553; }
+</style>
+</helmet>
+
+<section style="padding:48px clamp(16px,3vw,56px) 96px;display:flex;flex-direction:column;gap:40px">
+  <header style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;max-width:1100px">
+    <div>
+      <p style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.08em;color:#64748B">FORECOURT · LEAD CAPTURE</p>
+      <h1 style="margin:8px 0 0;font-size:40px;line-height:1.04;letter-spacing:-0.028em;font-weight:600">Lead forms</h1>
+      <p style="margin:10px 0 0;font-size:16px;line-height:24px;color:#475569;max-width:76ch;text-wrap:pretty">Six forms, one shell. Native validation, server round trip, errors re-rendered with every value preserved. The success screen is treated as the most valuable screen in the journey, not a receipt. Scroll inside each frame.</p>
+    </div>
+    <p style="margin:0;font-size:13px;line-height:18px;color:#64748B;font-family:'JetBrains Mono',monospace">turn 6 · 6a–6g</p>
+  </header>
+
+  <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+    <div id="6a" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">6a</span>
+        <span style="font-size:15px;font-weight:600">Enquire · own page · empty → filled → error → success</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+        <sc-for list="{{ enquireStates }}" as="s" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <p style="margin:0;width:600px;font-size:13px;font-weight:600;color:#475569">{{ s.label }}</p>
+            <div style="width:600px;height:760px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+              <dc-import name="Forms" mode="light" form="enquire" state="{{ s.state }}" placement="page" hint-size="600px,760px"></dc-import>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <p style="margin:0;max-width:1240px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">The error state is the one users actually hit, so it does the most work: a summary at the top saying nothing was sent and nothing was lost, two links straight to the fields, and per-field messages that quote what we read and say what to type instead. Fields keep their values, get a red hairline and a tinted well, and carry <code style="font-family:'JetBrains Mono',monospace">aria-invalid</code>.</p>
+    </div>
+
+    <div id="6b" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">6b</span>
+        <span style="font-size:15px;font-weight:600">Dark · error and success</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+        <div style="width:600px;height:760px;overflow:auto;border-radius:10px;border:1px solid #2A2E36;box-shadow:0 1px 3px rgba(15,23,42,0.16)">
+          <dc-import name="Forms" mode="dark" form="enquire" state="error" placement="page" hint-size="600px,760px"></dc-import>
+        </div>
+        <div style="width:600px;height:760px;overflow:auto;border-radius:10px;border:1px solid #2A2E36;box-shadow:0 1px 3px rgba(15,23,42,0.16)">
+          <dc-import name="Forms" mode="dark" form="reserve" state="success" placement="page" hint-size="600px,760px"></dc-import>
+        </div>
+      </div>
+    </div>
+
+    <div id="6c" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#B45309;color:#fff;border-radius:4px;padding:3px 7px">6c</span>
+        <span style="font-size:15px;font-weight:600">Reserve · the deposit terms, and the receipt</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+        <div style="width:600px;height:820px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+          <dc-import name="Forms" mode="light" form="reserve" state="filled" placement="page" hint-size="600px,820px"></dc-import>
+        </div>
+        <div style="width:600px;height:820px;overflow:auto;border-radius:10px;border:1px solid #CBD5E1;box-shadow:0 1px 3px rgba(15,23,42,0.08)">
+          <dc-import name="Forms" mode="light" form="reserve" state="success" placement="page" hint-size="600px,820px"></dc-import>
+        </div>
+      </div>
+      <p style="margin:0;max-width:1240px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">Three ticks and two crosses, before the payment button: what £99 does, and what it explicitly does not do. The required confirmation restates the refund position in the same words rather than pointing at terms, and it is a separate box from the optional marketing consent — which is never required to reserve a car.</p>
+    </div>
+
+    <div id="6d" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">6d</span>
+        <span style="font-size:15px;font-weight:600">Test drive · part-exchange · video · notify — filled and success</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+        <sc-for list="{{ others }}" as="o" hint-placeholder-count="8">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <p style="margin:0;width:520px;font-size:13px;font-weight:600;color:#475569">{{ o.label }}</p>
+            <div style="width:520px;height:720px;overflow:auto;border-radius:10px;border:1px solid {{ o.bd }};box-shadow:0 1px 3px rgba(15,23,42,0.1)">
+              <dc-import name="Forms" mode="{{ o.mode }}" form="{{ o.form }}" state="{{ o.state }}" placement="page" hint-size="520px,720px"></dc-import>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <p style="margin:0;max-width:1240px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">Part-exchange returns a real range and what it is worth against this car, then asks for three named photographs — the one thing that firms the figure up. The mileage error is the honest one: a letter O typed where a zero belongs, quoted back.</p>
+    </div>
+
+    <div id="6e" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0F172A;color:#fff;border-radius:4px;padding:3px 7px">6e</span>
+        <span style="font-size:15px;font-weight:600">Inline on the vehicle page · mobile 375</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+        <sc-for list="{{ inlineFrames }}" as="i" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <p style="margin:0;width:375px;font-size:13px;font-weight:600;color:#475569">{{ i.label }}</p>
+            <div style="width:375px;height:720px;overflow:auto;border-radius:10px;border:1px solid {{ i.bd }};background:{{ i.bg }};padding:16px">
+              <dc-import name="Forms" mode="{{ i.mode }}" form="{{ i.form }}" state="{{ i.state }}" placement="inline" hint-size="343px,680px"></dc-import>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <p style="margin:0;max-width:1240px;font-size:13px;line-height:18px;color:#475569;text-wrap:pretty">Inline, the shell drops the masthead, the back link and the side rail — the car is already on the page above it, so repeating the photograph and the price would be noise. Everything else is identical markup, including the consent blocks and the success screen; the same route serves both, so a JS-free POST can land on either.</p>
+    </div>
+
+    <div id="6f" style="display:flex;flex-direction:column;gap:10px;max-width:1280px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#0E5A6B;color:#fff;border-radius:4px;padding:3px 7px">6f</span>
+        <span style="font-size:15px;font-weight:600">Implementation notes</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:20px">
+        <div style="background:#0F172A;color:#fff;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600;color:#fff">What goes on a success screen</h2>
+          <p style="margin:0 0 16px;font-size:13px;line-height:18px;color:#94A3B8">The buyer has just raised their hand. Six things earn their place; "thanks, we'll be in touch" is none of them.</p>
+          <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ successRecipe }}" as="s" hint-placeholder-count="6">
+              <li style="font-size:14px;line-height:20px"><span style="font-weight:600">{{ s.name }}</span> — <span style="color:#94A3B8">{{ s.detail }}</span></li>
+            </sc-for>
+          </ol>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">Fields, keyboards and validation</h2>
+          <p style="margin:0 0 16px;font-size:13px;line-height:18px;color:#475569">Every input declares its type, inputmode and autocomplete so a phone shows the right keyboard and autofill works first time.</p>
+          <dl style="margin:0">
+            <sc-for list="{{ fieldSpec }}" as="f" hint-placeholder-count="7">
+              <div style="display:grid;grid-template-columns:minmax(96px,1fr) minmax(170px,1.9fr);gap:12px;padding:9px 0;border-bottom:1px solid #E2E8F0;align-items:baseline">
+                <dt style="font-size:14px;line-height:20px;font-weight:600">{{ f.name }}</dt>
+                <dd style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:18px;color:#475569;word-break:break-word">{{ f.value }}</dd>
+              </div>
+            </sc-for>
+          </dl>
+          <p style="margin:14px 0 0;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty">Inputs are 48px, buttons 52px, every tappable row at least 44px. 16px font on inputs so iOS does not zoom on focus. Labels are always visible — no placeholder-as-label anywhere.</p>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">Errors, and the round trip</h2>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ errorRules }}" as="e" hint-placeholder-count="7">
+              <li style="display:flex;gap:10px;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty"><span aria-hidden="true" style="color:#0CA30C;font-weight:700;flex:none">✓</span>{{ e }}</li>
+            </sc-for>
+          </ul>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">Consent as a record</h2>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ consentRules }}" as="c" hint-placeholder-count="7">
+              <li style="display:flex;gap:10px;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty"><span aria-hidden="true" style="color:#0CA30C;font-weight:700;flex:none">✓</span>{{ c }}</li>
+            </sc-for>
+          </ul>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:24px">
+          <h2 style="margin:0 0 4px;font-size:20px;line-height:28px;font-weight:600">What JavaScript would buy</h2>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px">
+            <sc-for list="{{ jsNotes }}" as="j" hint-placeholder-count="5">
+              <li>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span aria-hidden="true" style="color:{{ j.dot }};font-weight:700">{{ j.icon }}</span>
+                  <span style="font-size:14px;line-height:20px;font-weight:600">{{ j.name }}</span>
+                  <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:12px;color:#64748B">{{ j.verdict }}</span>
+                </div>
+                <p style="margin:4px 0 0 22px;font-size:13px;line-height:19px;color:#475569;text-wrap:pretty">{{ j.detail }}</p>
+              </li>
+            </sc-for>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      enquireStates: [
+        { label: "Empty", state: "empty" },
+        { label: "Filled", state: "filled" },
+        { label: "Error · re-rendered by the server", state: "error" },
+        { label: "Success", state: "success" }
+      ],
+      others: [
+        { label: "Test drive · filled", form: "testdrive", state: "filled", mode: "light", bd: "#CBD5E1" },
+        { label: "Test drive · success", form: "testdrive", state: "success", mode: "light", bd: "#CBD5E1" },
+        { label: "Part-exchange · error", form: "partex", state: "error", mode: "light", bd: "#CBD5E1" },
+        { label: "Part-exchange · success", form: "partex", state: "success", mode: "light", bd: "#CBD5E1" },
+        { label: "Video walkaround · filled", form: "video", state: "filled", mode: "dark", bd: "#2A2E36" },
+        { label: "Video walkaround · success", form: "video", state: "success", mode: "dark", bd: "#2A2E36" },
+        { label: "Notify me · empty", form: "notify", state: "empty", mode: "dark", bd: "#2A2E36" },
+        { label: "Notify me · success", form: "notify", state: "success", mode: "dark", bd: "#2A2E36" }
+      ],
+      inlineFrames: [
+        { label: "Enquire · inline · light", form: "enquire", state: "empty", mode: "light", bd: "#CBD5E1", bg: "#F8FAFC" },
+        { label: "Enquire · inline · success", form: "enquire", state: "success", mode: "light", bd: "#CBD5E1", bg: "#F8FAFC" },
+        { label: "Reserve · inline · dark", form: "reserve", state: "empty", mode: "dark", bd: "#2A2E36", bg: "#0E1013" },
+        { label: "Video · inline · error", form: "video", state: "error", mode: "light", bd: "#CBD5E1", bg: "#F8FAFC" }
+      ],
+      successRecipe: [
+        { name: "A named person and a time", detail: "\"Your question is with Dan at Bletchley\", replying by about 3pm. Not \"a member of our team\", not \"as soon as possible\"." },
+        { name: "Proof we read it", detail: "The success copy repeats what they actually asked — the Saturday viewing, the Golf part-exchange, the kerbed alloy they want filmed." },
+        { name: "What happens next, numbered", detail: "Three steps with real timings, including the one that says nothing happens unless they answer." },
+        { name: "The obvious next action", detail: "One accented CTA that raises intent — reserve it, book the drive, send the photos — and one quieter alternative." },
+        { name: "Something to do while waiting", detail: "MOT history, declared marks, directions. Three links that keep them on the car rather than back on Google." },
+        { name: "A way out", detail: "How to change or cancel, the phone number, the person's name, and a reference. No dead end, no obligation." }
+      ],
+      fieldSpec: [
+        { name: "Name", value: "type=text · autocomplete=name" },
+        { name: "Email", value: "type=email · inputmode=email · autocomplete=email" },
+        { name: "Phone", value: "type=tel · inputmode=tel · autocomplete=tel" },
+        { name: "Reg", value: "type=text · autocomplete=off · JetBrains Mono · text-transform:uppercase" },
+        { name: "Mileage", value: "type=text · inputmode=numeric (not type=number — no spinners, commas tolerated)" },
+        { name: "Date", value: "type=date · native picker · server clamps to opening hours" },
+        { name: "Message", value: "textarea rows=4 · optional, and labelled optional" }
+      ],
+      errorRules: [
+        "The server re-renders the page with every submitted value in place. Nothing is ever retyped.",
+        "Native validation first: required, type=email, type=tel. The server repeats every check because native validation can be bypassed.",
+        "The summary says what happened (nothing was sent), why (two fields), and what to do (fix these, press again) — and that nothing was lost.",
+        "Each message quotes what we read back — \"we read it as jane.example.co.uk\" — then says what to type. Never \"Invalid input\".",
+        "Errors are marked three ways: the icon, the message, and a red hairline plus tinted well. Never colour alone.",
+        "Each summary item is a link to its field; the field carries aria-invalid and the message is bound to the input by aria-describedby.",
+        "A failed submit never loses a payment step: the reserve form validates before Stripe is ever reached, and the error page states plainly that no payment was taken."
+      ],
+      consentRules: [
+        "Marketing consent is never bundled with the enquiry. Asking about a car is not agreeing to be emailed about other cars.",
+        "Every box ships unticked. There is no code path that renders one checked.",
+        "The wording names the channel, exactly what will be sent, what will not be sent, and the unsubscribe route — in the label, not in a linked policy.",
+        "Required confirmations (deposit terms, driving licence) are visually distinct from optional marketing: brand-tinted well and brand border versus a plain bordered box.",
+        "What is stored is a record: channel, basis, source URL, timestamp, and the exact wording version shown on screen — never a boolean.",
+        "Consent is re-checked at send time, not at schedule time, so a withdrawal in between stops the email.",
+        "The reserve confirmation restates the refund position in the same words as the page above it, so consent is given to something the buyer has actually read."
+      ],
+      jsNotes: [
+        { icon: "✓", dot: "#0CA30C", name: "Validation and error states", verdict: "no JS needed", detail: "Native constraints plus a server round trip. Inline validation as you type is a nicety; the round trip is the thing that has to be right, and it is the only one that cannot be bypassed." },
+        { icon: "✓", dot: "#0CA30C", name: "Reg and mileage lookup", verdict: "no JS needed", detail: "The reg is submitted with the form and the DVLA lookup happens server-side, so a paid lookup is never spent on a half-typed plate." },
+        { icon: "✓", dot: "#0CA30C", name: "Deposit payment", verdict: "hosted, off-site", detail: "The button posts to our server, which creates the payment and redirects to Stripe's own page. No card fields in our HTML, so no PCI scope and no card JS." },
+        { icon: "!", dot: "#FAB219", name: "Available-slot picker for test drives", verdict: "worth it later", detail: "Native type=date cannot know the diary. Today the server offers the two nearest slots by phone; a real availability grid would be server-rendered pages per week, not a JS calendar." },
+        { icon: "✕", dot: "#D03B3B", name: "Multi-step wizards and progress bars", verdict: "not shipping", detail: "Four fields do not need a wizard. Every extra step is a place to lose the warmest lead the dealer will get today." }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

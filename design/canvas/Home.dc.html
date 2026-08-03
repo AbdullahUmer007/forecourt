@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }
+</style>
+</helmet>
+<div style="{{ theme }}">
+<header>
+  <div style="position:sticky;top:0;z-index:30;background:var(--s1,#fff);border-bottom:1px solid var(--bd,#E2E8F0)">
+    <div style="max-width:1280px;margin:0 auto;padding:8px clamp(16px,3cqw,32px);display:flex;align-items:center;gap:12px">
+      <a href="#" style="display:flex;align-items:center;gap:10px;min-height:44px;min-width:0;flex:1 1 auto" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">
+        <span aria-hidden="true" style="flex:none;width:{{ logoW }};max-width:60px;height:36px;border-radius:4px;background-color:var(--s3,#F1F5F9);background-image:repeating-linear-gradient(135deg,transparent 0 10px,var(--stripe,rgba(15,23,42,0.05)) 10px 11px);border:1px solid var(--bd,#E2E8F0);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--sub,#64748B);overflow:hidden">logo</span>
+        <span style="display:flex;flex-direction:column;justify-content:center;min-width:0">
+          <span style="font-size:clamp(15px,1.7cqw,21px);font-weight:700;letter-spacing:-0.022em;color:var(--ink,#0F172A);line-height:1.15;text-wrap:balance">{{ dealer }}</span>
+          <span style="display:flex;align-items:center;gap:5px;font-size:12px;line-height:15px;font-weight:500;color:var(--sub,#64748B);white-space:nowrap">
+            <span aria-hidden="true" style="width:7px;height:7px;border-radius:999px;background:var(--good,#0CA30C);flex:none"></span>Open until 6pm
+          </span>
+        </span>
+      </a>
+      <a href="tel:01908993469" style="flex:none;display:flex;align-items:center;gap:6px;min-height:44px;padding:0 10px;border-radius:6px;background:var(--b600,#0E5A6B);color:#FFFFFF;font-size:14px;font-weight:600;white-space:nowrap;transition:background 100ms cubic-bezier(0.2,0,0,1)" style-hover="background:var(--b700,#0B4553);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">
+        <span aria-hidden="true" style="font-size:15px">✆</span>01908 993 469
+      </a>
+    </div>
+  </div>
+  <nav aria-label="Main" style="background:var(--s1,#fff);border-bottom:1px solid var(--bd,#E2E8F0)">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px);display:flex;gap:clamp(14px,1.6cqw,24px);overflow-x:auto;scrollbar-width:none">
+      <sc-for list="{{ nav }}" as="item" hint-placeholder-count="5">
+        <a href="#" style="display:flex;align-items:center;min-height:40px;font-size:14px;font-weight:500;white-space:nowrap;color:var(--mut,#475569);border-bottom:2px solid transparent;transition:color 100ms cubic-bezier(0.2,0,0,1)" style-hover="color:var(--link,#0E5A6B)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ item }}</a>
+      </sc-for>
+    </div>
+  </nav>
+</header>
+
+<main style="background:var(--s2,#F8FAFC);color:var(--ink,#0F172A)">
+
+  <!-- HERO: search first, no photograph, no slider -->
+  <section style="background:var(--plane,#16181D);color:var(--planeInk,#fff)">
+    <div style="max-width:1280px;margin:0 auto;padding:clamp(28px,4cqw,64px) clamp(16px,3cqw,32px) clamp(20px,2.5cqw,40px);display:flex;flex-wrap:wrap;gap:clamp(20px,3cqw,48px);align-items:flex-start">
+      <div style="flex:1 1 min(100%,440px)">
+        <p style="margin:0;display:inline-flex;align-items:center;gap:7px;font-size:13px;line-height:18px;font-weight:600;color:var(--planeInk,#fff);background:var(--planeWell,#1D2027);border:1px solid var(--planeBd,#2A2E36);border-radius:999px;padding:5px 12px">
+          <span aria-hidden="true" style="flex:none;width:8px;height:8px;border-radius:999px;background:var(--good,#0CA30C)"></span><span style="flex:none;white-space:nowrap">Open now until 6pm</span>
+        </p>
+        <h1 style="margin:14px 0 0;font-size:clamp(30px,4.2cqw,60px);line-height:1.02;letter-spacing:-0.03em;font-weight:600;text-wrap:balance">{{ headline }}</h1>
+        <p style="margin:14px 0 0;font-size:clamp(16px,1.5cqw,20px);line-height:1.45;color:var(--planeMut,#94A3B8);max-width:52ch;text-wrap:pretty">{{ standfirst }}</p>
+        <dl style="margin:clamp(18px,2cqw,28px) 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:clamp(12px,1.5cqw,20px)">
+          <sc-for list="{{ heroStats }}" as="s" hint-placeholder-count="3">
+            <div>
+              <dd style="margin:0;font-size:clamp(26px,2.8cqw,38px);line-height:1;font-weight:700;letter-spacing:-0.025em">{{ s.value }}</dd>
+              <dt style="font-size:13px;line-height:18px;color:var(--planeMut,#94A3B8);padding-top:4px">{{ s.label }}</dt>
+            </div>
+          </sc-for>
+        </dl>
+      </div>
+
+      <form style="flex:1 1 min(100%,380px);background:var(--s1,#fff);color:var(--ink,#0F172A);border-radius:10px;padding:clamp(16px,2cqw,24px);display:flex;flex-direction:column;gap:12px">
+        <div>
+          <h2 style="margin:0;font-size:clamp(18px,1.9cqw,24px);line-height:1.2;font-weight:600">Find your next car</h2>
+          <p style="margin:6px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569)">Three taps to a shortlist. Or type a reg if you have seen one of ours.</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px">
+          <sc-for list="{{ heroFields }}" as="f" hint-placeholder-count="3">
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">{{ f.label }}</span>
+              <select style="min-height:48px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);padding:0 10px;font-size:16px;font-weight:500" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">
+                <sc-for list="{{ f.options }}" as="o" hint-placeholder-count="4">
+                  <option>{{ o }}</option>
+                </sc-for>
+              </select>
+            </label>
+          </sc-for>
+        </div>
+        <button type="submit" style="min-height:52px;border:none;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:17px;font-weight:600;cursor:pointer;transition:background 100ms cubic-bezier(0.2,0,0,1)" style-hover="background:var(--b700,#0B4553)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ searchCta }}</button>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <a href="#" style="display:flex;align-items:center;min-height:44px;font-size:15px;font-weight:600;color:var(--link,#0E5A6B);text-decoration:underline" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ browseAll }}</a>
+          <span aria-hidden="true" style="color:var(--sub,#64748B)">·</span>
+          <a href="#" style="display:flex;align-items:center;min-height:44px;font-size:15px;font-weight:600;color:var(--link,#0E5A6B);text-decoration:underline" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Search by reg</a>
+        </div>
+      </form>
+    </div>
+
+    <div style="border-top:1px solid var(--planeBd,#2A2E36)">
+      <ul style="list-style:none;margin:0 auto;padding:14px clamp(16px,3cqw,32px);max-width:1280px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px clamp(16px,2cqw,32px)">
+        <sc-for list="{{ heroProof }}" as="p" hint-placeholder-count="4">
+          <li style="display:flex;gap:9px;align-items:flex-start;font-size:14px;line-height:20px;color:var(--planeInk,#fff)">
+            <span aria-hidden="true" style="color:var(--good,#0CA30C);font-weight:700;flex:none">✓</span>{{ p }}
+          </li>
+        </sc-for>
+      </ul>
+    </div>
+  </section>
+
+  <!-- WHY BUY HERE — shown, not told -->
+  <section style="background:var(--s1,#fff);border-bottom:1px solid var(--bd,#E2E8F0);padding:clamp(28px,3.5cqw,56px) 0">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px)">
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;padding-bottom:clamp(16px,2cqw,28px)">
+        <h2 style="margin:0;font-size:clamp(22px,2.6cqw,36px);line-height:1.12;letter-spacing:-0.02em;font-weight:600;max-width:26ch;text-wrap:balance">Four things we publish that most dealers will not.</h2>
+        <p style="margin:0;font-size:14px;line-height:20px;color:var(--sub,#64748B);max-width:34ch;text-wrap:pretty">Every one of these is on every car's page, before you ring us.</p>
+      </div>
+      <ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:1px;background:var(--bd,#E2E8F0);border:1px solid var(--bd,#E2E8F0);border-radius:10px;overflow:hidden">
+        <sc-for list="{{ why }}" as="w" hint-placeholder-count="4">
+          <li style="background:var(--s1,#fff);padding:clamp(18px,2cqw,26px)">
+            <p style="margin:0;font-size:clamp(28px,3cqw,40px);line-height:1;font-weight:700;letter-spacing:-0.025em;font-variant-numeric:proportional-nums">{{ w.figure }}</p>
+            <h3 style="margin:12px 0 0;font-size:17px;line-height:23px;font-weight:600;text-wrap:pretty">{{ w.title }}</h3>
+            <p style="margin:6px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty">{{ w.detail }}</p>
+            <a href="#" style="display:inline-flex;align-items:center;min-height:44px;font-size:14px;font-weight:600;color:var(--link,#0E5A6B);text-decoration:underline" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ w.link }}</a>
+          </li>
+        </sc-for>
+      </ul>
+    </div>
+  </section>
+
+  <!-- JUST ARRIVED -->
+  <section style="max-width:1280px;margin:0 auto;padding:clamp(28px,3.5cqw,56px) clamp(16px,3cqw,32px) 0">
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between;padding-bottom:clamp(14px,1.8cqw,22px)">
+      <h2 style="margin:0;font-size:clamp(20px,2.1cqw,28px);line-height:1.2;letter-spacing:-0.015em;font-weight:600">{{ arrivedHeading }}</h2>
+      <a href="#" style="display:flex;align-items:center;min-height:44px;font-size:15px;font-weight:600;color:var(--link,#0E5A6B);text-decoration:underline" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ browseAll }} →</a>
+    </div>
+    <ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:clamp(12px,1.5cqw,16px)">
+      <sc-for list="{{ cars }}" as="car" hint-placeholder-count="4">
+        <li style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;transition:border-color 100ms cubic-bezier(0.2,0,0,1)" style-hover="border-color:var(--link,#0E5A6B)">
+          <div style="position:relative">
+            <div aria-hidden="true" style="aspect-ratio:4/3;background-color:var(--s3,#F1F5F9);background-image:repeating-linear-gradient(135deg,transparent 0 14px,var(--stripe,rgba(15,23,42,0.05)) 14px 15px);display:flex;align-items:flex-end;padding:10px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--sub,#64748B)">{{ car.shot }}</span>
+            </div>
+            <div style="position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+              <sc-for list="{{ car.badges }}" as="b" hint-placeholder-count="1">
+                <span style="display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:4px;background:{{ b.bg }};color:{{ b.ink }};font-size:12px;font-weight:600"><span aria-hidden="true">{{ b.icon }}</span>{{ b.label }}</span>
+              </sc-for>
+            </div>
+            <a href="#" title="Save to shortlist" style="position:absolute;top:8px;right:8px;width:44px;height:44px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--mut,#475569)" style-hover="border-color:var(--link,#0E5A6B);color:var(--link,#0E5A6B);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px"><span aria-hidden="true">♡</span></a>
+          </div>
+          <div style="padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;flex:1">
+            <div>
+              <h3 style="margin:0;font-size:17px;line-height:22px;font-weight:600;letter-spacing:-0.01em;text-wrap:pretty"><a href="#" style-hover="color:var(--link,#0E5A6B)">{{ car.name }}</a></h3>
+              <p style="margin:3px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty">{{ car.derivative }}</p>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px 14px">
+              <sc-for list="{{ car.specs }}" as="s" hint-placeholder-count="3">
+                <span style="font-size:13px;line-height:18px;color:var(--mut,#475569)">{{ s }}</span>
+              </sc-for>
+            </div>
+            <div style="margin-top:auto;padding-top:4px">
+              <p style="margin:0;font-size:26px;line-height:30px;font-weight:700;letter-spacing:-0.025em">{{ car.price }}</p>
+              <p style="margin:2px 0 0;font-size:13px;line-height:18px;color:var(--sub,#64748B)">{{ car.finance }}</p>
+            </div>
+          </div>
+        </li>
+      </sc-for>
+    </ul>
+  </section>
+
+  <!-- BROWSE BY -->
+  <section style="max-width:1280px;margin:0 auto;padding:clamp(28px,3.5cqw,56px) clamp(16px,3cqw,32px)">
+    <h2 style="margin:0 0 clamp(14px,1.8cqw,22px);font-size:clamp(20px,2.1cqw,28px);line-height:1.2;letter-spacing:-0.015em;font-weight:600">Browse the forecourt</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:clamp(12px,1.5cqw,20px)">
+      <sc-for list="{{ browse }}" as="group" hint-placeholder-count="4">
+        <div style="background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:18px">
+          <h3 style="margin:0 0 12px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">{{ group.name }}</h3>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px">
+            <sc-for list="{{ group.items }}" as="i" hint-placeholder-count="5">
+              <li>
+                <a href="#" style="display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;border-radius:6px;background:var(--s3,#F1F5F9);font-size:14px;font-weight:600;color:var(--ink,#0F172A);transition:background 100ms cubic-bezier(0.2,0,0,1)" style-hover="background:var(--well,#E6F4F1);text-decoration:none" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">{{ i.label }}<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:var(--mut,#475569);font-variant-numeric:tabular-nums">{{ i.count }}</span></a>
+              </li>
+            </sc-for>
+          </ul>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- REVIEWS -->
+  <section style="background:var(--s1,#fff);border-top:1px solid var(--bd,#E2E8F0);border-bottom:1px solid var(--bd,#E2E8F0);padding:clamp(28px,3.5cqw,56px) 0">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px);display:flex;flex-wrap:wrap;gap:clamp(20px,3cqw,48px);align-items:flex-start">
+      <div style="flex:1 1 min(100%,260px)">
+        <p style="margin:0;font-size:clamp(56px,7cqw,96px);line-height:0.86;font-weight:700;letter-spacing:-0.035em;font-variant-numeric:proportional-nums">{{ rating }}</p>
+        <div aria-hidden="true" style="display:flex;gap:4px;padding-top:12px;color:var(--accentInk,#B45309);font-size:19px">
+          <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+        </div>
+        <p style="margin:10px 0 0;font-size:16px;line-height:23px;font-weight:600">{{ ratingLine }}</p>
+        <p style="margin:6px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);max-width:34ch;text-wrap:pretty">Collected by Google and Autotrader — we cannot edit or remove them, and we answer the poor ones.</p>
+        <a href="#" style="display:inline-flex;align-items:center;min-height:44px;font-size:15px;font-weight:600;color:var(--link,#0E5A6B);text-decoration:underline" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Read every review →</a>
+      </div>
+      <ul style="list-style:none;margin:0;padding:0;flex:1 1 min(100%,520px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:clamp(12px,1.5cqw,16px)">
+        <sc-for list="{{ reviews }}" as="r" hint-placeholder-count="3">
+          <li style="background:var(--s2,#F8FAFC);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:10px">
+            <div aria-hidden="true" style="display:flex;gap:3px;color:var(--accentInk,#B45309);font-size:14px">
+              <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+            </div>
+            <blockquote style="margin:0;font-size:15px;line-height:22px;text-wrap:pretty">{{ r.quote }}</blockquote>
+            <p style="margin:auto 0 0;font-size:13px;line-height:18px;color:var(--sub,#64748B)">{{ r.who }}</p>
+          </li>
+        </sc-for>
+      </ul>
+    </div>
+  </section>
+
+  <!-- PART-EX + FINANCE -->
+  <section style="max-width:1280px;margin:0 auto;padding:clamp(28px,3.5cqw,56px) clamp(16px,3cqw,32px);display:flex;flex-wrap:wrap;gap:clamp(12px,1.5cqw,20px)">
+    <div style="flex:1 1 min(100%,320px);background:var(--well,#E6F4F1);border-radius:10px;padding:clamp(18px,2.2cqw,28px)">
+      <h2 style="margin:0;font-size:clamp(20px,2.2cqw,30px);line-height:1.15;letter-spacing:-0.02em;font-weight:600;text-wrap:balance">Bring your old one — we will price it while you look.</h2>
+      <p style="margin:10px 0 0;font-size:15px;line-height:22px;color:var(--mut,#475569);max-width:46ch;text-wrap:pretty">Give us the reg and mileage and we will send a real part-exchange figure the same day, not an online guess. We will settle outstanding finance directly with your lender.</p>
+      <form style="display:flex;flex-wrap:wrap;gap:8px;padding-top:16px">
+        <label style="flex:1 1 150px;display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Your reg</span>
+          <input type="text" placeholder="WN22 HNL" style="min-height:48px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);padding:0 12px;font-family:'JetBrains Mono',monospace;font-size:16px;letter-spacing:0.04em;text-transform:uppercase" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px" />
+        </label>
+        <label style="flex:1 1 120px;display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--sub,#64748B)">Mileage</span>
+          <input type="text" inputmode="numeric" placeholder="48,000" style="min-height:48px;border-radius:6px;border:1px solid var(--bd,#E2E8F0);background:var(--s1,#fff);padding:0 12px;font-family:'JetBrains Mono',monospace;font-size:16px" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px" />
+        </label>
+        <button type="submit" style="flex:1 1 100%;min-height:52px;border:none;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:16px;font-weight:600;cursor:pointer" style-hover="background:var(--b700,#0B4553)" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Value my part-exchange</button>
+      </form>
+    </div>
+    <div style="flex:1 1 min(100%,320px);background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:clamp(18px,2.2cqw,28px);display:flex;flex-direction:column">
+      <h2 style="margin:0;font-size:clamp(20px,2.2cqw,30px);line-height:1.15;letter-spacing:-0.02em;font-weight:600;text-wrap:balance">Finance, with the figures shown before you ask.</h2>
+      <p style="margin:10px 0 0;font-size:15px;line-height:22px;color:var(--mut,#475569);max-width:46ch;text-wrap:pretty">Every car on this site carries a monthly payment with its full representative example. HP or PCP, from a panel of eight lenders, and a decision usually the same afternoon.</p>
+      <dl style="margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px">
+        <sc-for list="{{ financeStats }}" as="f" hint-placeholder-count="3">
+          <div style="background:var(--s3,#F1F5F9);border-radius:6px;padding:12px 14px">
+            <dd style="margin:0;font-size:22px;line-height:26px;font-weight:700;letter-spacing:-0.02em">{{ f.value }}</dd>
+            <dt style="font-size:13px;line-height:18px;color:var(--mut,#475569);padding-top:2px">{{ f.label }}</dt>
+          </div>
+        </sc-for>
+      </dl>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:16px;margin-top:auto">
+        <a href="#" style="display:flex;align-items:center;min-height:48px;padding:0 20px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:16px;font-weight:600" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none">How our finance works</a>
+      </div>
+      <p style="margin:14px 0 0;font-size:12px;line-height:16px;color:var(--sub,#64748B);text-wrap:pretty">Kennington Car Sales Ltd is authorised and regulated by the Financial Conduct Authority, FRN 993469, as a credit broker not a lender. We may receive a commission for introducing you, disclosed in writing before you sign. Finance subject to status.</p>
+    </div>
+  </section>
+
+  <!-- LOCATION -->
+  <section style="background:var(--s3,#F1F5F9);padding:clamp(28px,3.5cqw,56px) 0">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px);display:flex;flex-wrap:wrap;gap:clamp(12px,1.5cqw,20px)">
+      <div style="flex:1 1 min(100%,300px);background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;overflow:hidden">
+        <div aria-hidden="true" style="aspect-ratio:16/9;background-color:var(--s3,#F1F5F9);background-image:repeating-linear-gradient(135deg,transparent 0 14px,var(--stripe,rgba(15,23,42,0.05)) 14px 15px);display:flex;align-items:center;justify-content:center">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--sub,#64748B)">static map · MK1 1AA</span>
+        </div>
+        <div style="padding:18px 20px">
+          <h2 style="margin:0;font-size:clamp(18px,1.9cqw,24px);line-height:1.25;font-weight:600">Watling Street, Bletchley</h2>
+          <p style="margin:8px 0 0;font-size:15px;line-height:22px;color:var(--mut,#475569);text-wrap:pretty">Milton Keynes MK1 1AA. Four minutes from the M1 junction 14, twelve minutes' walk from Bletchley station. Free parking on site, and we will collect you from the station if you are coming by train.</p>
+          <a href="#" style="display:inline-flex;align-items:center;min-height:44px;font-size:15px;font-weight:600;color:var(--link,#0E5A6B);text-decoration:underline" style-focus="outline:2px solid var(--b600,#0E5A6B);outline-offset:2px">Get directions →</a>
+        </div>
+      </div>
+      <div style="flex:1 1 min(100%,280px);background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);border-radius:10px;padding:20px">
+        <div style="display:flex;align-items:center;gap:8px;padding-bottom:14px">
+          <span aria-hidden="true" style="width:9px;height:9px;border-radius:999px;background:var(--good,#0CA30C);flex:none"></span>
+          <span style="font-size:15px;font-weight:600">Open now — until 6pm today</span>
+        </div>
+        <dl style="margin:0">
+          <sc-for list="{{ hours }}" as="h" hint-placeholder-count="3">
+            <div style="display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid var(--bd,#E2E8F0);min-height:44px;align-items:center">
+              <dt style="font-size:14px;line-height:20px;font-weight:{{ h.weight }};color:{{ h.colour }}">{{ h.day }}</dt>
+              <dd style="margin:0;font-family:'JetBrains Mono',monospace;font-size:14px;line-height:20px;font-weight:{{ h.weight }};color:{{ h.colour }};font-variant-numeric:tabular-nums">{{ h.time }}</dd>
+            </div>
+          </sc-for>
+        </dl>
+        <p style="margin:14px 0 0;font-size:14px;line-height:20px;color:var(--mut,#475569);text-wrap:pretty">No appointment needed, but ring ahead if you want a specific car ready and charged.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer style="background:var(--plane,#16181D);color:var(--planeInk,#fff);padding:clamp(28px,3.5cqw,48px) 0 96px">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,3cqw,32px)">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:clamp(20px,2.5cqw,40px);padding-bottom:clamp(20px,2.5cqw,32px)">
+        <div>
+          <p style="margin:0;font-size:17px;font-weight:700;letter-spacing:-0.015em">{{ dealer }}</p>
+          <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:var(--planeMut,#94A3B8)">Watling Street, Bletchley,<br />Milton Keynes MK1 1AA</p>
+          <p style="margin:8px 0 0;font-size:15px;line-height:22px;font-weight:600"><a href="tel:01908993469" style="color:var(--planeLink,#5EC7DC);text-decoration:underline">01908 993 469</a></p>
+        </div>
+        <sc-for list="{{ footerCols }}" as="col" hint-placeholder-count="3">
+          <nav aria-label="{{ col.name }}">
+            <p style="margin:0 0 10px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.02em;color:var(--planeMut,#94A3B8)">{{ col.name }}</p>
+            <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column">
+              <sc-for list="{{ col.links }}" as="l" hint-placeholder-count="5">
+                <li><a href="#" style="display:flex;align-items:center;min-height:36px;font-size:14px;line-height:20px;color:var(--planeInk,#fff)" style-hover="color:var(--planeLink,#5EC7DC)" style-focus="outline:2px solid var(--planeLink,#5EC7DC);outline-offset:2px">{{ l }}</a></li>
+              </sc-for>
+            </ul>
+          </nav>
+        </sc-for>
+      </div>
+      <div style="border-top:1px solid var(--planeBd,#2A2E36);padding-top:20px;display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between">
+        <p style="margin:0;font-size:12px;line-height:17px;color:var(--planeMut,#94A3B8);max-width:82ch;text-wrap:pretty">Kennington Car Sales Ltd, registered in England 03421887, registered office Watling Street, Bletchley, Milton Keynes MK1 1AA. Authorised and regulated by the Financial Conduct Authority, FRN 993469, as a credit broker not a lender. We work with a panel of lenders and may receive a commission for introducing you to them; the amount is disclosed to you in writing before you sign anything. Our initial disclosure document and complaints procedure are web pages, linked above — not downloads. Prices include VAT under the margin scheme where applicable.</p>
+        <p style="margin:0;font-size:12px;line-height:17px;color:var(--planeMut,#94A3B8)">Site by Forecourt</p>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<sc-if value="{{ sticky }}" hint-placeholder-val="{{ false }}">
+  <div style="position:sticky;bottom:0;z-index:40;background:var(--s1,#fff);border-top:1px solid var(--bd,#E2E8F0);padding:10px 12px;display:flex;gap:8px;align-items:center;box-shadow:0 -1px 12px rgba(15,23,42,0.08)">
+    <a href="#" style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:6px;background:var(--b600,#0E5A6B);color:#fff;font-size:15px;font-weight:600" style-hover="background:var(--b700,#0B4553);text-decoration:none">{{ browseAll }}</a>
+    <a href="tel:01908993469" style="flex:none;display:flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:6px;background:var(--s1,#fff);border:1px solid var(--bd,#E2E8F0);color:var(--link,#0E5A6B);font-size:15px;font-weight:600;gap:6px" style-hover="border-color:var(--link,#0E5A6B);text-decoration:none"><span aria-hidden="true">✆</span>Call</a>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light' | 'dark'&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;large&quot;,&quot;small&quot;],&quot;default&quot;:&quot;large&quot;,&quot;tsType&quot;:&quot;'large' | 'small'&quot;,&quot;section&quot;:&quot;Tenant&quot;},&quot;sticky&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Tenant&quot;}}">
+class Component extends DCLogic {
+  tokens(dark) {
+    const light = {
+      "--s1": "#FFFFFF", "--s2": "#F8FAFC", "--s3": "#F1F5F9", "--bd": "#E2E8F0",
+      "--ink": "#0F172A", "--mut": "#475569", "--sub": "#64748B",
+      "--b600": "#0E5A6B", "--b700": "#0B4553", "--b300": "#5EC7DC",
+      "--link": "#0E5A6B", "--well": "#E6F4F1",
+      "--accent": "#F59E0B", "--accentInk": "#B45309",
+      "--good": "#0CA30C", "--warn": "#FAB219", "--serious": "#EC835A", "--critical": "#D03B3B",
+      "--plane": "#16181D", "--planeWell": "#1D2027", "--planeInk": "#FFFFFF",
+      "--planeMut": "#94A3B8", "--planeBd": "#2A2E36", "--planeLink": "#5EC7DC",
+      "--stripe": "rgba(15,23,42,0.05)"
+    };
+    const dk = {
+      "--s1": "#16181D", "--s2": "#0E1013", "--s3": "#1D2027", "--bd": "#2A2E36",
+      "--ink": "#FFFFFF", "--mut": "#94A3B8", "--sub": "#7A8598",
+      "--b600": "#0E5A6B", "--b700": "#0B4553", "--b300": "#5EC7DC",
+      "--link": "#5EC7DC", "--well": "#1D2027",
+      "--accent": "#F59E0B", "--accentInk": "#F59E0B",
+      "--good": "#0CA30C", "--warn": "#FAB219", "--serious": "#EC835A", "--critical": "#D03B3B",
+      "--plane": "#0E1013", "--planeWell": "#1D2027", "--planeInk": "#FFFFFF",
+      "--planeMut": "#94A3B8", "--planeBd": "#2A2E36", "--planeLink": "#5EC7DC",
+      "--stripe": "rgba(255,255,255,0.06)"
+    };
+    return dark ? dk : light;
+  }
+
+  badge(kind) {
+    const map = {
+      reduced: { label: "Price reduced", icon: "↓", bg: "var(--accent,#F59E0B)", ink: "#0F172A" },
+      arrived: { label: "Just arrived", icon: "★", bg: "var(--b600,#0E5A6B)", ink: "#FFFFFF" },
+      low: { label: "Low mileage", icon: "◆", bg: "var(--well,#E6F4F1)", ink: "var(--ink,#0F172A)" }
+    };
+    return map[kind];
+  }
+
+  renderVals() {
+    const dark = (this.props.mode ?? "light") === "dark";
+    const small = (this.props.size ?? "large") === "small";
+    const theme = Object.assign({}, this.tokens(dark), {
+      containerType: "inline-size",
+      background: dark ? "#0E1013" : "#F8FAFC",
+      color: dark ? "#FFFFFF" : "#0F172A",
+      fontFamily: "Inter, system-ui, sans-serif"
+    });
+    const total = small ? 14 : 123;
+
+    return {
+      theme,
+      dealer: small ? "Bletchley Motor Company" : "Kennington Car Sales",
+      logoW: small ? "72px" : "36px",
+      sticky: this.props.sticky ?? false,
+      nav: ["Cars in stock", "Finance", "Part-exchange", "About us", "Contact"],
+      headline: small
+        ? "Fourteen cars. Every one we would put our own name to."
+        : "123 cars in Bletchley, every one with its MOT history and its marks on the page.",
+      standfirst: small
+        ? "A small pitch on Watling Street, deliberately. We buy about four cars a month, prep them properly and publish everything we find — including the dents."
+        : "Tell us your budget and what shape of car you need. We will show you every one we have that fits, with the price, the provenance check and the damage photographed before you ring.",
+      heroStats: small
+        ? [{ value: "14", label: "cars on the pitch" }, { value: "£4,995", label: "cheapest today" }, { value: "4.9", label: "from 38 reviews" }]
+        : [{ value: "123", label: "cars in stock" }, { value: "£6,495", label: "cheapest today" }, { value: "4.8", label: "from 252 reviews" }],
+      searchCta: small ? "Show me all 14" : "Show me the cars",
+      browseAll: small ? "See all 14 cars" : "Browse all 123 cars",
+      heroFields: [
+        { label: "Budget", options: small ? ["Any price", "Under £6,000", "£6,000–£12,000", "£12,000–£20,000", "Over £20,000"] : ["Any price", "Under £10,000", "£10,000–£20,000", "£20,000–£30,000", "£30,000–£46,000"] },
+        { label: "Body style", options: small ? ["Any shape", "Hatchback (6)", "Estate (3)", "SUV (3)", "Saloon (2)"] : ["Any shape", "SUV (41)", "Hatchback (34)", "Estate (18)", "Saloon (16)", "MPV (9)", "Coupé (5)"] },
+        { label: "Fuel", options: small ? ["Any fuel", "Petrol (9)", "Diesel (4)", "Hybrid (1)"] : ["Any fuel", "Petrol (52)", "Diesel (31)", "Hybrid (22)", "Electric (18)"] }
+      ],
+      heroProof: [
+        "Every car provenance-checked with HPI before it goes on the site",
+        "Full DVSA MOT history published, advisories and all",
+        "Every mark photographed and captioned — we never hide them",
+        "12 months' warranty included on every car over £5,000"
+      ],
+      why: [
+        { figure: "123 / 123", title: "Provenance-checked, not just claimed", detail: "Outstanding finance, write-off category, stolen marker, mileage anomaly. The check date is printed on every car's page.", link: "See a check" },
+        { figure: "Every test", title: "The whole MOT history, advisories included", detail: "Straight from the DVSA, with a mileage chart. If a car has a bad test in its past, you will read it here first.", link: "See an MOT history" },
+        { figure: "1,847", title: "Marks photographed last year", detail: "Kerbed alloys, stone chips, scuffed bumpers — captioned with what they are, on the car's own page.", link: "See declared condition" },
+        { figure: "12 mth", title: "Warranty, parts and labour", detail: "Included on every car over £5,000, usable at any VAT-registered garage — not only ours.", link: "What it covers" }
+      ],
+      arrivedHeading: small ? "On the pitch this week" : "Just arrived this week",
+      cars: [
+        { name: small ? "2017 Ford Fiesta" : "2022 Tesla Model X", derivative: small ? "1.0T EcoBoost Titanium · 5dr" : "Dual Motor Long Range · 7 seats", price: small ? "£7,495" : "£45,999", finance: small ? "£139 a month · 12.9% APR rep." : "£649 a month · 9.9% APR rep.", specs: small ? ["58,120 miles", "Petrol", "Manual"] : ["40,470 miles", "Electric", "Automatic"], badges: [this.badge("arrived")], shot: small ? "YD17 FST · front 3/4" : "WN22 HNL · front 3/4" },
+        { name: small ? "2019 Skoda Octavia" : "2022 BMW iX", derivative: small ? "1.6 TDI SE Technology Estate" : "xDrive40 M Sport", price: small ? "£9,995" : "£43,880", finance: small ? "£184 a month · 12.9% APR rep." : "£618 a month · 9.9% APR rep.", specs: small ? ["71,400 miles", "Diesel", "Manual"] : ["29,760 miles", "Electric", "Automatic"], badges: [this.badge("arrived")], shot: small ? "MK19 OCT · front 3/4" : "RE22 BMX · front 3/4" },
+        { name: small ? "2018 Nissan Qashqai" : "2023 Hyundai Ioniq 5", derivative: small ? "1.5 dCi N-Connecta" : "Ultimate 73kWh AWD", price: small ? "£8,750" : "£31,750", finance: small ? "£162 a month · 12.9% APR rep." : "£447 a month · 9.9% APR rep.", specs: small ? ["64,880 miles", "Diesel", "Manual"] : ["16,430 miles", "Electric", "Automatic"], badges: [this.badge("low")], shot: small ? "KX18 QSH · front 3/4" : "SJ23 ION · front 3/4" },
+        { name: small ? "2016 Vauxhall Corsa" : "2021 Audi Q7", derivative: small ? "1.4 SE 5dr" : "55 TFSI e S line quattro", price: small ? "£4,995" : "£39,995", finance: small ? "£94 a month · 12.9% APR rep." : "£563 a month · 9.9% APR rep.", specs: small ? ["48,300 miles", "Petrol", "Manual"] : ["38,410 miles", "Plug-in hybrid", "Automatic"], badges: [this.badge("reduced")], shot: small ? "FG16 CRS · front 3/4" : "YD21 AUQ · front 3/4" }
+      ],
+      browse: small ? [
+        { name: "By budget", items: [{ label: "Under £6,000", count: "3" }, { label: "£6,000–£9,000", count: "5" }, { label: "£9,000–£12,000", count: "4" }, { label: "Over £12,000", count: "2" }] },
+        { name: "By body style", items: [{ label: "Hatchback", count: "6" }, { label: "Estate", count: "3" }, { label: "SUV", count: "3" }, { label: "Saloon", count: "2" }] },
+        { name: "By make", items: [{ label: "Ford", count: "4" }, { label: "Vauxhall", count: "3" }, { label: "Skoda", count: "3" }, { label: "Nissan", count: "2" }, { label: "Kia", count: "2" }] },
+        { name: "By fuel", items: [{ label: "Petrol", count: "9" }, { label: "Diesel", count: "4" }, { label: "Hybrid", count: "1" }] }
+      ] : [
+        { name: "By budget", items: [{ label: "Under £10,000", count: "28" }, { label: "£10,000–£20,000", count: "44" }, { label: "£20,000–£30,000", count: "31" }, { label: "Over £30,000", count: "20" }] },
+        { name: "By body style", items: [{ label: "SUV", count: "41" }, { label: "Hatchback", count: "34" }, { label: "Estate", count: "18" }, { label: "Saloon", count: "16" }, { label: "MPV", count: "9" }, { label: "Coupé", count: "5" }] },
+        { name: "By make", items: [{ label: "BMW", count: "17" }, { label: "Ford", count: "15" }, { label: "Audi", count: "13" }, { label: "Kia", count: "11" }, { label: "Tesla", count: "9" }, { label: "Volvo", count: "8" }, { label: "All makes", count: "22" }] },
+        { name: "By fuel", items: [{ label: "Petrol", count: "52" }, { label: "Diesel", count: "31" }, { label: "Hybrid", count: "22" }, { label: "Electric", count: "18" }] }
+      ],
+      rating: small ? "4.9" : "4.8",
+      ratingLine: small ? "4.9 out of 5 from 38 reviews" : "4.8 out of 5 from 252 reviews",
+      reviews: [
+        { quote: "They had photographed a scuff on the wing and pointed it out before I asked. First dealer I have been to that told me something bad about their own car.", who: "Sandeep R · bought a Kia Sportage · June 2026" },
+        { quote: "Rang at nine, car was charged and outside when I arrived at eleven. Part-exchange figure was the same one they quoted on the phone, not five hundred less.", who: "Alison M · bought a Volvo XC60 · May 2026" },
+        { quote: "The MOT advisories were all on the website, and the tyres they said were borderline had already been changed. Straightforward, no pressure to take the finance.", who: "Dave K · bought a Ford Kuga · April 2026" }
+      ],
+      financeStats: [
+        { value: "8", label: "lenders on the panel" },
+        { value: "9.9%", label: "APR representative" },
+        { value: "Same day", label: "decision, usually" }
+      ],
+      hours: [
+        { day: "Monday to Saturday", time: "10am – 6pm", weight: "600", colour: "var(--ink,#0F172A)" },
+        { day: "Sunday", time: "11am – 4pm", weight: "400", colour: "var(--mut,#475569)" },
+        { day: "Bank holidays", time: "10am – 4pm", weight: "400", colour: "var(--mut,#475569)" }
+      ],
+      footerCols: [
+        { name: "Buying a car", links: ["All " + total + " cars in stock", "Finance explained", "Part-exchange", "Reserve a car", "Warranty"] },
+        { name: "About us", links: ["Our forecourt", "Reviews", "Contact and directions", "How we prep a car"] },
+        { name: "The legal bits", links: ["Initial disclosure", "Complaints procedure", "Privacy policy", "Cookie policy", "Terms and conditions"] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
