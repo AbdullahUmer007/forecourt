@@ -6,7 +6,7 @@
  */
 
 import { withSession, toPence, toInt, toDate, type Tx } from './db';
-import type { Session } from '../session';
+import type { Session } from '@/auth/session';
 import { money, type Money } from '@forecourt/domain';
 import type {
   Appraisal, DamageMark, ReconStandard, Valuation, Offer, Settlement,

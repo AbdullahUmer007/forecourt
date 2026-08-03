@@ -20,7 +20,7 @@
  */
 
 import postgres, { type TransactionSql } from 'postgres';
-import type { Session } from '../session';
+import type { Session } from '@/auth/session';
 
 const url = process.env['DATABASE_URL'];
 if (!url) {

@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
-import { requireSession } from '../../../session';
-import { loadAppraisal } from '../../../data/appraisals';
-import { Card, StatusBadge, Figure, Amount, Reg, Row, Empty, Problem } from '../../../components/ui';
-import { DamageMap } from '../../../components/damage-map';
+import { requireSession } from '@/auth/session';
+import { loadAppraisal } from '@/data/appraisals';
+import { Card, StatusBadge, Figure, Amount, Reg, Row, Empty, Problem } from '@/components/ui';
+import { DamageMap } from '@/components/damage-map';
 import {
   estimateRecon, valuationPanel, settlementPosition, equityPosition,
   currentOffer, offerExpired, conversionBlockers,
@@ -41,6 +41,12 @@ export default async function AppraisalDetail(
     { userId: session.userId, tenantId: session.tenantId, roleKey: session.roleKey,
       permissions: session.permissions, scope: session.scope, siteIds: session.siteIds },
     'vehicle.cost.read',
+  );
+
+  const canEditVehicles = holds(
+    { userId: session.userId, tenantId: session.tenantId, roleKey: session.roleKey,
+      permissions: session.permissions, scope: session.scope, siteIds: session.siteIds },
+    'vehicle.update',
   );
 
   const description = [appraisal.make, appraisal.model, appraisal.derivative]
@@ -88,7 +94,14 @@ export default async function AppraisalDetail(
 
         {/* ---------------------------------------------- the damage map */}
         <Card title="Condition" action={<span className="text-ink-subtle">{marks.length} marked</span>}>
-          <DamageMap marks={marks} />
+          <DamageMap
+            marks={marks}
+            appraisalId={appraisal.id}
+            // The button is hidden for a role that cannot record one, but the
+            // server action checks the same permission itself — this is the
+            // convenience, that is the control.
+            canEdit={canEditVehicles && appraisal.state !== 'converted'}
+          />
         </Card>
 
         {/* -------------------------------------------- the recon estimate */}

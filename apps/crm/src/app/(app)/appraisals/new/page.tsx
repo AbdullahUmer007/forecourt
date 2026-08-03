@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Card, Empty } from '../../../components/ui';
+import { Card, Empty } from '@/components/ui';
 
 /**
  * Not built yet, and says so plainly.

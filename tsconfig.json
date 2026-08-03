@@ -28,7 +28,15 @@
     // in the one suite that gates our own site's score. Inferring from the JS
     // is better than a hand-written .d.ts that drifts from it.
     "allowJs": true,
-    "checkJs": false
+    "checkJs": false,
+    // Mirrors apps/crm/tsconfig.json and vitest.config.ts. All three have to
+    // agree or the CRM typechecks in the editor and fails in CI, which is the
+    // worst of the three places to find out.
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["apps/crm/src/*"],
+      "@forecourt/domain": ["packages/domain/src/index.ts"]
+    }
   },
   "include": [
     "packages/*/src/**/*.ts",

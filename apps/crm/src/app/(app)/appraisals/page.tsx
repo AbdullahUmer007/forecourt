@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { requireSession } from '../../session';
-import { listAppraisals, type AppraisalSummary } from '../../data/appraisals';
-import { StatusBadge, Empty, Amount, Reg, type Tone } from '../../components/ui';
+import { requireSession } from '@/auth/session';
+import { listAppraisals, type AppraisalSummary } from '@/data/appraisals';
+import { StatusBadge, Empty, Amount, Reg, type Tone } from '@/components/ui';
 import type { AppraisalState } from '@forecourt/domain';
 
 /**

@@ -14,14 +14,15 @@
  *   - Marks already recorded show their count on the panel, so you can see
  *     what you have done without scrolling to a list.
  *
- * Recording a mark is not wired to a server action yet: `appraisal_damage`
- * INSERTs need the audit event and the media upload that go with them, and a
- * half-written mutation is worse than an honest read-only view. What is here
- * is the real geometry and the real interaction.
+ * Selecting a panel opens the form that records a mark against it — through a
+ * server action that permission-checks, validates, prices from the tenant's
+ * standard costs, strips EXIF from the photograph and writes the audit event
+ * in the same transaction as the row.
  */
 
 import { useState } from 'react';
 import type { DamageMark } from '@forecourt/domain';
+import { MarkForm } from './mark-form';
 
 /**
  * The panels, laid out as the car actually is — nearside on the left, offside
@@ -66,8 +67,16 @@ const SEVERITY_TONE: Record<string, string> = {
   heavy: 'border-critical',
 };
 
-export function DamageMap({ marks }: { marks: readonly DamageMark[] }) {
+const LABELS = new Map<string, string>(
+  [...LAYOUT.flat(), ...WHEELS].map((c) => [c.panel, c.label]),
+);
+
+export function DamageMap(
+  { marks, appraisalId, canEdit }:
+  { marks: readonly DamageMark[]; appraisalId: string; canEdit: boolean },
+) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
 
   const byPanel = new Map<string, DamageMark[]>();
   for (const mark of marks) {
@@ -94,7 +103,7 @@ export function DamageMap({ marks }: { marks: readonly DamageMark[] }) {
                 label={cell.label}
                 marks={byPanel.get(cell.panel) ?? []}
                 selected={selected === cell.panel}
-                onSelect={setSelected}
+                onSelect={(p) => { setSelected(p); setAdding(false); }}
               />
             ))}
           </div>
@@ -109,32 +118,54 @@ export function DamageMap({ marks }: { marks: readonly DamageMark[] }) {
             label={wheel.label}
             marks={byPanel.get(wheel.panel) ?? []}
             selected={selected === wheel.panel}
-            onSelect={setSelected}
+            onSelect={(p) => { setSelected(p); setAdding(false); }}
           />
         ))}
       </div>
 
-      <div aria-live="polite" className="min-h-11">
-        {selected && (
-          selectedMarks.length > 0 ? (
-            <ul className="grid gap-1">
-              {selectedMarks.map((mark) => (
-                <li
-                  key={mark.id}
-                  className="rounded-sm border border-edge bg-surface-3 px-3 py-2 text-[13px] leading-[18px]"
-                >
-                  <span className="font-medium capitalize">{mark.severity}</span>{' '}
-                  {mark.damageType.replace(/_/g, ' ')}
-                  {mark.sizeMm !== null && mark.sizeMm !== undefined && ` · ${mark.sizeMm}mm`}
-                  {mark.notes && <span className="text-ink-muted"> — {mark.notes}</span>}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-[13px] leading-[18px] text-ink-subtle">
-              Nothing marked on this panel.
-            </p>
-          )
+      <div aria-live="polite" className="grid min-h-11 gap-2">
+        {selected && !adding && (
+          <>
+            {selectedMarks.length > 0 ? (
+              <ul className="grid gap-1">
+                {selectedMarks.map((mark) => (
+                  <li
+                    key={mark.id}
+                    className="rounded-sm border border-edge bg-surface-3 px-3 py-2 text-[13px] leading-[18px]"
+                  >
+                    <span className="font-medium capitalize">{mark.severity}</span>{' '}
+                    {mark.damageType.replace(/_/g, ' ')}
+                    {mark.sizeMm !== null && mark.sizeMm !== undefined && ` · ${mark.sizeMm}mm`}
+                    {mark.notes && <span className="text-ink-muted"> — {mark.notes}</span>}
+                    {mark.photoKey && <span className="text-ink-subtle"> · photo</span>}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-[13px] leading-[18px] text-ink-subtle">
+                Nothing marked on {LABELS.get(selected) ?? selected}.
+              </p>
+            )}
+
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => setAdding(true)}
+                className="min-h-11 rounded-md border border-edge-strong bg-surface-1 px-4 font-medium hover:bg-surface-3"
+              >
+                Mark {LABELS.get(selected) ?? selected}
+              </button>
+            )}
+          </>
+        )}
+
+        {selected && adding && (
+          <MarkForm
+            appraisalId={appraisalId}
+            panel={selected}
+            label={LABELS.get(selected) ?? selected}
+            onDone={() => setAdding(false)}
+          />
         )}
       </div>
     </div>

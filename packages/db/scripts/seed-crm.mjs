@@ -17,7 +17,11 @@
  */
 
 import postgres from 'postgres';
+import { hash as argonHash, Algorithm } from '@node-rs/argon2';
 import { requireDatabaseUrl } from '../../../scripts/load-env.mjs';
+
+/** Long enough to satisfy the password policy, and obviously a demo value. */
+const DEMO_PASSWORD = 'kennington demo forecourt access';
 
 const TENANT = '11111111-1111-4111-8111-111111111111'; // Kennington, from seed-demo
 const OWNER = '22222222-0000-4000-8000-000000000001';
@@ -70,11 +74,19 @@ async function seed() {
   });
 
   await step('users', async () => {
+    // A real Argon2id hash, generated here rather than pasted in, so the demo
+    // exercises the same verification path production does. The password is
+    // printed at the end — it is a local demo database, and a seed that hides
+    // the credential it just created is a seed nobody can use.
+    const passwordHash = await argonHash(DEMO_PASSWORD, {
+      algorithm: Algorithm.Argon2id, memoryCost: 19_456, timeCost: 2, parallelism: 1,
+    });
+
     await sql`
-      INSERT INTO users (id, email, name) VALUES
-        (${OWNER}::uuid, 'owner@kenningtoncarsales.co.uk', 'Dealer Principal'),
-        (${EXEC}::uuid, 'sales@kenningtoncarsales.co.uk', 'Sales Executive')
-      ON CONFLICT (id) DO NOTHING`;
+      INSERT INTO users (id, email, name, password_hash) VALUES
+        (${OWNER}::uuid, 'owner@kenningtoncarsales.co.uk', 'Dealer Principal', ${passwordHash}),
+        (${EXEC}::uuid, 'sales@kenningtoncarsales.co.uk', 'Sales Executive', ${passwordHash})
+      ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash`;
   });
 
   await step('memberships', async () => {
@@ -249,9 +261,9 @@ async function seed() {
   });
 
   console.log('\n✓ CRM demo data seeded.');
-  console.log('  Sign in as either (no password — there is no login yet):');
-  console.log('    CRM_DEV_USER=owner@kenningtoncarsales.co.uk   sees cost prices');
-  console.log('    CRM_DEV_USER=sales@kenningtoncarsales.co.uk   does not');
+  console.log(`  Password for both accounts: ${DEMO_PASSWORD}`);
+  console.log('    owner@kenningtoncarsales.co.uk   sees cost prices, can record damage');
+  console.log('    sales@kenningtoncarsales.co.uk   sees neither the breakdown nor the trade value');
   console.log('  Then: pnpm dev:crm → http://localhost:3002');
 }
 

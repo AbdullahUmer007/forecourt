@@ -247,6 +247,29 @@ export function storageKey(p: StorageKeyParts): string {
 export const isTenantOwnedKey = (key: string, tenantId: string): boolean =>
   key.startsWith(`t/${tenantId}/`);
 
+/**
+ * The key for a photograph taken during a part-exchange appraisal.
+ *
+ * An appraisal has no vehicle yet — that is the whole point of it — so
+ * `storageKey` does not fit. What must NOT change is the `t/{tenantId}/`
+ * prefix, because `isTenantOwnedKey` is the guard that stops one dealer's
+ * media being written under another's path, and a key shape that quietly
+ * bypasses it is worse than no guard at all.
+ *
+ * On conversion to stock these objects are re-pointed at the vehicle rather
+ * than copied: the bytes are already content-addressed, so the same photograph
+ * under two keys is two copies of one thing and an invitation for them to
+ * disagree.
+ */
+export function appraisalMediaKey(p: {
+  tenantId: string;
+  appraisalId: string;
+  contentHash: string;
+  extension?: string;
+}): string {
+  return `t/${p.tenantId}/a/${p.appraisalId}/${p.contentHash.slice(0, 12)}.${p.extension ?? 'jpg'}`;
+}
+
 // ---------------------------------------------------------------- processing
 
 export type ProcessingStep =
