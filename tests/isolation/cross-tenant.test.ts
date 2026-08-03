@@ -149,9 +149,22 @@ const TENANT_TABLES = [
   'stock_book_sequences',
   'payments',
   'aml_overrides',
-  // M12+ — created by later migrations; each skips until its table exists
+  // M12 — deals & the evidence ledger
   'deals',
+  'deal_addons',
   'deal_evidence',
+  'document_templates',
+  'deal_documents',
+  'deal_repair_attempts',
+  // M13 — part-exchange appraisal
+  'appraisals',
+  'appraisal_damage',
+  'recon_cost_standards',
+  'appraisal_costs',
+  'appraisal_valuations',
+  'appraisal_offers',
+  'appraisal_settlements',
+  // M14+ — created by later migrations; each skips until its table exists
   'appointments',
 ] as const;
 
@@ -179,6 +192,12 @@ const APPEND_ONLY = new Set<string>([
   // NOT here — they have a lawful draft→issued lifecycle and are frozen by a
   // content trigger instead, so an UPDATE on a draft must still succeed.
   'payments', 'aml_overrides',
+  // M12: the ledger and the documents are what an ombudsman asks to see.
+  'deal_documents', 'deal_addons',
+  // M13: an offer was said out loud to a customer, and the valuation is what
+  // it was based on. `appraisal_settlements` is NOT here — it has one lawful
+  // update (being paid) and is frozen by a content trigger instead.
+  'appraisal_offers', 'appraisal_valuations',
 ]);
 
 /**
@@ -209,10 +228,14 @@ const B_CONTACT = 'eeeeeee2-eeee-4eee-8eee-eeeeeeeeeee2';
 const B_CONTACT_2 = 'eeeeeee3-eeee-4eee-8eee-eeeeeeeeeee3';
 const A_WORDING = 'fffffff1-ffff-4fff-8fff-fffffffffff1';
 const B_WORDING = 'fffffff2-ffff-4fff-8fff-fffffffffff2';
+const A_DEAL = 'dddddda1-dddd-4ddd-8ddd-ddddddddddd1';
+const B_DEAL = 'dddddda2-dddd-4ddd-8ddd-ddddddddddd2';
 const A_INVOICE = 'cccccca1-cccc-4ccc-8ccc-cccccccccdd1';
 const B_INVOICE = 'cccccca2-cccc-4ccc-8ccc-cccccccccdd2';
 const A_LEAD = 'aaaaaab1-aaaa-4aaa-8aaa-aaaaaaaaabb1';
 const B_LEAD = 'aaaaaab2-aaaa-4aaa-8aaa-aaaaaaaaabb2';
+const A_APPRAISAL = 'bbbbbba1-bbbb-4bbb-8bbb-bbbbbbbbbcc1';
+const B_APPRAISAL = 'bbbbbba2-bbbb-4bbb-8bbb-bbbbbbbbbcc2';
 // 43 characters — the shortlist_token_unguessable CHECK enforces the length,
 // so a short token here would fail on the constraint rather than the policy.
 const A_TOKEN = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1';
@@ -407,6 +430,61 @@ const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   aml_overrides: {
     columns: 'tenant_id, contact_id, running_total_pence, threshold_pence, reason, authorised_by',
     values: `'${TENANT_B}', '${B_CONTACT}', 1200000, 1000000, 'Smuggled override', '${B_USER}'`,
+  },
+
+  // ---- M12: deals and the evidence ledger. A leak here hands one dealer
+  // another's finance evidence, which is both a data breach and a defence.
+  deals: {
+    columns: 'tenant_id, contact_id, vehicle_id, state, vehicle_price_pence',
+    values: `'${TENANT_B}', '${B_CONTACT}', '${B_VEHICLE}', 'building', 1200000`,
+  },
+  deal_addons: {
+    columns: 'tenant_id, deal_id, product_code, product_name, price_pence, offered_at',
+    values: `'${TENANT_B}', '${B_DEAL}', 'GAP', 'Smuggled GAP', 39900, now()`,
+  },
+  deal_evidence: {
+    columns: 'tenant_id, deal_id, sequence, kind, payload, entry_hash, occurred_at',
+    values: `'${TENANT_B}', '${B_DEAL}', 99, 'note', '{}'::jsonb, 'smuggledhash', now()`,
+  },
+  document_templates: {
+    columns: 'tenant_id, code, name, version, body_markdown',
+    values: `'${TENANT_B}', 'smuggled', 'Smuggled template', 99, 'Body'`,
+  },
+  deal_documents: {
+    columns: 'tenant_id, deal_id, code, version, rendered_body, content_hash',
+    values: `'${TENANT_B}', '${B_DEAL}', 'order-form', 1, 'Smuggled body', 'smuggledhash'`,
+  },
+  deal_repair_attempts: {
+    columns: 'tenant_id, deal_id, fault_reported, started_at',
+    values: `'${TENANT_B}', '${B_DEAL}', 'Smuggled fault', now()`,
+  },
+  appraisals: {
+    columns: 'tenant_id, registration, state',
+    values: `'${TENANT_B}', 'SMUGGLE1', 'draft'`,
+  },
+  appraisal_damage: {
+    columns: 'tenant_id, appraisal_id, panel, panel_group, damage_type, severity',
+    values: `'${TENANT_B}', '${B_APPRAISAL}', 'nsf_door', 'body_panel', 'dent', 'moderate'`,
+  },
+  recon_cost_standards: {
+    columns: 'tenant_id, damage_type, severity, panel_group, cost_pence',
+    values: `'${TENANT_B}', 'scratch', 'heavy', 'bumper', 24000`,
+  },
+  appraisal_costs: {
+    columns: 'tenant_id, appraisal_id, category, description, estimate_pence',
+    values: `'${TENANT_B}', '${B_APPRAISAL}', 'bodywork', 'Smuggled recon line', 24000`,
+  },
+  appraisal_valuations: {
+    columns: 'tenant_id, appraisal_id, source, trade_pence',
+    values: `'${TENANT_B}', '${B_APPRAISAL}', 'manual', 450000`,
+  },
+  appraisal_offers: {
+    columns: 'tenant_id, appraisal_id, revision, allowance_pence',
+    values: `'${TENANT_B}', '${B_APPRAISAL}', 99, 350000`,
+  },
+  appraisal_settlements: {
+    columns: 'tenant_id, appraisal_id, lender_name, settlement_pence, source, quoted_at',
+    values: `'${TENANT_B}', '${B_APPRAISAL}', 'Smuggled Finance', 310000, 'lender_letter', now()`,
   },
 };
 
@@ -693,6 +771,93 @@ async function seedRivalData(): Promise<void> {
           ('${A}'::uuid,'${A_CONTACT}'::uuid,1200000::bigint,1000000::bigint,'Override A','${USER_A}'::uuid),
           ('${B}'::uuid,'${B_CONTACT}'::uuid,1200000::bigint,1000000::bigint,'Override B','${B_USER}'::uuid)) v
         WHERE NOT EXISTS (SELECT 1 FROM aml_overrides WHERE contact_id = '${A_CONTACT}');
+    `);
+  }
+
+  // M12 tables — deals and the evidence ledger.
+  if (await tableExists('deals')) {
+    await sql.unsafe(`
+      INSERT INTO deals (id, tenant_id, contact_id, vehicle_id, state, vehicle_price_pence) VALUES
+        ('${A_DEAL}','${A}','${A_CONTACT}','${A_VEHICLE}','building',1200000),
+        ('${B_DEAL}','${B}','${B_CONTACT}','${B_VEHICLE}','building',1200000)
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO deal_addons (tenant_id, deal_id, product_code, product_name, price_pence, offered_at)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_DEAL}'::uuid,'GAP','GAP insurance A',39900::bigint,now()),
+          ('${B}'::uuid,'${B_DEAL}'::uuid,'GAP','GAP insurance B',39900::bigint,now())) v
+        WHERE NOT EXISTS (SELECT 1 FROM deal_addons WHERE deal_id = '${A_DEAL}');
+
+      INSERT INTO deal_evidence (tenant_id, deal_id, sequence, kind, payload, entry_hash, occurred_at)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_DEAL}'::uuid,1,'initial_disclosure'::evidence_kind,'{}'::jsonb,'hash-a',now()),
+          ('${B}'::uuid,'${B_DEAL}'::uuid,1,'initial_disclosure'::evidence_kind,'{}'::jsonb,'hash-b',now())) v
+        WHERE NOT EXISTS (SELECT 1 FROM deal_evidence WHERE deal_id = '${A_DEAL}');
+
+      INSERT INTO document_templates (tenant_id, code, name, version, body_markdown)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'order-form','Order form A',1,'Body A'),
+          ('${B}'::uuid,'order-form','Order form B',1,'Body B')) v
+        WHERE NOT EXISTS (SELECT 1 FROM document_templates WHERE tenant_id = '${A}');
+
+      INSERT INTO deal_documents (tenant_id, deal_id, code, version, rendered_body, content_hash)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_DEAL}'::uuid,'order-form',1,'Rendered A','hash-doc-a'),
+          ('${B}'::uuid,'${B_DEAL}'::uuid,'order-form',1,'Rendered B','hash-doc-b')) v
+        WHERE NOT EXISTS (SELECT 1 FROM deal_documents WHERE deal_id = '${A_DEAL}');
+
+      INSERT INTO deal_repair_attempts (tenant_id, deal_id, fault_reported, started_at)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_DEAL}'::uuid,'Fault A',now()),
+          ('${B}'::uuid,'${B_DEAL}'::uuid,'Fault B',now())) v
+        WHERE NOT EXISTS (SELECT 1 FROM deal_repair_attempts WHERE deal_id = '${A_DEAL}');
+    `);
+  }
+
+  // M13 tables — part-exchange appraisal.
+  if (await tableExists('appraisals')) {
+    await sql.unsafe(`
+      INSERT INTO appraisals (id, tenant_id, contact_id, registration, state, seller_type, mileage) VALUES
+        ('${A_APPRAISAL}','${A}','${A_CONTACT}','AA11PXA','appraised','private_individual',42500),
+        ('${B_APPRAISAL}','${B}','${B_CONTACT}','BB11PXB','appraised','private_individual',42500)
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO appraisal_damage (tenant_id, appraisal_id, panel, panel_group, damage_type, severity)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_APPRAISAL}'::uuid,'nsf_door','body_panel'::panel_group,'dent'::damage_type,'moderate'::damage_severity),
+          ('${B}'::uuid,'${B_APPRAISAL}'::uuid,'nsf_door','body_panel'::panel_group,'dent'::damage_type,'moderate'::damage_severity)) v
+        WHERE NOT EXISTS (SELECT 1 FROM appraisal_damage WHERE appraisal_id = '${A_APPRAISAL}');
+
+      INSERT INTO recon_cost_standards (tenant_id, damage_type, severity, panel_group, cost_pence)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'dent'::damage_type,'moderate'::damage_severity,'body_panel'::panel_group,12000::bigint),
+          ('${B}'::uuid,'dent'::damage_type,'moderate'::damage_severity,'body_panel'::panel_group,12000::bigint)) v
+        WHERE NOT EXISTS (SELECT 1 FROM recon_cost_standards WHERE tenant_id = '${A}');
+
+      INSERT INTO appraisal_costs (tenant_id, appraisal_id, category, description, estimate_pence)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_APPRAISAL}'::uuid,'bodywork'::cost_category,'Recon A',12000::bigint),
+          ('${B}'::uuid,'${B_APPRAISAL}'::uuid,'bodywork'::cost_category,'Recon B',12000::bigint)) v
+        WHERE NOT EXISTS (SELECT 1 FROM appraisal_costs WHERE appraisal_id = '${A_APPRAISAL}');
+
+      INSERT INTO appraisal_valuations (tenant_id, appraisal_id, source, trade_pence)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_APPRAISAL}'::uuid,'manual'::valuation_source,450000::bigint),
+          ('${B}'::uuid,'${B_APPRAISAL}'::uuid,'manual'::valuation_source,450000::bigint)) v
+        WHERE NOT EXISTS (SELECT 1 FROM appraisal_valuations WHERE appraisal_id = '${A_APPRAISAL}');
+
+      INSERT INTO appraisal_offers (tenant_id, appraisal_id, revision, allowance_pence)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_APPRAISAL}'::uuid,1,350000::bigint),
+          ('${B}'::uuid,'${B_APPRAISAL}'::uuid,1,350000::bigint)) v
+        WHERE NOT EXISTS (SELECT 1 FROM appraisal_offers WHERE appraisal_id = '${A_APPRAISAL}');
+
+      INSERT INTO appraisal_settlements (tenant_id, appraisal_id, lender_name,
+                                         settlement_pence, source, quoted_at)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_APPRAISAL}'::uuid,'Lender A',310000::bigint,'lender_letter'::settlement_source,now()),
+          ('${B}'::uuid,'${B_APPRAISAL}'::uuid,'Lender B',310000::bigint,'lender_letter'::settlement_source,now())) v
+        WHERE NOT EXISTS (SELECT 1 FROM appraisal_settlements WHERE appraisal_id = '${A_APPRAISAL}');
     `);
   }
 
@@ -992,6 +1157,99 @@ describeDb('cross-tenant isolation', () => {
         .toBeGreaterThan(0);
     },
   );
+
+  /**
+   * M12: a repair attempt sets a statutory deadline, so its start date is
+   * frozen while its completion is not. Asserted against the real trigger,
+   * because a CHECK constraint and a comment prove nothing about behaviour.
+   */
+  it('a repair attempt can be completed but never re-dated or deleted', async () => {
+    if (!(await tableExists('deal_repair_attempts'))) return;
+
+    const id: string = globalThis.crypto.randomUUID();
+    await sql.unsafe(`
+      INSERT INTO deal_repair_attempts (id, tenant_id, deal_id, fault_reported, started_at)
+      VALUES ('${id}', '${TENANT_A}', '${A_DEAL}', 'Clutch judder', now() - interval '2 days')`);
+
+    // Back-dating the start would SHORTEN the customer's right to reject.
+    await expect(
+      sql.unsafe(`UPDATE deal_repair_attempts SET started_at = now() WHERE id = '${id}'`),
+    ).rejects.toThrow(/statutory deadline/i);
+
+    await expect(
+      sql.unsafe(`UPDATE deal_repair_attempts SET fault_reported = 'Something else' WHERE id = '${id}'`),
+    ).rejects.toThrow(/statutory deadline/i);
+
+    await expect(
+      sql.unsafe(`DELETE FROM deal_repair_attempts WHERE id = '${id}'`),
+    ).rejects.toThrow(/cannot be deleted/i);
+
+    // Completing an open repair is the one lawful update, and it must work —
+    // otherwise the clock could never resume.
+    await sql.unsafe(`UPDATE deal_repair_attempts SET completed_at = now() WHERE id = '${id}'`);
+
+    // But a completed repair cannot then be re-dated.
+    await expect(
+      sql.unsafe(`UPDATE deal_repair_attempts SET completed_at = now() + interval '1 day' WHERE id = '${id}'`),
+    ).rejects.toThrow(/cannot be re-dated/i);
+  });
+
+  /**
+   * M12: an add-on accepted before it was offered is the data shape of a
+   * pre-ticked box, and PRIN 2A treats that as a fair-value failure.
+   */
+  it('refuses an add-on accepted before it was offered', async () => {
+    if (!(await tableExists('deal_addons'))) return;
+
+    await expect(
+      sql.unsafe(`
+        INSERT INTO deal_addons (tenant_id, deal_id, product_code, product_name,
+                                 price_pence, offered_at, accepted_at, demands_and_needs)
+        VALUES ('${TENANT_A}', '${A_DEAL}', 'PRETICK', 'Pre-ticked product', 9900,
+                now(), now() - interval '1 hour', 'Wanted it')`),
+    ).rejects.toThrow(/addon_accepted_after_offered/i);
+  });
+
+  it('refuses an accepted add-on with no demands and needs statement', async () => {
+    if (!(await tableExists('deal_addons'))) return;
+
+    await expect(
+      sql.unsafe(`
+        INSERT INTO deal_addons (tenant_id, deal_id, product_code, product_name,
+                                 price_pence, offered_at, accepted_at)
+        VALUES ('${TENANT_A}', '${A_DEAL}', 'NODN', 'No statement', 9900,
+                now() - interval '1 hour', now())`),
+    ).rejects.toThrow(/addon_accepted_needs_statement/i);
+  });
+
+  /**
+   * M12: the evidence chain cannot fork. Two entries at position 4 is exactly
+   * the ambiguity the ledger exists to prevent.
+   */
+  it('refuses a second evidence entry at the same position in a deal', async () => {
+    if (!(await tableExists('deal_evidence'))) return;
+
+    await expect(
+      sql.unsafe(`
+        INSERT INTO deal_evidence (tenant_id, deal_id, sequence, kind, payload, entry_hash, occurred_at)
+        VALUES ('${TENANT_A}', '${A_DEAL}', 1, 'note', '{}'::jsonb, 'forked', now())`),
+    ).rejects.toThrow(/deal_evidence_deal_sequence_unique/i);
+  });
+
+  /**
+   * M12: contract formation decides whether a 14-day cancellation right
+   * exists. A contracted deal without it is refused by the database, not only
+   * by the domain layer.
+   */
+  it('refuses to contract a deal with no contract formation recorded', async () => {
+    if (!(await tableExists('deals'))) return;
+
+    await expect(
+      sql.unsafe(`
+        INSERT INTO deals (tenant_id, contact_id, state, contracted_at)
+        VALUES ('${TENANT_A}', '${A_CONTACT}', 'contracted', now())`),
+    ).rejects.toThrow(/deal_contracted_needs_formation/i);
+  });
 
   it('an issued invoice cannot be re-priced, renumbered or deleted', async () => {
     if (!(await tableExists('invoices'))) return;

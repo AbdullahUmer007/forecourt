@@ -91,8 +91,19 @@ async function setup() {
 
   if (migrations.length === 0) throw new Error('No migrations found — check packages/db/migrations.');
 
+  // Recorded as it goes, so `db:migrate` can pick up from here. Without this a
+  // freshly set-up database has every table and no history, and the next
+  // migration run cannot tell it apart from a database that was never built.
+  await run('migration history', `
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      filename    text PRIMARY KEY,
+      applied_at  timestamptz NOT NULL DEFAULT now()
+    )`);
+
   for (const file of migrations) {
     await run(file, readFileSync(join(DB, 'migrations', file), 'utf8'));
+    await sql`INSERT INTO schema_migrations (filename) VALUES (${file})
+              ON CONFLICT (filename) DO NOTHING`;
   }
 
   const [{ n }] = await sql`

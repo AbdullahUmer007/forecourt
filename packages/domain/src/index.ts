@@ -17,3 +17,6 @@ export * from './leads.js';
 export * from './invoicing.js';
 export * from './stock-book.js';
 export * from './aml.js';
+export * from './evidence.js';
+export * from './deals.js';
+export * from './appraisal.js';
