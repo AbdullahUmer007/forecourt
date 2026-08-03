@@ -1,0 +1,17 @@
+BEGIN;
+
+DROP TRIGGER IF EXISTS append_only ON messages;
+DROP TRIGGER IF EXISTS append_only ON lead_events;
+
+DROP TABLE IF EXISTS lead_sla_policies CASCADE;
+DROP TABLE IF EXISTS messages CASCADE;
+DROP TABLE IF EXISTS lead_events CASCADE;
+DROP TABLE IF EXISTS leads CASCADE;
+
+DROP TYPE IF EXISTS message_status;
+DROP TYPE IF EXISTS message_direction;
+DROP TYPE IF EXISTS loss_reason;
+DROP TYPE IF EXISTS lead_stage;
+DROP TYPE IF EXISTS lead_source;
+
+COMMIT;

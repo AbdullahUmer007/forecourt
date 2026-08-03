@@ -6,10 +6,11 @@ import { describe, it, expect } from 'vitest';
 import {
   shortlistCookie, shouldIssueToken, isValidToken, addToShortlist, removeFromShortlist,
   mergeShortlists, markUnavailable, shortlistSummary, describeSearch, createSavedSearch,
-  canSendAlert, MAX_SHORTLIST_ITEMS, SHORTLIST_COOKIE,
+  canSendAlert, canSendAlertWithConsent, MAX_SHORTLIST_ITEMS, SHORTLIST_COOKIE,
   type Shortlist, type SavedSearch,
 } from './shortlist.js';
 import { EMPTY_QUERY, type SearchQuery, type MultiDimension } from './search.js';
+import type { ConsentRecord } from './consent.js';
 
 const T = 't-kennington';
 const list = (items: Shortlist['items'] = []): Shortlist =>
@@ -179,9 +180,12 @@ describe('whether an alert may be sent', () => {
   });
 
   it('will not send without a consent record at all', () => {
+    // The reason used to name M9 as the outstanding dependency. M9 has landed,
+    // so it now states the rule itself — an alert is direct marketing and
+    // needs a lawful basis, whatever module happens to supply it.
     const decision = canSendAlert({ ...base, consentId: null }, ctx);
     expect(decision.send).toBe(false);
-    expect(decision.reason).toMatch(/M9/);
+    expect(decision.reason).toMatch(/consent/i);
   });
 
   it('re-checks consent AT SEND TIME, not at save time', () => {
@@ -204,5 +208,83 @@ describe('whether an alert may be sent', () => {
     const justSent = { ...base, lastNotifiedAt: at('2026-08-02T06:00:00Z') };
     expect(canSendAlert(justSent, ctx).send).toBe(false);
     expect(canSendAlert({ ...justSent, frequency: 'instant' }, ctx).send).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+describe('saved-search alerts against real M9 consent records', () => {
+  const AUG = (d: number): Date => new Date(Date.UTC(2026, 7, d, 12));
+
+  const consent = (over: Partial<ConsentRecord> = {}): ConsentRecord => ({
+    id: 'c1', tenantId: 't1', contactId: 'p1',
+    channel: 'email', basis: 'explicit', granted: true,
+    source: 'website_form', wordingId: 'w1',
+    evidence: null, sourceDetail: null, expiresAt: null,
+    recordedAt: AUG(1), recordedBy: null,
+    ...over,
+  });
+
+  const search: SavedSearch = {
+    id: 's1', tenantId: 't1', contactId: 'p1', token: null,
+    name: 'Automatic Golf under £15,000',
+    canonicalPath: '/used-cars/volkswagen/golf',
+    query: EMPTY_QUERY, frequency: 'daily',
+    consentId: 'c1', createdAt: AUG(1), lastNotifiedAt: null,
+  };
+
+  const ctx = {
+    now: AUG(10), matchingVehicleCount: 3,
+    channel: 'email' as const, destination: 'dave@example.com',
+    consentHistory: [consent()], suppressions: [],
+  };
+
+  it('sends when consent is valid at send time', () => {
+    expect(canSendAlertWithConsent(search, ctx).send).toBe(true);
+  });
+
+  it('blocks when consent was withdrawn after the search was saved', () => {
+    // Saved on the 1st, withdrawn on the 9th, sending on the 10th. This is the
+    // path that was unreachable while M9 was outstanding.
+    const history = [
+      consent({ id: 'grant', recordedAt: AUG(1) }),
+      consent({ id: 'withdraw', granted: false, wordingId: null, recordedAt: AUG(9) }),
+    ];
+    const d = canSendAlertWithConsent(search, { ...ctx, consentHistory: history });
+    expect(d.send).toBe(false);
+    expect(d.reason).toContain('withdrawn');
+  });
+
+  it('blocks a suppressed destination', () => {
+    const suppressions = [{
+      channel: 'email' as const, destination: 'dave@example.com',
+      active: true, createdAt: AUG(2),
+    }];
+    expect(canSendAlertWithConsent(search, { ...ctx, suppressions }).send).toBe(false);
+  });
+
+  it('treats an alert as MARKETING, never as a service message', () => {
+    // If this were sent as `service` it would bypass consent entirely, which
+    // is the single most damaging mistake available in this module.
+    expect(canSendAlertWithConsent(search, { ...ctx, consentHistory: [] }).send).toBe(false);
+  });
+
+  it('refuses legitimate interest for an email alert', () => {
+    const history = [consent({ basis: 'legitimate_interest' })];
+    const d = canSendAlertWithConsent(search, { ...ctx, consentHistory: history });
+    expect(d.send).toBe(false);
+    expect(d.reason).toContain('PECR');
+  });
+
+  it('still applies the frequency rules once consent passes', () => {
+    const recent = { ...search, lastNotifiedAt: AUG(10) };
+    expect(canSendAlertWithConsent(recent, ctx).send).toBe(false);
+  });
+
+  it('still refuses to send an empty alert', () => {
+    expect(canSendAlertWithConsent(search, { ...ctx, matchingVehicleCount: 0 }).send).toBe(false);
+  });
+
+  it('blocks everything to an erased contact', () => {
+    expect(canSendAlertWithConsent(search, { ...ctx, contactErased: true }).send).toBe(false);
   });
 });

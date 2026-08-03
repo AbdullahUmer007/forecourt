@@ -8,3 +8,7 @@ dist/
 audit-*.md
 audit-*.json
 coverage/
+
+# TypeScript incremental build cache — a build artifact that was committed by
+# accident and shows as modified on every build.
+*.tsbuildinfo

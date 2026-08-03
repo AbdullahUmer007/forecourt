@@ -16,11 +16,15 @@
  * shortlist token is minted for a visitor who is only browsing.
  *
  * Sending a saved-search alert is a different thing entirely: that is direct
- * marketing and needs a consent record from M9, re-checked at send time. Until
- * M9 lands, `canSendAlert` returns false and says why.
+ * marketing and needs a consent record, re-checked at send time. M9 supplies
+ * it — `canSendAlertWithConsent` at the foot of this file derives the decision
+ * from the real append-only consent history and the suppression list.
  */
 
 import { canonicalSearchPath, type SearchQuery } from './search.js';
+import {
+  canSend, type ConsentRecord, type SuppressionRecord,
+} from './consent.js';
 
 // ---------------------------------------------------------------- tokens
 
@@ -248,7 +252,7 @@ export function canSendAlert(
   },
 ): SendDecision {
   if (search.consentId === null) {
-    return { send: false, reason: 'no consent record — saved-search alerts require M9 consent capture' };
+    return { send: false, reason: 'no consent record — a saved-search alert is direct marketing' };
   }
   if (!ctx.consentValidAtSendTime) {
     return { send: false, reason: 'consent withdrawn or expired since the search was saved' };
@@ -266,4 +270,53 @@ export function canSendAlert(
     return { send: false, reason: `too soon after the last alert for a ${search.frequency} search` };
   }
   return { send: true, reason: `${ctx.matchingVehicleCount} new matching vehicles` };
+}
+
+/**
+ * M9 wiring: decide a saved-search alert from REAL consent records.
+ *
+ * `canSendAlert` takes two booleans — `consentValidAtSendTime` and
+ * `suppressed` — that nothing computed while M9 was outstanding, so the whole
+ * alert path was inert by construction. This is the bridge: it derives both
+ * from the append-only consent history and the suppression list, at the moment
+ * of sending, and then applies the existing frequency and relevance rules.
+ *
+ * A saved-search alert is direct marketing — it is an unsolicited message
+ * promoting stock — so it goes through the `marketing` gate, never `service`.
+ * That distinction is the reason `canSend` takes a `kind` at all: getting it
+ * wrong here would let every alert bypass consent under a service exemption
+ * that does not apply to it.
+ */
+export function canSendAlertWithConsent(
+  search: SavedSearch,
+  ctx: {
+    now: Date;
+    matchingVehicleCount: number;
+    channel: 'email' | 'sms';
+    destination: string;
+    consentHistory: readonly ConsentRecord[];
+    suppressions: readonly SuppressionRecord[];
+    contactErased?: boolean;
+  },
+): SendDecision {
+  const gate = canSend({
+    kind: 'marketing',
+    channel: ctx.channel,
+    destination: ctx.destination,
+    consentHistory: ctx.consentHistory,
+    suppressions: ctx.suppressions,
+    sentAt: ctx.now,
+    ...(ctx.contactErased === undefined ? {} : { contactErased: ctx.contactErased }),
+  });
+
+  // The consent gate is the blocking one and its reason is the useful one, so
+  // it is reported verbatim rather than flattened into "no consent".
+  if (!gate.send) return { send: false, reason: gate.reason };
+
+  return canSendAlert(search, {
+    now: ctx.now,
+    matchingVehicleCount: ctx.matchingVehicleCount,
+    consentValidAtSendTime: true,
+    suppressed: false,
+  });
 }

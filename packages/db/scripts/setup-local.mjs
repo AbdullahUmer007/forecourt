@@ -2,10 +2,18 @@
  * Create a local database from nothing: extensions, RLS scaffolding, every
  * migration in order, then the policy verification.
  *
- *   pnpm db:setup
+ *   pnpm db:setup          fails if the database already has tables
+ *   pnpm db:setup --reset  drops the public schema first, then rebuilds
  *
  * This is the same sequence CI runs, deliberately — a local database that is
  * built differently from CI's is a local database that lies to you.
+ *
+ * The migrations are NOT idempotent and are not meant to be. `CREATE TYPE` has
+ * no `IF NOT EXISTS` in Postgres, so a second run always died on the first
+ * enum with "type fca_permission_type already exists" — which reads like a
+ * broken migration when it actually means "this database is already built".
+ * Rewriting the migrations to be self-healing would hide real drift, so the
+ * check lives here instead: we look before we leap, and say which it is.
  *
  * It refuses to run against anything that does not look local. Applying a
  * migration sequence to the wrong database is not a mistake you get to undo.
@@ -38,8 +46,34 @@ const run = async (label, text) => {
   console.log('ok');
 };
 
-try {
+const RESET = process.argv.includes('--reset');
+
+async function setup() {
+  // Look before we leap. A populated database is the normal case for anyone
+  // running this a second time, and it deserves an instruction rather than a
+  // Postgres error about an enum.
+  const [existing] = await sql`
+    SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'public'`;
+
+  if (existing.n > 0 && !RESET) {
+    console.log(`This database already has ${existing.n} tables — it is already set up.`);
+    console.log('');
+    console.log('  To verify it:      pnpm db:policies');
+    console.log('  To seed demo data: pnpm db:seed');
+    console.log('  To rebuild it from scratch (DESTROYS ALL LOCAL DATA):');
+    console.log('                     pnpm db:setup --reset');
+    return;
+  }
+
   console.log('Setting up the local database…');
+
+  if (RESET) {
+    // Drops enums, functions and tables together, which is why this is a
+    // schema drop rather than a list of DROP TABLEs that would drift.
+    await run('reset (dropping public schema)', `
+      DROP SCHEMA public CASCADE;
+      CREATE SCHEMA public;`);
+  }
 
   await run('extensions', `
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -65,6 +99,10 @@ try {
     SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'public'`;
   console.log(`\n✓ ${migrations.length} migrations applied, ${n} tables.`);
   console.log('  Now run: pnpm db:policies && pnpm db:seed');
+}
+
+try {
+  await setup();
 } catch (err) {
   console.log('FAILED');
   console.error(`\n${err.message}`);

@@ -19,12 +19,28 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 const DATABASE_URL = process.env.DATABASE_URL;
 const describeDb = DATABASE_URL ? describe : describe.skip;
 
-if (!DATABASE_URL) {
-  console.warn(
-    '\n  ⚠️  DATABASE_URL is not set — the cross-tenant leak suite did not run.\n' +
-      '     This is the blocking CI gate. CI MUST set DATABASE_URL.\n',
-  );
-}
+/**
+ * A skipped gate is a green gate, and that is the whole problem.
+ *
+ * This suite used to `describe.skip` with a stderr warning when DATABASE_URL
+ * was missing. Every runner and every CI summary reports a skipped suite as
+ * success, so the one test that stands between us and a cross-tenant leak
+ * could silently not run — which is precisely what it had been doing locally,
+ * because vitest does not read `.env` (now fixed by `setup.mjs`).
+ *
+ * So there is one test that ALWAYS runs and fails when the gate cannot. The
+ * suite can be unrunnable, or it can be green. It can no longer be both.
+ */
+describe('the cross-tenant leak gate itself', () => {
+  it('actually ran — a skipped isolation suite must never report as passing', () => {
+    expect(
+      DATABASE_URL,
+      'DATABASE_URL is not set, so the cross-tenant leak suite did not run. ' +
+      'This is the blocking gate (CLAUDE.md rule 1). Start Postgres and set ' +
+      'DATABASE_URL in .env, then re-run: pnpm test:isolation',
+    ).toBeTruthy();
+  });
+});
 
 type Row = Record<string, unknown>;
 type Sql = ((strings: TemplateStringsArray, ...values: unknown[]) => Promise<Row[]>) & {
@@ -60,9 +76,23 @@ const tableExists = async (table: string): Promise<boolean> => {
   return row?.['t'] != null;
 };
 
-const TENANT_A = '11111111-1111-4111-8111-111111111111';
-const TENANT_B = '22222222-2222-4222-8222-222222222222';
-const USER_A = '33333333-3333-4333-8333-333333333333';
+/**
+ * Dedicated UUIDs for this suite, in an `f...` space the demo seed never uses.
+ *
+ * TENANT_A was `11111111-…-111111111111`, which is byte-for-byte the tenant id
+ * `seed-demo.mjs` gives Kennington. On any database that had been seeded — the
+ * normal state of a working local machine — the tenants row was kept by
+ * `ON CONFLICT (id) DO NOTHING` and the suite then tried to give that tenant a
+ * SECOND default brand, which `brands_tenant_default_unique` correctly refused.
+ * The whole suite aborted in `beforeAll`, so all 125 tests reported as skipped
+ * rather than failed. The blocking gate could not run at all, and said so only
+ * in a stderr line nothing was checking.
+ *
+ * These ids are deliberately not adjacent to any seed's.
+ */
+const TENANT_A = 'ffffffff-0000-4000-8000-00000000000a';
+const TENANT_B = 'ffffffff-0000-4000-8000-00000000000b';
+const USER_A = 'ffffffff-0000-4000-8000-0000000000a1';
 
 /** Tables that must be tested for isolation. Every new tenant table joins this list. */
 const TENANT_TABLES = [
@@ -99,14 +129,29 @@ const TENANT_TABLES = [
   'vehicle_finance_quotes',
   'initial_disclosure_versions',
   'finance_promotion_log',
-  // M9+ — created by later migrations; each skips until its table exists
+  // M9 — contacts & consent
   'contacts',
-  'leads',
-  'deals',
-  'invoices',
-  'stock_book_entries',
-  'deal_evidence',
+  'consent_wordings',
   'contact_consents',
+  'suppressions',
+  'contact_merges',
+  'data_subject_requests',
+  // M10 — leads & communications
+  'leads',
+  'lead_events',
+  'messages',
+  'lead_sla_policies',
+  // M11 — money
+  'invoices',
+  'invoice_lines',
+  'invoice_sequences',
+  'stock_book_entries',
+  'stock_book_sequences',
+  'payments',
+  'aml_overrides',
+  // M12+ — created by later migrations; each skips until its table exists
+  'deals',
+  'deal_evidence',
   'appointments',
 ] as const;
 
@@ -124,9 +169,16 @@ const SPECIAL_TABLES = {
 
 /** Append-only tables reject UPDATE via a trigger before RLS is reached. */
 const APPEND_ONLY = new Set<string>([
-  'audit_events', 'deal_evidence', 'stock_book_entries', 'invoices', 'contact_consents',
+  'audit_events', 'deal_evidence', 'stock_book_entries', 'contact_consents',
   'vehicle_status_history', 'vehicle_prices', 'vehicle_lookups', 'search_events',
   'representative_examples', 'initial_disclosure_versions', 'finance_promotion_log', 'compliance_rules',
+  // M9/M10 evidence: a consent withdrawal, a suppression, a merge record and
+  // every message sent or blocked are all evidence, and evidence is appended.
+  'suppressions', 'contact_merges', 'lead_events', 'messages',
+  // M11: the records HMRC asks to see. `invoices` and `invoice_lines` are
+  // NOT here — they have a lawful draft→issued lifecycle and are frozen by a
+  // content trigger instead, so an UPDATE on a draft must still succeed.
+  'payments', 'aml_overrides',
 ]);
 
 /**
@@ -149,6 +201,18 @@ const A_MEDIA = 'ccccccc1-cccc-4ccc-8ccc-ccccccccccc1';
 const B_MEDIA = 'ccccccc2-cccc-4ccc-8ccc-ccccccccccc2';
 const A_SHORTLIST = 'ddddddd1-dddd-4ddd-8ddd-ddddddddddd1';
 const B_SHORTLIST = 'ddddddd2-dddd-4ddd-8ddd-ddddddddddd2';
+const A_CONTACT = 'eeeeeee1-eeee-4eee-8eee-eeeeeeeeeee1';
+const B_CONTACT = 'eeeeeee2-eeee-4eee-8eee-eeeeeeeeeee2';
+// A second contact for tenant B, so a merge payload has two distinct rows to
+// reference — `contact_merge_distinct` rejects winner = loser before the
+// policy is ever consulted.
+const B_CONTACT_2 = 'eeeeeee3-eeee-4eee-8eee-eeeeeeeeeee3';
+const A_WORDING = 'fffffff1-ffff-4fff-8fff-fffffffffff1';
+const B_WORDING = 'fffffff2-ffff-4fff-8fff-fffffffffff2';
+const A_INVOICE = 'cccccca1-cccc-4ccc-8ccc-cccccccccdd1';
+const B_INVOICE = 'cccccca2-cccc-4ccc-8ccc-cccccccccdd2';
+const A_LEAD = 'aaaaaab1-aaaa-4aaa-8aaa-aaaaaaaaabb1';
+const B_LEAD = 'aaaaaab2-aaaa-4aaa-8aaa-aaaaaaaaabb2';
 // 43 characters — the shortlist_token_unguessable CHECK enforces the length,
 // so a short token here would fail on the constraint rather than the policy.
 const A_TOKEN = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1';
@@ -264,6 +328,85 @@ const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   finance_promotion_log: {
     columns: 'tenant_id, page_path, rendered_hash, occurred_at',
     values: `'${TENANT_B}', '/used-cars/smuggled', 'deadbeef', '2026-08-15T12:00:00Z'`,
+  },
+
+  // ---- M9: contacts & consent. These hold named people's data, so a leak
+  // here is a personal data breach as well as a commercial one.
+  contacts: {
+    columns: 'tenant_id, first_name, last_name, email',
+    values: `'${TENANT_B}', 'Smuggled', 'Buyer', 'smuggled@isolation.test'`,
+  },
+  consent_wordings: {
+    columns: 'tenant_id, version, channel, basis, body, opt_out_text',
+    values: `'${TENANT_B}', 99, 'email', 'explicit', 'Smuggled wording', 'Unsubscribe any time.'`,
+  },
+  contact_consents: {
+    columns: 'tenant_id, contact_id, channel, basis, granted, source, wording_id',
+    values: `'${TENANT_B}', '${B_CONTACT}', 'email', 'explicit', true, 'website_form', '${B_WORDING}'`,
+  },
+  suppressions: {
+    columns: 'tenant_id, channel, destination, reason',
+    values: `'${TENANT_B}', 'email', 'smuggled@isolation.test', 'unsubscribed'`,
+  },
+  contact_merges: {
+    columns: 'tenant_id, winner_id, loser_id, reason, loser_snapshot',
+    values: `'${TENANT_B}', '${B_CONTACT}', '${B_CONTACT_2}', 'duplicate', '{}'::jsonb`,
+  },
+  data_subject_requests: {
+    columns: 'tenant_id, contact_id, kind, requested_at, due_at',
+    values: `'${TENANT_B}', '${B_CONTACT}', 'access', now(), now() + interval '30 days'`,
+  },
+
+  // ---- M10: leads & communications.
+  leads: {
+    columns: 'tenant_id, contact_id, vehicle_id, source',
+    values: `'${TENANT_B}', '${B_CONTACT}', '${B_VEHICLE}', 'website_enquiry'`,
+  },
+  lead_events: {
+    columns: 'tenant_id, lead_id, kind',
+    values: `'${TENANT_B}', '${B_LEAD}', 'created'`,
+  },
+  messages: {
+    columns: 'tenant_id, lead_id, contact_id, direction, channel, destination, body, is_marketing',
+    values: `'${TENANT_B}', '${B_LEAD}', '${B_CONTACT}', 'outbound', 'email', ` +
+            `'smuggled@isolation.test', 'Smuggled body', false`,
+  },
+  lead_sla_policies: {
+    columns: 'tenant_id, source, respond_within_minutes',
+    values: `'${TENANT_B}', 'autotrader', 15`,
+  },
+
+  // ---- M11: money. An invoice or a stock book entry reaching the wrong
+  // dealer is both a data leak and a VAT problem.
+  invoices: {
+    columns: 'tenant_id, kind, status, series, vat_scheme, net_total_pence, ' +
+             'vat_total_pence, gross_total_pence',
+    values: `'${TENANT_B}', 'sale', 'draft', 'sale', 'margin', 1200000, 0, 1200000`,
+  },
+  invoice_lines: {
+    columns: 'tenant_id, invoice_id, position, description, unit_price_pence, ' +
+             'net_pence, vat_amount_pence, gross_pence',
+    values: `'${TENANT_B}', '${B_INVOICE}', 1, 'Smuggled car', 1200000, 1200000, 0, 1200000`,
+  },
+  invoice_sequences: {
+    columns: 'tenant_id, series, prefix, last_number',
+    values: `'${TENANT_B}', 'smuggled', 'SMG-', 0`,
+  },
+  stock_book_entries: {
+    columns: 'tenant_id, entry_number, registration, vehicle_description, purchase_price_pence',
+    values: `'${TENANT_B}', 9999, 'SM11UGG', 'Smuggled vehicle', 1000000`,
+  },
+  stock_book_sequences: {
+    columns: 'tenant_id, last_number',
+    values: `'${TENANT_B}', 0`,
+  },
+  payments: {
+    columns: 'tenant_id, contact_id, direction, method, amount_pence',
+    values: `'${TENANT_B}', '${B_CONTACT}', 'in', 'cash', 500000`,
+  },
+  aml_overrides: {
+    columns: 'tenant_id, contact_id, running_total_pence, threshold_pence, reason, authorised_by',
+    values: `'${TENANT_B}', '${B_CONTACT}', 1200000, 1000000, 'Smuggled override', '${B_USER}'`,
   },
 };
 
@@ -438,6 +581,118 @@ async function seedRivalData(): Promise<void> {
           ('${A}'::uuid,'/used-cars/a','hash-a','2026-08-15T12:00:00Z'::timestamptz),
           ('${B}'::uuid,'/used-cars/b','hash-b','2026-08-15T12:00:00Z'::timestamptz)) v
         WHERE NOT EXISTS (SELECT 1 FROM finance_promotion_log WHERE page_path = '/used-cars/a');
+    `);
+  }
+
+  // M9 tables — contacts and consent.
+  if (await tableExists('contacts')) {
+    await sql.unsafe(`
+      INSERT INTO contacts (id, tenant_id, first_name, last_name, email) VALUES
+        ('${A_CONTACT}','${A}','Alice','Anderson','alice@isolation.test'),
+        ('${B_CONTACT}','${B}','Bob','Brown','bob@isolation.test'),
+        ('${B_CONTACT_2}','${B}','Bobby','Brown','bobby@isolation.test')
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO consent_wordings (id, tenant_id, version, channel, basis, body, opt_out_text) VALUES
+        ('${A_WORDING}','${A}',1,'email','explicit','Wording A','Unsubscribe any time.'),
+        ('${B_WORDING}','${B}',1,'email','explicit','Wording B','Unsubscribe any time.')
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO contact_consents (tenant_id, contact_id, channel, basis, granted, source, wording_id)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_CONTACT}'::uuid,'email'::consent_channel,'explicit'::consent_basis,
+           true,'website_form'::consent_source,'${A_WORDING}'::uuid),
+          ('${B}'::uuid,'${B_CONTACT}'::uuid,'email'::consent_channel,'explicit'::consent_basis,
+           true,'website_form'::consent_source,'${B_WORDING}'::uuid)) v
+        WHERE NOT EXISTS (SELECT 1 FROM contact_consents WHERE contact_id = '${A_CONTACT}');
+
+      INSERT INTO suppressions (tenant_id, channel, destination, reason)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'email'::consent_channel,'gone-a@isolation.test','unsubscribed'),
+          ('${B}'::uuid,'email'::consent_channel,'gone-b@isolation.test','unsubscribed')) v
+        WHERE NOT EXISTS (SELECT 1 FROM suppressions WHERE destination = 'gone-a@isolation.test');
+
+      INSERT INTO data_subject_requests (tenant_id, contact_id, kind, requested_at, due_at)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_CONTACT}'::uuid,'access',now(),now() + interval '30 days'),
+          ('${B}'::uuid,'${B_CONTACT}'::uuid,'access',now(),now() + interval '30 days')) v
+        WHERE NOT EXISTS (SELECT 1 FROM data_subject_requests WHERE contact_id = '${A_CONTACT}');
+    `);
+  }
+
+  // M10 tables — leads and communications.
+  if (await tableExists('leads')) {
+    await sql.unsafe(`
+      INSERT INTO leads (id, tenant_id, contact_id, vehicle_id, source) VALUES
+        ('${A_LEAD}','${A}','${A_CONTACT}','${A_VEHICLE}','website_enquiry'),
+        ('${B_LEAD}','${B}','${B_CONTACT}','${B_VEHICLE}','website_enquiry')
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO lead_events (tenant_id, lead_id, kind)
+        SELECT * FROM (VALUES ('${A}'::uuid,'${A_LEAD}'::uuid,'created'),
+                              ('${B}'::uuid,'${B_LEAD}'::uuid,'created')) v
+        WHERE NOT EXISTS (SELECT 1 FROM lead_events WHERE lead_id = '${A_LEAD}');
+
+      INSERT INTO messages (tenant_id, lead_id, contact_id, direction, channel,
+                            destination, body, is_marketing)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_LEAD}'::uuid,'${A_CONTACT}'::uuid,'outbound'::message_direction,
+           'email'::consent_channel,'alice@isolation.test','Reply A',false),
+          ('${B}'::uuid,'${B_LEAD}'::uuid,'${B_CONTACT}'::uuid,'outbound'::message_direction,
+           'email'::consent_channel,'bob@isolation.test','Reply B',false)) v
+        WHERE NOT EXISTS (SELECT 1 FROM messages WHERE lead_id = '${A_LEAD}');
+
+      INSERT INTO lead_sla_policies (tenant_id, source, respond_within_minutes)
+        SELECT * FROM (VALUES ('${A}'::uuid,'website_enquiry'::lead_source,30),
+                              ('${B}'::uuid,'website_enquiry'::lead_source,30)) v
+        WHERE NOT EXISTS (SELECT 1 FROM lead_sla_policies WHERE tenant_id = '${A}');
+    `);
+  }
+
+  // M11 tables — money.
+  if (await tableExists('invoices')) {
+    await sql.unsafe(`
+      INSERT INTO invoice_sequences (tenant_id, series, prefix, last_number)
+        SELECT * FROM (VALUES ('${A}'::uuid,'sale','KEN-',0::bigint),
+                              ('${B}'::uuid,'sale','BEE-',0::bigint)) v
+        WHERE NOT EXISTS (SELECT 1 FROM invoice_sequences WHERE tenant_id = '${A}');
+
+      INSERT INTO stock_book_sequences (tenant_id, last_number)
+        SELECT * FROM (VALUES ('${A}'::uuid,0::bigint), ('${B}'::uuid,0::bigint)) v
+        WHERE NOT EXISTS (SELECT 1 FROM stock_book_sequences WHERE tenant_id = '${A}');
+
+      INSERT INTO invoices (id, tenant_id, kind, status, series, vat_scheme,
+                            net_total_pence, vat_total_pence, gross_total_pence) VALUES
+        ('${A_INVOICE}','${A}','sale','draft','sale','margin',1200000,0,1200000),
+        ('${B_INVOICE}','${B}','sale','draft','sale','margin',1200000,0,1200000)
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO invoice_lines (tenant_id, invoice_id, position, description,
+                                 unit_price_pence, net_pence, vat_amount_pence, gross_pence)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_INVOICE}'::uuid,1,'Car A',1200000::bigint,1200000::bigint,0::bigint,1200000::bigint),
+          ('${B}'::uuid,'${B_INVOICE}'::uuid,1,'Car B',1200000::bigint,1200000::bigint,0::bigint,1200000::bigint)) v
+        WHERE NOT EXISTS (SELECT 1 FROM invoice_lines WHERE invoice_id = '${A_INVOICE}');
+
+      INSERT INTO stock_book_entries (tenant_id, entry_number, registration,
+                                      vehicle_description, purchase_price_pence)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,1::bigint,'AA11AAA','Vehicle A',1000000::bigint),
+          ('${B}'::uuid,1::bigint,'BB11BBB','Vehicle B',1000000::bigint)) v
+        WHERE NOT EXISTS (SELECT 1 FROM stock_book_entries WHERE registration = 'AA11AAA');
+
+      INSERT INTO payments (tenant_id, contact_id, direction, method, amount_pence)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_CONTACT}'::uuid,'in'::payment_direction,'cash'::payment_method,500000::bigint),
+          ('${B}'::uuid,'${B_CONTACT}'::uuid,'in'::payment_direction,'cash'::payment_method,500000::bigint)) v
+        WHERE NOT EXISTS (SELECT 1 FROM payments WHERE contact_id = '${A_CONTACT}');
+
+      INSERT INTO aml_overrides (tenant_id, contact_id, running_total_pence,
+                                 threshold_pence, reason, authorised_by)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_CONTACT}'::uuid,1200000::bigint,1000000::bigint,'Override A','${USER_A}'::uuid),
+          ('${B}'::uuid,'${B_CONTACT}'::uuid,1200000::bigint,1000000::bigint,'Override B','${B_USER}'::uuid)) v
+        WHERE NOT EXISTS (SELECT 1 FROM aml_overrides WHERE contact_id = '${A_CONTACT}');
     `);
   }
 
@@ -696,9 +951,13 @@ describeDb('cross-tenant isolation', () => {
   // Gate 4 — append-only tables reject mutation.
   // -------------------------------------------------------------------
   it.each([
-    'deal_evidence', 'stock_book_entries', 'invoices', 'contact_consents', 'search_events',
+    'deal_evidence', 'stock_book_entries', 'contact_consents', 'search_events',
     // M8: what we advertised, and what the rulebook said when we advertised it.
     'compliance_rules', 'representative_examples', 'initial_disclosure_versions', 'finance_promotion_log',
+    // M9/M10 evidence.
+    'suppressions', 'contact_merges', 'lead_events', 'messages',
+    // M11 money records HMRC asks to see.
+    'payments', 'aml_overrides',
   ])(
     '%s rejects UPDATE and DELETE',
     async (table) => {
@@ -710,6 +969,77 @@ describeDb('cross-tenant isolation', () => {
       expect(Number(trigger?.['n'] ?? 0), `${table} must carry the append_only trigger`).toBeGreaterThan(0);
     },
   );
+
+  /**
+   * `invoices` and `invoice_lines` are NOT blanket append-only, and that is
+   * deliberate: an invoice has a lawful draft → issued → paid lifecycle, so a
+   * total UPDATE ban would make it impossible to issue one.
+   *
+   * What must be immutable is the CONTENT once issued. This asserts the
+   * guarantee rather than the mechanism — the earlier version of this test
+   * demanded the `append_only` trigger by name and would have been satisfied
+   * by a trigger that did nothing.
+   */
+  it.each(['invoices', 'invoice_lines'])(
+    '%s freezes its content once the invoice is issued',
+    async (table) => {
+      if (!(await tableExists(table))) return;
+      const [trigger] = await sql`
+        SELECT count(*) AS n FROM pg_trigger
+        WHERE tgrelid = ${'public.' + table}::regclass
+          AND tgname LIKE 'freeze_issued%' AND NOT tgisinternal`;
+      expect(Number(trigger?.['n'] ?? 0), `${table} must carry a freeze-on-issue trigger`)
+        .toBeGreaterThan(0);
+    },
+  );
+
+  it('an issued invoice cannot be re-priced, renumbered or deleted', async () => {
+    if (!(await tableExists('invoices'))) return;
+
+    // A dedicated invoice per run. Re-using the seeded one made this pass
+    // once and then fail on the second run against the same database — the
+    // trigger correctly refused to re-stamp an already-issued invoice, which
+    // is the behaviour under test refusing the test's own setup.
+    const freshId: string = globalThis.crypto.randomUUID();
+
+    // The number must be unique within (tenant, series) too, so it comes from
+    // the max already present rather than a literal. Hard-coding `1` passed on
+    // a clean database and collided on every rerun — the unique index doing
+    // exactly its job, against the test's own setup.
+    const [maxRow] = await sql`
+      SELECT coalesce(max(number), 0) AS n FROM invoices
+       WHERE tenant_id = ${TENANT_A} AND series = 'freeze-test'`;
+    const next = BigInt(String(maxRow?.['n'] ?? 0)) + 1n;
+
+    await sql.unsafe(`
+      INSERT INTO invoices (id, tenant_id, kind, status, series, vat_scheme,
+                            net_total_pence, vat_total_pence, gross_total_pence,
+                            number, reference, issued_at)
+      VALUES ('${freshId}', '${TENANT_A}', 'sale', 'issued', 'freeze-test', 'margin',
+              1200000, 0, 1200000, ${next}, 'FRZ-${next}', now())`);
+
+    // Now tamper with it the way a bug or a bad actor would. Each of these is
+    // a different HMRC problem.
+    await expect(
+      sql.unsafe(`UPDATE invoices SET number = 9002 WHERE id = '${freshId}'`),
+    ).rejects.toThrow(/number cannot change/i);
+
+    await expect(
+      sql.unsafe(`UPDATE invoices SET gross_total_pence = 1 WHERE id = '${freshId}'`),
+    ).rejects.toThrow(/cannot be re-priced/i);
+
+    await expect(
+      sql.unsafe(`UPDATE invoices SET buyer_name = 'Someone Else' WHERE id = '${freshId}'`),
+    ).rejects.toThrow(/part of the record/i);
+
+    await expect(
+      sql.unsafe(`DELETE FROM invoices WHERE id = '${freshId}'`),
+    ).rejects.toThrow(/cannot be deleted/i);
+
+    // Status may still move — an issued invoice must be able to become paid,
+    // or the freeze would make the product unusable.
+    await sql.unsafe(`UPDATE invoices SET status = 'paid' WHERE id = '${freshId}'`);
+  });
 
   // -------------------------------------------------------------------
   // Gate 5 — unique constraints are tenant-scoped, not global.
