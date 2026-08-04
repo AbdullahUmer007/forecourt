@@ -164,7 +164,14 @@ const TENANT_TABLES = [
   'appraisal_valuations',
   'appraisal_offers',
   'appraisal_settlements',
-  // M14+ — created by later migrations; each skips until its table exists
+  // M14 — prep pipeline
+  'prep_stages',
+  'prep_cards',
+  'prep_stage_events',
+  'prep_tasks',
+  'prep_parts',
+  'prep_blocks',
+  // M15+ — created by later migrations; each skips until its table exists
   'appointments',
 ] as const;
 
@@ -236,6 +243,12 @@ const A_LEAD = 'aaaaaab1-aaaa-4aaa-8aaa-aaaaaaaaabb1';
 const B_LEAD = 'aaaaaab2-aaaa-4aaa-8aaa-aaaaaaaaabb2';
 const A_APPRAISAL = 'bbbbbba1-bbbb-4bbb-8bbb-bbbbbbbbbcc1';
 const B_APPRAISAL = 'bbbbbba2-bbbb-4bbb-8bbb-bbbbbbbbbcc2';
+const A_PREP_STAGE = 'cccccca1-cccc-4ccc-8ccc-cccccccccee1';
+const B_PREP_STAGE = 'cccccca2-cccc-4ccc-8ccc-cccccccccee2';
+const A_PREP_CARD = 'cccccca1-cccc-4ccc-8ccc-cccccccccff1';
+const B_PREP_CARD = 'cccccca2-cccc-4ccc-8ccc-cccccccccff2';
+const A_PREP_TASK = 'cccccca1-cccc-4ccc-8ccc-ccccccccc111';
+const B_PREP_TASK = 'cccccca2-cccc-4ccc-8ccc-ccccccccc222';
 // 43 characters — the shortlist_token_unguessable CHECK enforces the length,
 // so a short token here would fail on the constraint rather than the policy.
 const A_TOKEN = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1';
@@ -485,6 +498,30 @@ const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   appraisal_settlements: {
     columns: 'tenant_id, appraisal_id, lender_name, settlement_pence, source, quoted_at',
     values: `'${TENANT_B}', '${B_APPRAISAL}', 'Smuggled Finance', 310000, 'lender_letter', now()`,
+  },
+  prep_stages: {
+    columns: 'tenant_id, key, name, position',
+    values: `'${TENANT_B}', 'smuggled_stage', 'Smuggled stage', 99`,
+  },
+  prep_cards: {
+    columns: 'tenant_id, vehicle_id, current_stage_id',
+    values: `'${TENANT_B}', '${B_VEHICLE}', '${B_PREP_STAGE}'`,
+  },
+  prep_stage_events: {
+    columns: 'tenant_id, card_id, stage_id, entered_at',
+    values: `'${TENANT_B}', '${B_PREP_CARD}', '${B_PREP_STAGE}', now()`,
+  },
+  prep_tasks: {
+    columns: 'tenant_id, card_id, description, category',
+    values: `'${TENANT_B}', '${B_PREP_CARD}', 'Smuggled task', 'valet'`,
+  },
+  prep_parts: {
+    columns: 'tenant_id, task_id, description',
+    values: `'${TENANT_B}', '${B_PREP_TASK}', 'Smuggled part'`,
+  },
+  prep_blocks: {
+    columns: 'tenant_id, card_id, reason, started_at',
+    values: `'${TENANT_B}', '${B_PREP_CARD}', 'awaiting_parts', now()`,
   },
 };
 
@@ -858,6 +895,44 @@ async function seedRivalData(): Promise<void> {
           ('${A}'::uuid,'${A_APPRAISAL}'::uuid,'Lender A',310000::bigint,'lender_letter'::settlement_source,now()),
           ('${B}'::uuid,'${B_APPRAISAL}'::uuid,'Lender B',310000::bigint,'lender_letter'::settlement_source,now())) v
         WHERE NOT EXISTS (SELECT 1 FROM appraisal_settlements WHERE appraisal_id = '${A_APPRAISAL}');
+    `);
+  }
+
+  // M14 tables — the prep pipeline.
+  if (await tableExists('prep_stages')) {
+    await sql.unsafe(`
+      INSERT INTO prep_stages (id, tenant_id, key, name, position, sla_hours) VALUES
+        ('${A_PREP_STAGE}','${A}','bodywork','Bodywork A',4,72),
+        ('${B_PREP_STAGE}','${B}','bodywork','Bodywork B',4,72)
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO prep_cards (id, tenant_id, vehicle_id, current_stage_id) VALUES
+        ('${A_PREP_CARD}','${A}','${A_VEHICLE}','${A_PREP_STAGE}'),
+        ('${B_PREP_CARD}','${B}','${B_VEHICLE}','${B_PREP_STAGE}')
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO prep_stage_events (tenant_id, card_id, stage_id, entered_at)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_PREP_CARD}'::uuid,'${A_PREP_STAGE}'::uuid,now()),
+          ('${B}'::uuid,'${B_PREP_CARD}'::uuid,'${B_PREP_STAGE}'::uuid,now())) v
+        WHERE NOT EXISTS (SELECT 1 FROM prep_stage_events WHERE card_id = '${A_PREP_CARD}');
+
+      INSERT INTO prep_tasks (id, tenant_id, card_id, description, category) VALUES
+        ('${A_PREP_TASK}','${A}','${A_PREP_CARD}','Task A','valet'),
+        ('${B_PREP_TASK}','${B}','${B_PREP_CARD}','Task B','valet')
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO prep_parts (tenant_id, task_id, description)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_PREP_TASK}'::uuid,'Part A'),
+          ('${B}'::uuid,'${B_PREP_TASK}'::uuid,'Part B')) v
+        WHERE NOT EXISTS (SELECT 1 FROM prep_parts WHERE task_id = '${A_PREP_TASK}');
+
+      INSERT INTO prep_blocks (tenant_id, card_id, reason, started_at)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_PREP_CARD}'::uuid,'awaiting_parts'::prep_block_reason,now()),
+          ('${B}'::uuid,'${B_PREP_CARD}'::uuid,'awaiting_parts'::prep_block_reason,now())) v
+        WHERE NOT EXISTS (SELECT 1 FROM prep_blocks WHERE card_id = '${A_PREP_CARD}');
     `);
   }
 

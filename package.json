@@ -20,7 +20,8 @@
     "preview": "tsx demo/build-preview.ts",
     "db:setup": "node packages/db/scripts/setup-local.mjs",
     "db:seed": "tsx packages/db/scripts/seed-demo.mjs",
-    "db:seed:crm": "node packages/db/scripts/seed-crm.mjs"
+    "db:seed:crm": "node packages/db/scripts/seed-crm.mjs",
+    "db:seed:prep": "node packages/db/scripts/seed-prep.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
