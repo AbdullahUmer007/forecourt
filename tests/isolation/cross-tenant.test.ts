@@ -171,7 +171,13 @@ const TENANT_TABLES = [
   'prep_tasks',
   'prep_parts',
   'prep_blocks',
-  // M15+ — created by later migrations; each skips until its table exists
+  // M16 — channel feeds
+  'channels',
+  'channel_listings',
+  'channel_overrides',
+  'channel_sync_events',
+  'channel_rules',
+  // M17+ — created by later migrations; each skips until its table exists
   'appointments',
 ] as const;
 
@@ -205,6 +211,9 @@ const APPEND_ONLY = new Set<string>([
   // it was based on. `appraisal_settlements` is NOT here — it has one lawful
   // update (being paid) and is frozen by a content trigger instead.
   'appraisal_offers', 'appraisal_valuations',
+  // M16: the record of what we sent a portal and what came back. Editing it
+  // would destroy the only evidence of a feed that stopped working.
+  'channel_sync_events',
 ]);
 
 /**
@@ -247,6 +256,8 @@ const A_PREP_STAGE = 'cccccca1-cccc-4ccc-8ccc-cccccccccee1';
 const B_PREP_STAGE = 'cccccca2-cccc-4ccc-8ccc-cccccccccee2';
 const A_PREP_CARD = 'cccccca1-cccc-4ccc-8ccc-cccccccccff1';
 const B_PREP_CARD = 'cccccca2-cccc-4ccc-8ccc-cccccccccff2';
+const A_CHANNEL = 'dddddda1-dddd-4ddd-8ddd-ddddddddeee1';
+const B_CHANNEL = 'dddddda2-dddd-4ddd-8ddd-ddddddddeee2';
 const A_PREP_TASK = 'cccccca1-cccc-4ccc-8ccc-ccccccccc111';
 const B_PREP_TASK = 'cccccca2-cccc-4ccc-8ccc-ccccccccc222';
 // 43 characters — the shortlist_token_unguessable CHECK enforces the length,
@@ -522,6 +533,26 @@ const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   prep_blocks: {
     columns: 'tenant_id, card_id, reason, started_at',
     values: `'${TENANT_B}', '${B_PREP_CARD}', 'awaiting_parts', now()`,
+  },
+  channels: {
+    columns: 'tenant_id, channel, display_name',
+    values: `'${TENANT_B}', 'carwow', 'Smuggled channel'`,
+  },
+  channel_listings: {
+    columns: 'tenant_id, channel_id, vehicle_id, status',
+    values: `'${TENANT_B}', '${B_CHANNEL}', '${B_VEHICLE}', 'not_published'`,
+  },
+  channel_overrides: {
+    columns: 'tenant_id, channel_id, vehicle_id, price_pence',
+    values: `'${TENANT_B}', '${B_CHANNEL}', '${B_VEHICLE}', 999900`,
+  },
+  channel_sync_events: {
+    columns: 'tenant_id, channel_id, action, outcome, idempotency_key, adapter_version, message',
+    values: `'${TENANT_B}', '${B_CHANNEL}', 'publish', 'rejected', 'smuggled-key', 1, 'Smuggled'`,
+  },
+  channel_rules: {
+    columns: 'tenant_id, channel_id, min_photos',
+    values: `'${TENANT_B}', '${B_CHANNEL}', 8`,
   },
 };
 
@@ -933,6 +964,41 @@ async function seedRivalData(): Promise<void> {
           ('${A}'::uuid,'${A_PREP_CARD}'::uuid,'awaiting_parts'::prep_block_reason,now()),
           ('${B}'::uuid,'${B_PREP_CARD}'::uuid,'awaiting_parts'::prep_block_reason,now())) v
         WHERE NOT EXISTS (SELECT 1 FROM prep_blocks WHERE card_id = '${A_PREP_CARD}');
+    `);
+  }
+
+  // M16 tables — channel feeds.
+  if (await tableExists('channels')) {
+    await sql.unsafe(`
+      INSERT INTO channels (id, tenant_id, channel, display_name, enabled) VALUES
+        ('${A_CHANNEL}','${A}','auto_trader','Auto Trader A',true),
+        ('${B_CHANNEL}','${B}','auto_trader','Auto Trader B',true)
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO channel_listings (tenant_id, channel_id, vehicle_id, status)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_CHANNEL}'::uuid,'${A_VEHICLE}'::uuid,'not_published'::listing_status),
+          ('${B}'::uuid,'${B_CHANNEL}'::uuid,'${B_VEHICLE}'::uuid,'not_published'::listing_status)) v
+        WHERE NOT EXISTS (SELECT 1 FROM channel_listings WHERE channel_id = '${A_CHANNEL}');
+
+      INSERT INTO channel_overrides (tenant_id, channel_id, vehicle_id, price_pence)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_CHANNEL}'::uuid,'${A_VEHICLE}'::uuid,1899900::bigint),
+          ('${B}'::uuid,'${B_CHANNEL}'::uuid,'${B_VEHICLE}'::uuid,1899900::bigint)) v
+        WHERE NOT EXISTS (SELECT 1 FROM channel_overrides WHERE channel_id = '${A_CHANNEL}');
+
+      INSERT INTO channel_sync_events (tenant_id, channel_id, action, outcome,
+                                       idempotency_key, adapter_version, message)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_CHANNEL}'::uuid,'publish'::sync_action,'success'::sync_outcome,'key-a',1,NULL::text),
+          ('${B}'::uuid,'${B_CHANNEL}'::uuid,'publish'::sync_action,'success'::sync_outcome,'key-b',1,NULL::text)) v
+        WHERE NOT EXISTS (SELECT 1 FROM channel_sync_events WHERE idempotency_key = 'key-a');
+
+      INSERT INTO channel_rules (tenant_id, channel_id, min_photos)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_CHANNEL}'::uuid,8),
+          ('${B}'::uuid,'${B_CHANNEL}'::uuid,8)) v
+        WHERE NOT EXISTS (SELECT 1 FROM channel_rules WHERE channel_id = '${A_CHANNEL}');
     `);
   }
 
