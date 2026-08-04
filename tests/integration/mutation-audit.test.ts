@@ -1,78 +1,49 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { withSession, sql } from '@/data/db';
+import { withSession, sql, type Tx } from '@/data/db';
 import { writeAudit, changedFields } from '@/data/audit';
-import type { Session } from '@/auth/session';
+import { ensureFixtures, session, T } from './fixtures';
 
 /**
  * The definition of done says "audit event on every mutation". This checks the
- * part of that claim which is easy to get wrong and impossible to see: that the
- * audit row and the change it describes live or die TOGETHER.
+ * part of that claim which is easy to get wrong and impossible to see: that
+ * the audit row and the change it describes live or die TOGETHER.
  *
  * An audit event committed on its own connection survives a rolled-back
  * mutation, and the result is a trail describing something that never
- * happened — which is worse than no trail, because it is believed.
+ * happened — worse than no trail, because it is believed.
+ *
+ * Fixtures are built by this suite rather than read from the demo seed; see
+ * `fixtures.ts`.
  */
 
-const TENANT = '11111111-1111-4111-8111-111111111111'; // Kennington
-const USER = '22222222-0000-4000-8000-000000000001';
-const APPRAISAL = '55555555-0000-4000-8000-00000000000a';
-
-const session: Session = {
-  sessionId: '00000000-0000-4000-8000-00000000ffff',
-  userId: USER,
-  membershipId: '00000000-0000-4000-8000-00000000fffe',
-  tenantId: TENANT,
-  roleKey: 'owner',
-  permissions: ['*'],
-  scope: 'all_sites',
-  siteIds: [],
-  displayName: 'Dealer Principal',
-  email: 'owner@kenningtoncarsales.co.uk',
-  tenantName: 'Kennington Car Sales',
-  mfaSatisfiedAt: null,
-  stepUpSatisfiedAt: null,
-  stepUpValid: false,
-};
-
-const NOTE = 'atomicity probe — safe to delete';
-
-let seeded = false;
+let ready = false;
+let reason = '';
 
 beforeAll(async () => {
-  const [row] = await sql`SELECT id FROM appraisals WHERE id = ${APPRAISAL}::uuid`;
-  seeded = Boolean(row);
-});
-
-afterAll(async () => {
-  if (seeded) {
-    await sql`DELETE FROM appraisal_damage WHERE notes = ${NOTE}`;
-    // The audit rows are deliberately NOT cleaned up: `audit_events` is
-    // append-only and the trigger refuses a DELETE outright. Writing this
-    // teardown was how that got confirmed against the real database rather
-    // than against the migration that claims it.
+  try {
+    await ensureFixtures();
+    ready = true;
+  } catch (err) {
+    reason = err instanceof Error ? err.message : String(err);
   }
-  await sql.end();
 });
 
-/**
- * Always runs. A suite that silently skips because the database was not seeded
- * reports green, and every CI summary counts a skipped suite as a success —
- * the exact failure the isolation suite had on 3 August.
- */
-it('the CRM integration gate can run', () => {
-  expect(
-    seeded,
-    'Kennington demo data missing. Run `pnpm db:setup`, `pnpm db:seed`, then `pnpm db:seed:crm`.',
-  ).toBe(true);
+afterAll(async () => { await sql.end(); });
+
+/** Always runs, and fails rather than skipping. */
+it('the CRM integration fixtures build', () => {
+  expect(ready, `Could not build the integration fixtures: ${reason}`).toBe(true);
 });
 
-describe.runIf(process.env['DATABASE_URL'])('a mutation and its audit event', () => {
-  const insertMark = async (tx: Parameters<Parameters<typeof withSession>[1]>[0]) => {
+describe('a mutation and its audit event', () => {
+  const NOTE = 'atomicity probe';
+
+  const insertMark = async (tx: Tx) => {
     const [mark] = await tx<{ id: string }[]>`
       INSERT INTO appraisal_damage (tenant_id, appraisal_id, panel, panel_group,
                                     damage_type, severity, notes, created_by)
-      VALUES (${TENANT}::uuid, ${APPRAISAL}::uuid, 'osf_door', 'body_panel',
-              'dent', 'moderate', ${NOTE}, ${USER}::uuid)
+      VALUES (${T.tenant}::uuid, ${T.appraisal}::uuid, 'osf_door', 'body_panel',
+              'dent', 'moderate', ${NOTE}, ${T.user}::uuid)
       RETURNING id`;
     await writeAudit({
       tx, session,
@@ -84,54 +55,63 @@ describe.runIf(process.env['DATABASE_URL'])('a mutation and its audit event', ()
     return mark!.id;
   };
 
-  const counts = async () => {
-    const [m] = await sql<{ n: number }[]>`
+  const counts = async (tx: Tx) => {
+    const [m] = await tx<{ n: number }[]>`
       SELECT count(*)::int AS n FROM appraisal_damage WHERE notes = ${NOTE}`;
-    const [a] = await sql<{ n: number }[]>`
+    const [a] = await tx<{ n: number }[]>`
       SELECT count(*)::int AS n FROM audit_events
       WHERE resource_type = 'appraisal_damage' AND action = 'test_probe'`;
     return { marks: m!.n, audits: a!.n };
   };
 
-  it('both land when the transaction commits', async () => {
-    const before = await counts();
-    await withSession(session, insertMark);
-    const after = await counts();
+  it('both land inside the transaction', async () => {
+    await expect(withSession(session, async (tx) => {
+      const before = await counts(tx);
+      await insertMark(tx);
+      const after = await counts(tx);
 
-    expect(after.marks).toBe(before.marks + 1);
-    expect(after.audits).toBe(before.audits + 1);
+      expect(after.marks).toBe(before.marks + 1);
+      expect(after.audits).toBe(before.audits + 1);
+      throw new Error('__rollback__');
+    })).rejects.toThrow('__rollback__');
   });
 
-  it('NEITHER lands when the transaction rolls back', async () => {
-    const before = await counts();
+  it('NEITHER survives when the transaction rolls back', async () => {
+    // `audit_events` is append-only and refuses a DELETE outright, so this
+    // suite cannot clean up after itself — which makes rolling back the only
+    // way to run it repeatedly, and also the thing being tested.
+    const before = await withSession(session, counts);
 
     await expect(withSession(session, async (tx) => {
       await insertMark(tx);
-      // Whatever fails after the write — a constraint, a timeout, a bug.
-      throw new Error('deliberate failure after the mark and its audit row');
-    })).rejects.toThrow(/deliberate failure/);
+      throw new Error('whatever fails after the write — a constraint, a timeout, a bug');
+    })).rejects.toThrow(/whatever fails/);
 
-    const after = await counts();
+    const after = await withSession(session, counts);
     expect(after.marks, 'the mark survived a rolled-back transaction').toBe(before.marks);
     expect(after.audits, 'an audit event survived describing a change that never happened')
       .toBe(before.audits);
   });
 
   it('the audit row records who, what and which tenant', async () => {
-    await withSession(session, insertMark);
-    const [event] = await sql<{
-      tenant_id: string; actor_id: string; actor_type: string;
-      resource_type: string; action: string; diff: unknown;
-    }[]>`
-      SELECT tenant_id, actor_id, actor_type, resource_type, action, diff
-      FROM audit_events
-      WHERE resource_type = 'appraisal_damage' AND action = 'test_probe'
-      ORDER BY occurred_at DESC LIMIT 1`;
+    await expect(withSession(session, async (tx) => {
+      await insertMark(tx);
 
-    expect(event!.tenant_id).toBe(TENANT);
-    expect(event!.actor_id).toBe(USER);
-    expect(event!.actor_type).toBe('user');
-    expect(event!.diff).toMatchObject({ panel: { to: 'osf_door' } });
+      const [event] = await tx<{
+        tenant_id: string; actor_id: string; actor_type: string;
+        resource_type: string; action: string; diff: unknown;
+      }[]>`
+        SELECT tenant_id, actor_id, actor_type, resource_type, action, diff
+        FROM audit_events
+        WHERE resource_type = 'appraisal_damage' AND action = 'test_probe'
+        ORDER BY occurred_at DESC LIMIT 1`;
+
+      expect(event!.tenant_id).toBe(T.tenant);
+      expect(event!.actor_id).toBe(T.user);
+      expect(event!.actor_type).toBe('user');
+      expect(event!.diff).toMatchObject({ panel: { to: 'osf_door' } });
+      throw new Error('__rollback__');
+    })).rejects.toThrow('__rollback__');
   });
 });
 
