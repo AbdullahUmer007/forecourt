@@ -80,6 +80,18 @@ const TRANSITIONS: Record<DealState, readonly DealState[]> = {
   unwound: [],
 };
 
+/**
+ * Which states a deal may move to from where it is.
+ *
+ * Exported so a screen can offer exactly the moves that will be allowed rather
+ * than offering all eight and refusing six of them after the click. The table
+ * itself stays private: it is the single source, and a caller that could read
+ * it directly could also be tempted to reason about it.
+ */
+export function allowedDealTransitions(from: DealState): readonly DealState[] {
+  return TRANSITIONS[from];
+}
+
 export interface DealTransitionResult {
   ok: boolean;
   deal: Deal;

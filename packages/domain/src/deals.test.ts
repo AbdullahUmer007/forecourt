@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import {
-  transition, acceptAddon, declineAddon, acceptedAddons, marginPanel,
+  transition, allowedDealTransitions, acceptAddon, declineAddon, acceptedAddons, marginPanel,
   balanceToFinance, dealClocks, assessRejection, isLossMaking,
   type Deal, type DealAddon,
 } from './deals.js';
@@ -95,6 +95,42 @@ describe('the deal state machine', () => {
 });
 
 // ---------------------------------------------------------------- add-ons
+describe('what a deal may move to', () => {
+  it('offers exactly the moves `transition` will accept', () => {
+    // The screen builds its picker from this. If the two disagreed the screen
+    // would offer moves that are then refused after the click, which reads as
+    // a broken product rather than as a rule.
+    const states = [
+      'building', 'quoted', 'agreed', 'contracted',
+      'delivered', 'completed', 'cancelled', 'unwound',
+    ] as const;
+
+    for (const from of states) {
+      for (const to of states) {
+        if (from === to) continue;
+        const offered = allowedDealTransitions(from).includes(to);
+        // Given everything a transition could need, does it go through?
+        const r = transition(
+          deal({ state: from, contractFormation: 'on_premises' }),
+          to, AUG(9), { cancellationReason: 'customer changed their mind' },
+        );
+        expect(r.ok, `${from} → ${to}: offered=${offered} accepted=${r.ok}`).toBe(offered);
+      }
+    }
+  });
+
+  it('offers nothing from a terminal state', () => {
+    expect(allowedDealTransitions('cancelled')).toEqual([]);
+    expect(allowedDealTransitions('unwound')).toEqual([]);
+  });
+
+  it('still offers a way back from delivered', () => {
+    // Delivered is not terminal: a CRA s.22 rejection has to be recordable,
+    // and modelling delivery as final leaves no lawful path to record one.
+    expect(allowedDealTransitions('delivered')).toContain('unwound');
+  });
+});
+
 describe('add-ons are never pre-ticked', () => {
   it('refuses an acceptance dated before the offer', () => {
     // This is what a pre-ticked box looks like once it reaches the data.
