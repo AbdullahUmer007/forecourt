@@ -70,7 +70,21 @@ For each of `site`, `crm` and `admin`, in the dashboard:
 
    Do **not** set `PORT`. Railway injects it and the standalone server reads it.
 
-4. **Settings → Networking → Generate Domain.**
+4. **Settings → Deploy → Custom Start Command: leave it EMPTY.**
+
+   `railway.json` sets it to `/app/start.sh` and config-as-code wins, but a
+   value typed into the dashboard before the config file reached the deployed
+   commit is the most common way this breaks. Anything invoking a package
+   manager — `pnpm start`, `npm start` — fails at *Create container* with
+   **"The executable `pnpm` could not be found"**, because the runtime image is
+   a bare `node:20-slim`: pnpm exists only in the build stages, and the
+   standalone server does not need it.
+
+   `/app/start.sh` is written during the build with the app name already
+   baked into it, so it takes no arguments and reads no variables. The same
+   string works for all three services.
+
+5. **Settings → Networking → Generate Domain.**
 
 If a build fails with `APP must be crm, site or admin — got ''`, the service
 variable is missing. That message is deliberate: without it the build fails
@@ -239,6 +253,8 @@ Roughly in the order it will matter:
 
 | Symptom | Cause |
 |---|---|
+| **`The executable pnpm could not be found`, at *Create container*** | A custom start command is set on the service. The runtime image is a bare `node:20-slim` and has no package manager — clear the box, or set it to `/app/start.sh`. The image built fine; only the command used to launch it is wrong. |
+| `Cannot find module '/app/apps//server.js'` | Same class, one step further on: a start command that relies on `$APP` expanding, in a context that did not expand it. Use `/app/start.sh`, which has the name baked in. |
 | Build fails, `APP must be crm, site or admin` | The `APP` service variable is missing. |
 | `DATABASE_URL is not set` in the logs | The variable reference is wrong. It must be `${{Postgres.DATABASE_URL}}`, with the service named exactly as Railway named it. |
 | Every site URL 404s | No verified `domains` row for that host. Run `pnpm db:domain <host>`. Correct behaviour, not a fault. |

@@ -88,9 +88,24 @@ RUN groupadd --system --gid 1001 nodejs \
 COPY --from=build --chown=nextjs:nodejs /repo/apps/${APP}/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /repo/apps/${APP}/.next/static ./apps/${APP}/.next/static
 
+# A fixed entrypoint path, with the app name BAKED IN at build time.
+#
+# Standalone preserves the workspace layout, so the server lives at
+# `apps/<app>/server.js` rather than at the root — which means the obvious
+# `CMD node apps/$APP/server.js` depends on something expanding `$APP`. A
+# platform that runs the start command through a shell expands it; one that
+# execs it directly does not, and the failure is an unreadable "cannot find
+# module apps//server.js".
+#
+# Writing the name in here removes the question. `/app/start.sh` takes no
+# arguments, needs no variables and is the same string for every service, so
+# it can be pasted into any platform's start-command box without thinking
+# about how that box is evaluated.
+RUN printf '#!/bin/sh\nexec node /app/apps/%s/server.js\n' "$APP" > /app/start.sh \
+ && chmod +x /app/start.sh \
+ && chown nextjs:nodejs /app/start.sh
+
 USER nextjs
 EXPOSE 3000
 
-# Standalone preserves the workspace layout, so the entrypoint sits at the
-# app's path inside the traced tree rather than at the root.
-CMD ["sh", "-c", "node apps/$APP/server.js"]
+CMD ["/app/start.sh"]
