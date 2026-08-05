@@ -1,6 +1,6 @@
 import { requireSession } from '@/auth/session';
 import { loadBoard, type BoardCard } from '@/data/prep';
-import { StatusBadge, Empty, Amount, Reg, type Tone } from '@/components/ui';
+import { StatusBadge, Empty, Amount, Reg } from '@/components/ui';
 import { MoveControl } from '@/components/move-control';
 import {
   stageDurations, stageSlaState, prepMetrics, costPosition, describeBlockReason,
@@ -249,8 +249,3 @@ function PrepCardView(
   );
 }
 
-/** Status tone for a task, kept beside the board so both agree. */
-export const TASK_TONE: Record<string, Tone> = {
-  suggested: 'neutral', planned: 'neutral', approved: 'info',
-  in_progress: 'info', blocked: 'serious', done: 'good', declined: 'neutral',
-};

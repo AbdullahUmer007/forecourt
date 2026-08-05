@@ -81,3 +81,12 @@ jobs:
 
       - name: Lint
         run: pnpm lint
+
+      # Added 5 Aug 2026, because the CRM had NEVER been production-built and
+      # did not build. Two constraints Next.js enforces only here: a page
+      # module may export nothing but the reserved names, and a `'use server'`
+      # module may export nothing but async functions. Neither `tsc` nor eslint
+      # says a word about either, so an app that typechecks, lints and passes
+      # 1,500 tests can still be undeployable.
+      - name: Build the apps
+        run: pnpm build
