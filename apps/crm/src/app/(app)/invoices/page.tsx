@@ -5,6 +5,9 @@ import { Card, Figure, StatusBadge, Empty, Amount, Reg, Problem, type Tone } fro
 
 export const dynamic = 'force-dynamic';
 
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Invoices' };
+
 /**
  * Invoices.
  *
@@ -57,7 +60,7 @@ export default async function InvoicesPage(
             {page.queryMs}ms
           </span>
           {' · '}
-          <Link href="/vat/stock-book" className="text-brand-700 hover:underline">
+          <Link href="/vat/stock-book" className="text-link hover:underline">
             VAT stock book
           </Link>
         </p>

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getSession, signOut } from '@/auth/session';
+import { Nav } from '@/components/nav';
 import { holds } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
@@ -65,33 +66,43 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
+      {/*
+        Two rows, not one.
+        ─────────────────────────────────────────────────────────────────────
+        Twelve sections, the brand, the dealership name and a sign-out control
+        do not fit on one line at 1440px — they wrapped, and a masthead that
+        wraps mid-word reads as a broken page before anybody has looked at the
+        data. Worse, on a phone the nav was clipped at four items with no way
+        to reach the rest: Stock, Leads and Deals were unreachable on the
+        device §7 of the domain skill says a sales executive is standing on the
+        forecourt holding.
+
+        Identity on row one, sections on row two, and the sections row scrolls.
+      */}
       <header className="sticky top-0 z-10 border-b border-edge bg-surface-1">
-        <div className="mx-auto flex max-w-[1280px] items-center gap-4 px-4 py-2">
-          <Link href="/" className="font-semibold tracking-tight">Forecourt</Link>
-          <span className="hidden text-ink-subtle sm:inline">{session.tenantName}</span>
+        <div className="mx-auto flex max-w-[1280px] items-center gap-3 px-4 py-2">
+          <Link href="/" className="shrink-0 font-semibold tracking-tight">Forecourt</Link>
+          <span className="truncate text-ink-subtle">{session.tenantName}</span>
 
-          <nav className="ml-auto flex items-center gap-1 overflow-x-auto">
-            {nav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="inline-flex min-h-11 items-center rounded-md px-3 text-ink-muted hover:bg-surface-3 hover:text-ink"
+          <div className="ml-auto flex shrink-0 items-center gap-1">
+            {/* Who you are signed in as, on the page rather than in a tooltip.
+                A dealership where two people share a machine needs to be able
+                to see whose name is about to go on the audit row. */}
+            <span className="hidden max-w-[16ch] truncate text-ink-muted md:inline">
+              {session.displayName}
+            </span>
+            <form action={endSession}>
+              <button
+                type="submit"
+                className="inline-flex min-h-11 items-center rounded-md border border-edge-strong px-3 font-medium text-ink-muted hover:bg-surface-3 hover:text-ink"
               >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
-          <form action={endSession}>
-            <button
-              type="submit"
-              className="inline-flex min-h-11 items-center rounded-md px-3 text-ink-muted hover:bg-surface-3 hover:text-ink"
-              title={`Signed in as ${session.displayName}`}
-            >
-              Sign out
-            </button>
-          </form>
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
+
+        <Nav items={nav.map((item) => ({ href: item.href, label: item.label }))} />
       </header>
 
       <main className="mx-auto max-w-[1280px] px-4 py-6">{children}</main>

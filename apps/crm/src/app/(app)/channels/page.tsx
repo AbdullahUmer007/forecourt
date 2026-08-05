@@ -7,6 +7,9 @@ import { holds, formatRegistration, type ListingStatus } from '@forecourt/domain
 
 export const dynamic = 'force-dynamic';
 
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Channels' };
+
 /**
  * Channel feed status.
  *
@@ -273,7 +276,7 @@ function ListingView({ listing, showError = false }: { listing: ListingRow; show
         <span className="flex flex-wrap items-baseline gap-2">
           <Link
             href={`/stock/${listing.vehicleId}`}
-            className="mono font-medium text-brand-700 hover:underline"
+            className="mono font-medium text-link hover:underline"
           >
             {formatRegistration(listing.registration)}
           </Link>
@@ -307,7 +310,7 @@ function ListingView({ listing, showError = false }: { listing: ListingRow; show
       {listing.externalUrl && (
         <a
           href={listing.externalUrl}
-          className="mt-1 inline-block text-[13px] leading-[18px] text-brand-700 hover:underline"
+          className="mt-1 inline-block text-[13px] leading-[18px] text-link hover:underline"
           rel="noreferrer noopener"
           target="_blank"
         >

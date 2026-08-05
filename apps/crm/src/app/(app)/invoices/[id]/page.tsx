@@ -9,6 +9,9 @@ import { holds, format } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
 
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Invoice' };
+
 /**
  * One invoice.
  *
@@ -67,7 +70,7 @@ export default async function InvoicePage(
     <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
       <div className="grid gap-4">
         <Card>
-          <Link href="/invoices" className="text-[13px] leading-[18px] text-brand-700 hover:underline">
+          <Link href="/invoices" className="text-[13px] leading-[18px] text-link hover:underline">
             ← Invoices
           </Link>
 
@@ -195,7 +198,7 @@ export default async function InvoicePage(
                   rate in the code.{' '}
                   <a
                     href={detail.marginVat.sourceUrl}
-                    className="text-brand-700 hover:underline"
+                    className="text-link hover:underline"
                     rel="noreferrer noopener"
                     target="_blank"
                   >
@@ -222,7 +225,7 @@ export default async function InvoicePage(
               </Row>
               <Link
                 href="/vat/stock-book"
-                className="mt-2 inline-block text-[13px] leading-[18px] text-brand-700 hover:underline"
+                className="mt-2 inline-block text-[13px] leading-[18px] text-link hover:underline"
               >
                 Open the stock book →
               </Link>

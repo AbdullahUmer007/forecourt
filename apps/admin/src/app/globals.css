@@ -20,6 +20,15 @@
   --color-brand-600: #0E5A6B;
   --color-brand-700: #0B4553;
 
+  /*
+   * Accent TEXT, as its own token — see the CRM's globals.css for the full
+   * reasoning. `brand-700` is 10.55:1 on white and 2.28:1 on the dark surface,
+   * and it is also the primary button's hover background, so it cannot be
+   * re-pointed. brand-700 on light, brand-300 on dark, both values already
+   * named by the design system for exactly this.
+   */
+  --color-link: #0B4553;
+
   --color-accent-500: #F59E0B;
   --color-accent-700: #B45309;
 
@@ -66,6 +75,8 @@
       --color-brand-100: #0B3A47;
       --color-brand-600: #177A8F;
       --color-brand-700: #0E5A6B;
+      /* brand-300 — the value the design system names for dark accent text. */
+      --color-link: #5EC7DC;
 
       --color-surface-1: #16181D;
       --color-surface-2: #0E1013;
@@ -79,6 +90,15 @@
       --color-ink-subtle: #7A8598;
 
       --color-warning-ink: #FAB219;
+      /*
+       * `critical` had no dark value, so it inherited the light one and
+       * measured 3.70:1 against surface-1 dark — a fail, on the most urgent
+       * text in the product. Unlike `warning` and `serious`, which the design
+       * system states are sub-3:1 by design with icon+label as the mitigation,
+       * `critical` was chosen to PASS (4.80:1 on white). This is the nearest
+       * red to it that clears 4.5:1 on the dark surface: 4.83:1, measured.
+       */
+      --color-critical: #DE5A5A;
     }
   }
 

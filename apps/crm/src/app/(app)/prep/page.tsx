@@ -9,6 +9,9 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Prep' };
+
 /**
  * The prep board.
  *
@@ -93,9 +96,12 @@ export default async function PrepBoard() {
               >
                 <header className="mb-2 flex items-baseline justify-between gap-2">
                   <h2 className="text-[16px] leading-6 font-semibold">{stage.name}</h2>
-                  <span className="text-ink-subtle">
-                    {cards.length}
-                    {stage.slaHours !== null && ` · ${stage.slaHours}h`}
+                  {/* "2 · 48h" said nothing to anybody who had not written it.
+                      The count is a count of cars and the hours are the
+                      stage's target, so both now say so. */}
+                  <span className="shrink-0 text-[12px] leading-4 text-ink-subtle">
+                    {cards.length} car{cards.length === 1 ? '' : 's'}
+                    {stage.slaHours !== null && ` · ${stage.slaHours}h target`}
                   </span>
                 </header>
 

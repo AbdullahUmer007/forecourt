@@ -10,6 +10,9 @@ import { holds, type ComplianceStatement } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
 
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Compliance' };
+
 /**
  * The compliance centre.
  *
@@ -54,7 +57,7 @@ function Statement({ statement }: { statement: ComplianceStatement }) {
       <span className="text-[12px] leading-4 text-ink-subtle">
         <a
           href={statement.citation.url}
-          className="text-brand-700 hover:underline"
+          className="text-link hover:underline"
           rel="noreferrer noopener"
           target="_blank"
         >
@@ -100,12 +103,38 @@ export default async function CompliancePage() {
         </p>
       </div>
 
-      {/* The 72-hour clock first. It is the one measured in hours. */}
+      {/*
+        The 72-hour clock first. It is the one measured in hours.
+
+        A SUMMARY, not a second copy. This block used to render the full
+        `BreachView` — every statement, every citation — and then the "Data
+        breaches" card below rendered the identical thing again, word for word,
+        a screen-height apart. Two copies of an urgent sentence do not make it
+        twice as urgent; they make a reader wonder which one is the real one.
+        The alert says what is running and how long is left; the record below
+        says everything, once.
+      */}
       {breachesRunning.length > 0 && (
         <Problem title={`${breachesRunning.length} data breach${breachesRunning.length === 1 ? '' : 'es'} with an open obligation`}>
-          <ul className="grid gap-3">
-            {breachesRunning.map((b) => <BreachView key={b.id} breach={b} />)}
+          <ul className="grid gap-2">
+            {breachesRunning.map((b) => (
+              <li key={b.id} className="flex flex-wrap items-baseline justify-between gap-2">
+                <span className="min-w-0 text-ink">{b.summary}</span>
+                <StatusBadge
+                  tone={b.clock.breached ? 'critical' : 'warning'}
+                  icon={b.clock.breached ? '!' : '⏱'}
+                  label={b.clock.breached
+                    ? `${-b.clock.hoursRemaining}h past the deadline`
+                    : `${b.clock.hoursRemaining}h left`}
+                />
+              </li>
+            ))}
           </ul>
+          <p className="mt-2 text-[13px] leading-[18px]">
+            <a href="#data-breaches" className="text-link hover:underline">
+              What has to happen, and by when ↓
+            </a>
+          </p>
         </Problem>
       )}
 
@@ -197,11 +226,13 @@ export default async function CompliancePage() {
       </Card>
 
       {view.breaches.length > 0 && (
-        <Card title="Data breaches" className="mb-4">
-          <ul className="grid gap-3">
-            {view.breaches.map((b) => <BreachView key={b.id} breach={b} />)}
-          </ul>
-        </Card>
+        <div id="data-breaches" className="scroll-mt-32">
+          <Card title="Data breaches" className="mb-4">
+            <ul className="grid gap-3">
+              {view.breaches.map((b) => <BreachView key={b.id} breach={b} />)}
+            </ul>
+          </Card>
+        </div>
       )}
 
       <Card
@@ -238,9 +269,18 @@ export default async function CompliancePage() {
             one would train you to ignore the list.
           </Empty>
         ) : (
-          <ul className="grid gap-3">
-            {view.gaps.map((g) => <GapView key={g.dealId} gap={g} />)}
-          </ul>
+          <>
+            <ul className="grid gap-3">
+              {view.gaps.map((g) => <GapView key={g.dealId} gap={g} />)}
+            </ul>
+            {/* Stated once for the section it governs, rather than repeated
+                under every row it governs. */}
+            {view.gaps.find((g) => g.statement)?.statement && (
+              <ul className="mt-3 border-t border-edge pt-3">
+                <Statement statement={view.gaps.find((g) => g.statement)!.statement!} />
+              </ul>
+            )}
+          </>
         )}
       </Card>
 
@@ -265,7 +305,7 @@ export default async function CompliancePage() {
                 {t.citationUrl && t.citationRef && (
                   <a
                     href={t.citationUrl}
-                    className="text-[12px] leading-4 text-brand-700 hover:underline"
+                    className="text-[12px] leading-4 text-link hover:underline"
                     rel="noreferrer noopener"
                     target="_blank"
                   >
@@ -416,7 +456,7 @@ function GapView({ gap }: { gap: EvidenceGapRow }) {
   return (
     <li className="border-b border-edge pb-3 last:border-0 last:pb-0">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <Link href={`/deals/${gap.dealId}`} className="font-medium text-brand-700 hover:underline">
+        <Link href={`/deals/${gap.dealId}`} className="font-medium text-link hover:underline">
           {gap.reference ?? 'Deal'}
           {gap.contactName && ` · ${gap.contactName}`}
         </Link>
@@ -437,11 +477,16 @@ function GapView({ gap }: { gap: EvidenceGapRow }) {
           </li>
         ))}
       </ul>
-      {gap.statement && (
-        <ul className="mt-2">
-          <Statement statement={gap.statement} />
-        </ul>
-      )}
+      {/*
+        The statement is NOT rendered per row.
+
+        Every gap carries the same one — the same sentence, the same CONC 3.7 /
+        SYSC 9.1 citation — so four deals printed it four times, and the
+        repetition buried the only thing that differs between the rows, which
+        is which records are missing from which deal. It is rendered once
+        beneath the list instead. The citation requirement is satisfied by
+        being present and checkable, not by being present four times.
+      */}
     </li>
   );
 }

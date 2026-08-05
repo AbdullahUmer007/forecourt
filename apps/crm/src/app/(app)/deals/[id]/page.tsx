@@ -8,6 +8,9 @@ import { holds, format, type DealState } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
 
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Deal' };
+
 /**
  * One deal.
  *
@@ -105,7 +108,7 @@ export default async function DealPage(
     <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
       <div className="grid gap-4">
         <Card>
-          <Link href="/deals" className="text-[13px] leading-[18px] text-brand-700 hover:underline">
+          <Link href="/deals" className="text-[13px] leading-[18px] text-link hover:underline">
             ← Deals
           </Link>
 
@@ -216,7 +219,7 @@ export default async function DealPage(
                 Windows taken from the Consumer Rights Act rule in force on the delivery date.{' '}
                 <a
                   href={detail.clocksSource}
-                  className="text-brand-700 hover:underline"
+                  className="text-link hover:underline"
                   rel="noreferrer noopener"
                   target="_blank"
                 >
@@ -418,14 +421,14 @@ export default async function DealPage(
             <Row label="Name">{detail.contactName}</Row>
             <Row label="Phone">
               {detail.contactPhone
-                ? <a href={`tel:${detail.contactPhone}`} className="text-brand-700 hover:underline">
+                ? <a href={`tel:${detail.contactPhone}`} className="text-link hover:underline">
                     {detail.contactPhone}
                   </a>
                 : <span className="text-ink-subtle">Not given</span>}
             </Row>
             <Row label="Email">
               {detail.contactEmail
-                ? <a href={`mailto:${detail.contactEmail}`} className="text-brand-700 hover:underline">
+                ? <a href={`mailto:${detail.contactEmail}`} className="text-link hover:underline">
                     {detail.contactEmail}
                   </a>
                 : <span className="text-ink-subtle">Not given</span>}

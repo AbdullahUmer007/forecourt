@@ -5,6 +5,9 @@ import { EnrolForm, ChallengeForm } from '@/components/mfa-forms';
 
 export const dynamic = 'force-dynamic';
 
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Two-step verification' };
+
 /**
  * The second factor — enrolment or challenge, depending on which is owed.
  *

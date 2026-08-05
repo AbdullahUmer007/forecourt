@@ -8,6 +8,9 @@ import { holds, LOSS_REASON_LABELS, TERMINAL_STAGES, type LeadStage } from '@for
 
 export const dynamic = 'force-dynamic';
 
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Lead' };
+
 /**
  * One lead.
  *
@@ -82,7 +85,7 @@ export default async function LeadPage(
     <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
       <div className="grid gap-4">
         <Card>
-          <Link href="/leads" className="text-[13px] leading-[18px] text-brand-700 hover:underline">
+          <Link href="/leads" className="text-[13px] leading-[18px] text-link hover:underline">
             ← Leads
           </Link>
 
@@ -137,7 +140,7 @@ export default async function LeadPage(
             <ul className="grid gap-1">
               {lead.otherOpenLeads.map((o) => (
                 <li key={o.id}>
-                  <Link href={`/leads/${o.id}`} className="text-brand-700 hover:underline">
+                  <Link href={`/leads/${o.id}`} className="text-link hover:underline">
                     {o.registration ?? 'General enquiry'} · {label(o.stage)} · {stamp(o.receivedAt)}
                   </Link>
                 </li>
@@ -232,14 +235,14 @@ export default async function LeadPage(
             <Row label="Name">{lead.contactName}</Row>
             <Row label="Phone">
               {lead.contactPhone
-                ? <a href={`tel:${lead.contactPhone}`} className="text-brand-700 hover:underline">
+                ? <a href={`tel:${lead.contactPhone}`} className="text-link hover:underline">
                     {lead.contactPhone}
                   </a>
                 : <span className="text-ink-subtle">Not given</span>}
             </Row>
             <Row label="Email">
               {lead.contactEmail
-                ? <a href={`mailto:${lead.contactEmail}`} className="text-brand-700 hover:underline">
+                ? <a href={`mailto:${lead.contactEmail}`} className="text-link hover:underline">
                     {lead.contactEmail}
                   </a>
                 : <span className="text-ink-subtle">Not given</span>}
@@ -290,7 +293,7 @@ export default async function LeadPage(
             <p className="mt-2 font-medium">{lead.vehicleDescription ?? 'Not identified'}</p>
             <Link
               href={`/stock/${lead.vehicleId}`}
-              className="mt-2 inline-block text-[13px] leading-[18px] text-brand-700 hover:underline"
+              className="mt-2 inline-block text-[13px] leading-[18px] text-link hover:underline"
             >
               Open in stock →
             </Link>

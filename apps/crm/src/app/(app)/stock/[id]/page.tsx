@@ -7,6 +7,9 @@ import { holds, goLiveBlockers, OVERAGE_DAYS, format, subtract } from '@forecour
 
 export const dynamic = 'force-dynamic';
 
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Vehicle' };
+
 const label = (s: string): string =>
   s.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
 
@@ -64,7 +67,7 @@ export default async function VehiclePage(
     <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
       <div className="grid gap-4">
         <Card>
-          <Link href="/stock" className="text-[13px] leading-[18px] text-brand-700 hover:underline">
+          <Link href="/stock" className="text-[13px] leading-[18px] text-link hover:underline">
             ← Stock
           </Link>
 

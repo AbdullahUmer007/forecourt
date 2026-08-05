@@ -1,10 +1,13 @@
 import Link from 'next/link';
 import { requireSession } from '@/auth/session';
 import { loadDeals, type DealRow } from '@/data/deals';
-import { Card, Figure, StatusBadge, Empty, Amount, Reg, type Tone } from '@/components/ui';
+import { Card, Figure, StatusBadge, Empty, Amount, Reg, ListRow, type Tone } from '@/components/ui';
 import { holds, type DealState } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
+
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Deals' };
 
 /**
  * The deals list.
@@ -58,6 +61,10 @@ export default async function DealsPage(
 
   const filtered = Boolean(params['q'] || params['state'] || params['clocks']);
 
+  // As on the stock list: a site name repeated identically on every visible
+  // row is width spent telling a dealer their own name.
+  const multiSite = new Set(page.rows.map((r) => r.siteName)).size > 1;
+
   return (
     <>
       <div className="mb-4">
@@ -110,7 +117,7 @@ export default async function DealsPage(
             <div className="mt-2">
               <Link
                 href="/deals?clocks=1"
-                className="text-[13px] leading-[18px] text-brand-700 hover:underline"
+                className="text-[13px] leading-[18px] text-link hover:underline"
               >
                 Show them →
               </Link>
@@ -184,7 +191,9 @@ export default async function DealsPage(
         </Empty>
       ) : (
         <ul className="grid gap-2">
-          {page.rows.map((row) => <DealRowView key={row.id} row={row} />)}
+          {page.rows.map((row) => (
+            <DealRowView key={row.id} row={row} multiSite={multiSite} />
+          ))}
         </ul>
       )}
 
@@ -200,7 +209,7 @@ export default async function DealsPage(
   );
 }
 
-function DealRowView({ row }: { row: DealRow }) {
+function DealRowView({ row, multiSite }: { row: DealRow; multiSite: boolean }) {
   const state = STATE_PRESENTATION[row.state];
   const now = new Date();
 
@@ -216,32 +225,30 @@ function DealRowView({ row }: { row: DealRow }) {
     && !['building', 'quoted', 'cancelled'].includes(row.state);
 
   return (
-    <li>
-      <Link
-        href={`/deals/${row.id}`}
-        className="flex min-h-11 flex-wrap items-center gap-x-4 gap-y-2 rounded-md border border-edge bg-surface-1 p-3 hover:border-edge-strong hover:bg-surface-3"
-      >
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-2">
-            <span className="font-medium">{row.contactName}</span>
-            {row.reference && (
-              <span className="mono text-[13px] leading-[18px] text-ink-subtle">
-                {row.reference}
-              </span>
-            )}
-          </div>
-          <div className="truncate text-[13px] leading-[18px] text-ink-subtle">
-            {row.vehicleDescription ?? 'No car linked'}
-            {row.siteName && ` · ${row.siteName}`}
-            {row.deliveredAt
-              ? ` · delivered ${date(row.deliveredAt)}`
-              : ` · started ${date(row.createdAt)}`}
-          </div>
+    <ListRow
+      href={`/deals/${row.id}`}
+      reg={row.registration ? <Reg value={row.registration} /> : undefined}
+      title={(
+        <span className="flex flex-wrap items-baseline gap-x-2">
+          {row.contactName}
+          {row.reference && (
+            <span className="mono text-[13px] leading-[18px] font-normal text-ink-subtle">
+              {row.reference}
+            </span>
+          )}
+        </span>
+      )}
+      meta={(
+        <div className="truncate text-[13px] leading-[18px] text-ink-subtle">
+          {row.vehicleDescription ?? 'No car linked'}
+          {multiSite && row.siteName && ` · ${row.siteName}`}
+          {row.deliveredAt
+            ? ` · delivered ${date(row.deliveredAt)}`
+            : ` · started ${date(row.createdAt)}`}
         </div>
-
-        {row.registration && <Reg value={row.registration} />}
-
-        <div className="flex flex-wrap items-center gap-1.5">
+      )}
+      badges={(
+        <>
           <StatusBadge tone={state.tone} icon={state.icon} label={label(row.state)} />
 
           {row.financed && <StatusBadge tone="neutral" icon="₤" label="Financed" />}
@@ -268,18 +275,19 @@ function DealRowView({ row }: { row: DealRow }) {
               label={`${row.evidence.missing.length} evidence gap${row.evidence.missing.length === 1 ? '' : 's'}`}
             />
           )}
-        </div>
-
-        <div className="w-28 text-right">
-          <div className="font-semibold"><Amount value={row.totalPrice} /></div>
+        </>
+      )}
+      money={(
+        <>
+          <div className="font-semibold"><Amount value={row.totalPrice} pence={false} /></div>
           {row.dealGross ? (
             <div className={`text-[12px] leading-4 ${row.dealGross.amount < 0n ? 'text-critical' : 'text-ink-subtle'}`}>
-              <Amount value={row.dealGross} /> gross
+              <Amount value={row.dealGross} pence={false} /> gross
             </div>
           ) : null}
-        </div>
-      </Link>
-    </li>
+        </>
+      )}
+    />
   );
 }
 

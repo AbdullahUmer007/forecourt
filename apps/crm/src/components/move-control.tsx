@@ -30,57 +30,78 @@ export function MoveControl(
   const needsReason = state?.needsReason ?? null;
 
   return (
-    <form action={formAction} className="mt-3 grid gap-2 border-t border-edge pt-3">
-      <input type="hidden" name="cardId" value={cardId} />
+    // Collapsed until asked for.
+    //
+    // Expanded, this control is a label, a select and a button — about 130px
+    // on every card on the board. A prep board is read far more often than it
+    // is acted on: the question is which car is blocked and why, and the
+    // answer was being pushed below the fold by a form nobody had asked for
+    // yet. `<details>` keeps it one tap away and keeps working with no
+    // JavaScript, which is the same reason the form posts to a server action.
+    //
+    // Forced open once the server has said something — an overridable blocker
+    // needing a reason, or an error — because a message inside a closed
+    // disclosure is a message nobody reads.
+    <details
+      open={Boolean(state)}
+      className="mt-3 border-t border-edge pt-3 [&[open]>summary]:mb-2"
+    >
+      <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1 rounded-md px-2 font-medium text-link hover:bg-surface-3">
+        <span aria-hidden="true">→</span> Move this car
+      </summary>
 
-      <label className="grid gap-1">
-        <span className="text-[12px] leading-4 font-medium tracking-[0.02em] text-ink-subtle">
-          Move to
-        </span>
-        <select
-          name="toStageId"
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-          className="min-h-11 rounded-md border border-edge-strong bg-surface-1 px-3"
-        >
-          <option value="">Choose a stage…</option>
-          {stages
-            .filter((s) => s.id !== currentStageId)
-            .map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
-      </label>
+      <form action={formAction} className="grid gap-2">
+        <input type="hidden" name="cardId" value={cardId} />
 
-      {/* Overridable blockers: the move is allowed, but somebody has to say
-          why. A card that slides past an open block with nobody accountable is
-          how the days metric quietly stops meaning anything. */}
-      {needsReason && (
-        <div className="grid gap-2 rounded-md border border-warning/50 p-2">
-          <ul className="list-disc pl-4 text-[13px] leading-[18px] text-warning-ink">
-            {needsReason.map((b) => <li key={b.code}>{b.message}</li>)}
-          </ul>
-          <label className="grid gap-1">
-            <span className="text-[12px] leading-4 font-medium tracking-[0.02em] text-ink-subtle">
-              Reason for moving anyway
-            </span>
-            <input
-              name="override"
-              required
-              maxLength={200}
-              placeholder="Part fitted, block not closed yet…"
-              className="min-h-11 rounded-md border border-edge-strong bg-surface-1 px-3"
-            />
-          </label>
-        </div>
-      )}
+        <label className="grid gap-1">
+          <span className="text-[12px] leading-4 font-medium tracking-[0.02em] text-ink-subtle">
+            Move to
+          </span>
+          <select
+            name="toStageId"
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            className="min-h-11 rounded-md border border-edge-strong bg-surface-1 px-3"
+          >
+            <option value="">Choose a stage…</option>
+            {stages
+              .filter((s) => s.id !== currentStageId)
+              .map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        </label>
 
-      {state && !state.ok && !needsReason && state.error && (
-        <p role="alert" className="text-[13px] leading-[18px] text-critical">
-          <span aria-hidden="true">✕</span> {state.error}
-        </p>
-      )}
+        {/* Overridable blockers: the move is allowed, but somebody has to say
+            why. A card that slides past an open block with nobody accountable
+            is how the days metric quietly stops meaning anything. */}
+        {needsReason && (
+          <div className="grid gap-2 rounded-md border border-warning/50 p-2">
+            <ul className="list-disc pl-4 text-[13px] leading-[18px] text-warning-ink">
+              {needsReason.map((b) => <li key={b.code}>{b.message}</li>)}
+            </ul>
+            <label className="grid gap-1">
+              <span className="text-[12px] leading-4 font-medium tracking-[0.02em] text-ink-subtle">
+                Reason for moving anyway
+              </span>
+              <input
+                name="override"
+                required
+                maxLength={200}
+                placeholder="Part fitted, block not closed yet…"
+                className="min-h-11 rounded-md border border-edge-strong bg-surface-1 px-3"
+              />
+            </label>
+          </div>
+        )}
 
-      <MoveButton disabled={target === ''} needsReason={Boolean(needsReason)} />
-    </form>
+        {state && !state.ok && !needsReason && state.error && (
+          <p role="alert" className="text-[13px] leading-[18px] text-critical">
+            <span aria-hidden="true">✕</span> {state.error}
+          </p>
+        )}
+
+        <MoveButton disabled={target === ''} needsReason={Boolean(needsReason)} />
+      </form>
+    </details>
   );
 }
 

@@ -204,7 +204,7 @@ function PanelButton(
       className={`relative flex min-h-11 items-center justify-center rounded-sm border-2 px-1 text-center text-[12px] leading-4 transition-colors duration-100 ${
         worst ? SEVERITY_TONE[worst] : 'border-edge'
       } ${
-        selected ? 'bg-brand-50 text-brand-700' : 'bg-surface-1 text-ink-muted hover:bg-surface-3'
+        selected ? 'bg-brand-50 text-link' : 'bg-surface-1 text-ink-muted hover:bg-surface-3'
       }`}
     >
       {label}

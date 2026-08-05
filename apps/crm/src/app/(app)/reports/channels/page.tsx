@@ -11,6 +11,9 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Channel P&L' };
+
 /**
  * The Channel P&L — the table a dealer takes into a renewal negotiation.
  *
@@ -84,7 +87,7 @@ export default async function ChannelPnlPage(
             {view.queryMs}ms
           </span>
           {' · '}
-          <Link href="/" className="text-brand-700 hover:underline">Dashboard</Link>
+          <Link href="/" className="text-link hover:underline">Dashboard</Link>
         </p>
       </div>
 
@@ -150,14 +153,14 @@ export default async function ChannelPnlPage(
       )}
 
       <div className="mb-4 grid gap-2 sm:grid-cols-4">
-        <Card><Figure label="Spend" value={format(pnl.totals.spend)} /></Card>
+        <Card><Figure label="Spend" value={format(pnl.totals.spend, { pence: false })} /></Card>
         <Card><Figure label="Leads" value={String(pnl.totals.leads)} /></Card>
         <Card><Figure label="Sales" value={String(pnl.totals.sales)} /></Card>
         <Card>
           {canSeeCost ? (
             <Figure
               label="Gross profit"
-              value={format(pnl.totals.grossProfit)}
+              value={format(pnl.totals.grossProfit, { pence: false })}
               hint={pnl.totals.roi === null
                 ? 'No spend recorded to compare against'
                 : `${pnl.totals.roi}× on advertising spend`}
@@ -202,14 +205,20 @@ export default async function ChannelPnlPage(
           </div>
 
           {/* The reasons, under the table. A "—" the reader cannot explain is
-              a "—" they assume is a bug. */}
-          <ul className="mt-3 grid gap-1 text-[12px] leading-4 text-ink-subtle">
-            {pnl.rows.filter((r) => r.summary).map((r) => (
-              <li key={r.channel}>
-                <strong>{label(r.channel)}</strong> — {r.summary}
-              </li>
-            ))}
-          </ul>
+              a "—" they assume is a bug.
+              The summary already opens with the channel's display name, so it
+              is not repeated here — printing it twice is what produced the
+              "Auto Trader — autotrader:" line this replaces. */}
+          <details className="mt-3">
+            <summary className="inline-flex min-h-11 cursor-pointer items-center text-[13px] leading-[18px] text-link">
+              Why some figures are dashes
+            </summary>
+            <ul className="mt-1 grid gap-1 text-[12px] leading-4 text-ink-subtle">
+              {pnl.rows.filter((r) => r.summary).map((r) => (
+                <li key={r.channel}>{r.summary}</li>
+              ))}
+            </ul>
+          </details>
         </Card>
       )}
 
@@ -249,7 +258,7 @@ function PnlRowView({ row, canSeeCost }: { row: ChannelPnlRow; canSeeCost: boole
           href={isUnattributed
             ? '/deals?state=delivered'
             : `/leads?source=${encodeURIComponent(row.channel)}&from=${from}&to=${to}&closed=1`}
-          className="text-brand-700 hover:underline"
+          className="text-link hover:underline"
         >
           {label(row.channel)}
         </Link>
@@ -263,26 +272,26 @@ function PnlRowView({ row, canSeeCost }: { row: ChannelPnlRow; canSeeCost: boole
         </span>
       </th>
       <td className="py-2 pr-3 text-right tnum">
-        {row.spend ? <Amount value={row.spend} /> : <span className="text-ink-subtle">—</span>}
+        {row.spend ? <Amount value={row.spend} pence={false} /> : <span className="text-ink-subtle">—</span>}
       </td>
       <td className="py-2 pr-3 text-right tnum">{row.leads}</td>
       <td className="py-2 pr-3 text-right tnum">
         {/* A blank, never £0.00. "£0.00 cost per lead" reads as free; the
             truth is there were no leads to divide by. */}
         {row.costPerLead
-          ? <Amount value={row.costPerLead} />
+          ? <Amount value={row.costPerLead} pence={false} />
           : <span className="text-ink-subtle">—</span>}
       </td>
       <td className="py-2 pr-3 text-right tnum">{row.sales}</td>
       <td className="py-2 pr-3 text-right tnum">
         {row.costPerSale
-          ? <Amount value={row.costPerSale} />
+          ? <Amount value={row.costPerSale} pence={false} />
           : <span className="text-ink-subtle">—</span>}
       </td>
       {canSeeCost && (
         <>
           <td className="py-2 pr-3 text-right tnum">
-            <Amount value={row.grossProfit} />
+            <Amount value={row.grossProfit} pence={false} />
           </td>
           <td className="py-2 text-right tnum">
             {row.roi === null

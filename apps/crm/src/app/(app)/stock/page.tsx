@@ -1,13 +1,16 @@
 import Link from 'next/link';
 import { requireSession } from '@/auth/session';
 import { loadStock, type StockRow } from '@/data/stock';
-import { StatusBadge, Empty, Amount, Reg, type Tone } from '@/components/ui';
+import { StatusBadge, Empty, Amount, Reg, ListRow, type Tone } from '@/components/ui';
 import {
   holds, goLiveBlockers, OVERAGE_DAYS, format, subtract,
   type VehicleState,
 } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
+
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Stock' };
 
 /**
  * The stock list — the screen a dealer looks at more than any other.
@@ -68,6 +71,11 @@ export default async function StockPage(
   }, canSeeCost);
 
   const filtered = Boolean(params['q'] || params['state'] || params['make'] || params['overage']);
+
+  // Name the site only when the rows on screen are not all from the same one.
+  // A field whose value is identical on every visible row carries no
+  // information and costs a dealer the width it takes up.
+  const multiSite = new Set(page.rows.map((r) => r.siteName)).size > 1;
 
   return (
     <>
@@ -180,7 +188,7 @@ export default async function StockPage(
       ) : (
         <ul className="grid gap-2">
           {page.rows.map((row) => (
-            <StockRowView key={row.id} row={row} canSeeCost={canSeeCost} />
+            <StockRowView key={row.id} row={row} canSeeCost={canSeeCost} multiSite={multiSite} />
           ))}
         </ul>
       )}
@@ -197,7 +205,10 @@ export default async function StockPage(
   );
 }
 
-function StockRowView({ row, canSeeCost }: { row: StockRow; canSeeCost: boolean }) {
+function StockRowView(
+  { row, canSeeCost, multiSite }:
+  { row: StockRow; canSeeCost: boolean; multiSite: boolean },
+) {
   const state = STATE_PRESENTATION[row.state] ?? { tone: 'neutral' as Tone, icon: '·' };
   const description = [row.make, row.model, row.derivative].filter(Boolean).join(' ');
   const overage = row.daysInStock !== null && row.daysInStock >= OVERAGE_DAYS;
@@ -234,24 +245,23 @@ function StockRowView({ row, canSeeCost }: { row: StockRow; canSeeCost: boolean 
   const margin = costed && row.retailPrice ? subtract(row.retailPrice, row.totalCost!) : null;
 
   return (
-    <li>
-      <Link
-        href={`/stock/${row.id}`}
-        className="flex min-h-11 flex-wrap items-center gap-x-4 gap-y-2 rounded-md border border-edge bg-surface-1 p-3 hover:border-edge-strong hover:bg-surface-3"
-      >
-        <Reg value={row.registration} />
-
-        <div className="min-w-0 flex-1">
-          <div className="truncate font-medium">{description || 'Not identified'}</div>
-          <div className="truncate text-[13px] leading-[18px] text-ink-subtle">
-            <span className="mono">{row.stockNumber}</span>
-            {row.mileage !== null && ` · ${row.mileage.toLocaleString('en-GB')} miles`}
-            {row.colour && ` · ${row.colour}`}
-            {row.siteName && ` · ${row.siteName}`}
-          </div>
+    <ListRow
+      href={`/stock/${row.id}`}
+      reg={<Reg value={row.registration} />}
+      title={description || 'Not identified'}
+      meta={(
+        <div className="text-[13px] leading-[18px] text-ink-subtle">
+          <span className="mono">{row.stockNumber}</span>
+          {row.mileage !== null && ` · ${row.mileage.toLocaleString('en-GB')} miles`}
+          {row.colour && ` · ${row.colour}`}
+          {/* The site is named only where there is more than one to be in.
+              A single-site dealer was reading their own name on all fourteen
+              rows, which is fourteen repetitions of something they know. */}
+          {multiSite && row.siteName && ` · ${row.siteName}`}
         </div>
-
-        <div className="flex flex-wrap items-center gap-1.5">
+      )}
+      badges={(
+        <>
           <StatusBadge tone={state.tone} icon={state.icon} label={label(row.state)} />
           {overage && (
             <StatusBadge tone="warning" icon="⏱" label={`${row.daysInStock} days`} />
@@ -263,11 +273,12 @@ function StockRowView({ row, canSeeCost }: { row: StockRow; canSeeCost: boolean 
               label={`${blockers.length} to fix`}
             />
           )}
-        </div>
-
-        <div className="w-28 text-right">
+        </>
+      )}
+      money={(
+        <>
           <div className="font-semibold">
-            {row.retailPrice ? <Amount value={row.retailPrice} /> : (
+            {row.retailPrice ? <Amount value={row.retailPrice} pence={false} /> : (
               <span className="text-ink-subtle">No price</span>
             )}
           </div>
@@ -276,14 +287,14 @@ function StockRowView({ row, canSeeCost }: { row: StockRow; canSeeCost: boolean 
               figure computed FROM cost is withheld too. */}
           {margin ? (
             <div className={`text-[12px] leading-4 ${margin.amount < 0n ? 'text-critical' : 'text-ink-subtle'}`}>
-              {format(margin)} gross
+              {format(margin, { pence: false })} gross
             </div>
           ) : canSeeCost && row.retailPrice ? (
             <div className="text-[12px] leading-4 text-ink-subtle">No cost recorded</div>
           ) : null}
-        </div>
-      </Link>
-    </li>
+        </>
+      )}
+    />
   );
 }
 

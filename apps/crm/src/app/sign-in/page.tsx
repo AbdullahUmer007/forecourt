@@ -3,6 +3,9 @@ import { getSession, signIn } from '@/auth/session';
 
 export const dynamic = 'force-dynamic';
 
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Sign in' };
+
 /**
  * Sign in.
  *

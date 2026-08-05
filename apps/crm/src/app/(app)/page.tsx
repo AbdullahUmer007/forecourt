@@ -1,10 +1,15 @@
 import Link from 'next/link';
 import { requireSession } from '@/auth/session';
-import { loadOwnerDashboard } from '@/data/dashboard';
+import { loadOwnerDashboard, loadChannelPnl } from '@/data/dashboard';
 import { Card, Figure, StatusBadge, Empty } from '@/components/ui';
-import { holds, format, OVERAGE_DAYS, MIN_SALES_FOR_AVERAGE, type Money } from '@forecourt/domain';
+import {
+  holds, format, channelDisplayName, OVERAGE_DAYS, MIN_SALES_FOR_AVERAGE, type Money,
+} from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
+
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Dashboard' };
 
 /**
  * The owner dashboard.
@@ -41,6 +46,14 @@ export default async function Dashboard() {
 
   const view = await loadOwnerDashboard(session, canSeeCost);
   const d = view.dashboard;
+
+  // The channels that actually moved, for the card at the bottom. Loaded only
+  // for a principal who may see reports — the query is a real cost and there
+  // is no point paying it to render a card the role cannot have.
+  const pnl = canSeeReports ? await loadChannelPnl(session, {}, canSeeCost) : null;
+  const channels = (pnl?.pnl.rows ?? [])
+    .filter((r) => r.leads > 0 || r.sales > 0)
+    .slice(0, 4);
 
   const targetProgress = d.unitsTarget !== null && d.unitsTarget > 0
     ? Math.round((d.unitsSoldMtd / d.unitsTarget) * 100)
@@ -188,7 +201,7 @@ export default async function Dashboard() {
             <div className="mt-2">
               <Link
                 href="/leads?overdue=1"
-                className="text-[13px] leading-[18px] text-brand-700 hover:underline"
+                className="text-[13px] leading-[18px] text-link hover:underline"
               >
                 Show the ones past their target →
               </Link>
@@ -217,17 +230,52 @@ export default async function Dashboard() {
         <Card
           title="Where the sales came from"
           action={(
-            <Link href="/reports/channels" className="text-[13px] leading-[18px] text-brand-700 hover:underline">
+            <Link href="/reports/channels" className="text-[13px] leading-[18px] text-link hover:underline">
               Open the Channel P&amp;L →
             </Link>
           )}
         >
-          <p className="text-ink-muted">
-            What each advertising channel costs, what it brought in, and what it made — the table
-            to take into the next renewal conversation. Sales are credited to one channel each,
-            never split, and a channel with too few sales to be sure of reports no ROI rather than
-            a flattering one.
-          </p>
+          {/*
+            This card used to be a paragraph describing a table on another
+            page. On a dashboard whose stated rule is that every number is
+            clickable through to its source, a card with no numbers in it is a
+            link wearing a card's clothes — it takes the space of a panel and
+            costs a scroll to learn nothing. The four channels that actually
+            moved money are here; the argument for the full table is the table.
+          */}
+          {channels.length === 0 ? (
+            <p className="text-ink-muted">
+              No advertising spend or leads recorded in the last three months yet. Record what a
+              channel costs on the Channel P&amp;L and the rest fills itself in.
+            </p>
+          ) : (
+            <ul className="grid gap-2">
+              {channels.map((row) => (
+                <li key={row.channel} className="flex items-baseline justify-between gap-3 border-b border-edge pb-2 last:border-0 last:pb-0">
+                  <Link
+                    href={`/leads?source=${encodeURIComponent(row.channel)}&closed=1`}
+                    className="min-w-0 truncate font-medium text-link hover:underline"
+                  >
+                    {channelDisplayName(row.channel)}
+                  </Link>
+                  <span className="shrink-0 text-right text-ink-muted">
+                    <span className="tnum">{row.leads}</span> lead{row.leads === 1 ? '' : 's'}
+                    {' · '}
+                    <span className="tnum">{row.sales}</span> sale{row.sales === 1 ? '' : 's'}
+                    {canSeeCost && (
+                      <>
+                        {' · '}
+                        <span className="tnum font-medium text-ink">
+                          {format(row.grossProfit, { pence: false })}
+                        </span>
+                        {' gross'}
+                      </>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </Card>
       ) : (
         <Empty title="Reports are not on your role">

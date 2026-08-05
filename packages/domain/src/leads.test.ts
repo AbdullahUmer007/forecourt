@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  changeStage, reopen, allowedLeadTransitions, slaState, slaDueAt, DEFAULT_SLA_MINUTES,
+  changeStage, reopen, allowedLeadTransitions, slaState, slaDueAt, describeMinutes,
+  DEFAULT_SLA_MINUTES,
   parseMarketplaceLead, prepareOutbound, outboundIdempotencyKey,
   summarisePipeline, lossAnalysis, LOSS_REASON_LABELS,
   type Lead, type LossReason,
@@ -82,6 +83,26 @@ describe('the lead pipeline', () => {
   });
 });
 
+describe('describeMinutes', () => {
+  it('reads in the unit somebody thinks in at each scale', () => {
+    expect(describeMinutes(0)).toBe('0 min');
+    expect(describeMinutes(59)).toBe('59 min');
+    expect(describeMinutes(60)).toBe('1h');
+    expect(describeMinutes(90)).toBe('1h 30m');
+    expect(describeMinutes(322)).toBe('5h 22m');
+    expect(describeMinutes(1440)).toBe('1d');
+    expect(describeMinutes(1500)).toBe('1d 1h');
+  });
+
+  it('is unsigned — the direction is the sentence around it', () => {
+    // `minutesRemaining` is negative once overdue, so the caller says
+    // "overdue" and this says how much. A minus sign inside "−322 min
+    // overdue" reads as a double negative.
+    expect(describeMinutes(-322)).toBe(describeMinutes(322));
+    expect(describeMinutes(-322)).not.toContain('-');
+  });
+});
+
 // --------------------------------------------------------------------- SLA
 describe('the SLA clock', () => {
   it('gives a marketplace lead the tightest target', () => {
@@ -102,6 +123,21 @@ describe('the SLA clock', () => {
     expect(s.breached).toBe(true);
     expect(s.minutesRemaining).toBeLessThan(0);
     expect(s.label).toContain('overdue');
+  });
+
+  it('states a long overrun in hours, not in minutes', () => {
+    // The screen used to read "322 min overdue". That is a number somebody has
+    // to divide before it means anything, and the badge exists to be understood
+    // at a glance from the other side of a forecourt.
+    const s = slaState(lead({ receivedAt: AUG(3, 9) }), AUG(3, 14, 52));
+    expect(s.breached).toBe(true);
+    expect(s.label).toBe('5h 22m overdue');
+    expect(s.label).not.toContain('min');
+  });
+
+  it('leaves a short wait in minutes, which is how a target is set', () => {
+    const s = slaState(lead({ receivedAt: AUG(3, 9) }), AUG(3, 9, 10));
+    expect(s.label).toBe('20 min to respond');
   });
 
   it('measures what the CUSTOMER waited, from the first outbound message', () => {

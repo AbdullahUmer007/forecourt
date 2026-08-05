@@ -19,7 +19,7 @@ const TONE_CLASSES: Record<Tone, string> = {
   warning: 'bg-surface-1 text-warning-ink border-warning/50',
   serious: 'bg-surface-1 text-warning-ink border-serious/60',
   critical: 'bg-surface-1 text-critical border-critical/40',
-  info: 'bg-brand-50 text-brand-700 border-brand-600/30',
+  info: 'bg-brand-50 text-link border-brand-600/30',
 };
 
 /**
@@ -147,7 +147,7 @@ export function Button(
   const variants = {
     primary: 'bg-brand-600 text-white hover:bg-brand-700 border-brand-600',
     secondary: 'bg-surface-1 text-ink hover:bg-surface-3 border-edge-strong',
-    quiet: 'bg-transparent text-brand-700 hover:bg-brand-50 border-transparent',
+    quiet: 'bg-transparent text-link hover:bg-brand-50 border-transparent',
   };
   return (
     <button

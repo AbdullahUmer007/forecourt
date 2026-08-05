@@ -3,6 +3,8 @@ import { requireSession } from '@/auth/session';
 import { listAppraisals, type AppraisalSummary } from '@/data/appraisals';
 import { StatusBadge, Empty, Amount, Reg, type Tone } from '@/components/ui';
 import type { AppraisalState } from '@forecourt/domain';
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Part-exchange' };
 
 /**
  * Every state gets an icon and a label — rule 2. The tone is chosen by what

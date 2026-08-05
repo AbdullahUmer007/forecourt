@@ -9,6 +9,8 @@ import {
   assessTyres, vatSchemeForSeller,
   holds, format, money,
 } from '@forecourt/domain';
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Appraisal' };
 
 export default async function AppraisalDetail(
   { params }: { params: Promise<{ id: string }> },

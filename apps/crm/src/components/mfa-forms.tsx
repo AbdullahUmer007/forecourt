@@ -76,7 +76,7 @@ export function EnrolForm(
         </code>
         <p className="text-[13px] leading-[18px] text-ink-subtle">
           Account: {email}. On the phone you are holding, this link opens the app directly:{' '}
-          <a href={uri} className="text-brand-700 underline">add to authenticator</a>.
+          <a href={uri} className="text-link underline">add to authenticator</a>.
         </p>
       </div>
 

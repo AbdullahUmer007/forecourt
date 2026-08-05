@@ -6,6 +6,9 @@ import { holds, format, ACCOUNT_LABELS } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
 
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Accounting' };
+
 /**
  * Accounting sync.
  *

@@ -7,6 +7,9 @@ import { holds, STOCK_BOOK_REQUIRED_FIELDS } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
 
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'VAT stock book' };
+
 /**
  * The VAT margin stock book — the record HMRC asks to see on an inspection.
  *
@@ -71,7 +74,7 @@ export default async function StockBookPage(
             {page.queryMs}ms
           </span>
           {' · '}
-          <Link href="/invoices" className="text-brand-700 hover:underline">Invoices</Link>
+          <Link href="/invoices" className="text-link hover:underline">Invoices</Link>
         </p>
       </div>
 
@@ -83,7 +86,7 @@ export default async function StockBookPage(
             still to hand.
           </p>
           <p className="mt-2">
-            <Link href="/vat/stock-book?incomplete=1" className="text-brand-700 hover:underline">
+            <Link href="/vat/stock-book?incomplete=1" className="text-link hover:underline">
               Show only those →
             </Link>
           </p>
@@ -185,10 +188,25 @@ function EntryView({ row }: { row: StockBookRow }) {
   const sold = row.saleDate !== null;
   const incomplete = sold && row.missing.length > 0;
 
+  // A purchase price of zero is not a purchase price.
+  //
+  // `missingStockBookFields` counts a field as present unless it is null,
+  // undefined or empty, so a Money of £0.00 satisfies mandatory field 4 — and
+  // the entry renders "£0.00" as though somebody had recorded it. On a margin
+  // car that is not cosmetic: the margin is the selling price minus the
+  // purchase price, so a zero makes the whole sale the margin and the VAT
+  // roughly four times what is actually due.
+  //
+  // Named here rather than corrected silently: this screen is a statutory
+  // record and what it must not do is present an absent figure as a settled
+  // one. Whether the domain should treat a zero as missing is a question for
+  // the VAT specialist who is already reviewing M11, and it is flagged.
+  const purchasePriceMissing = row.purchasePrice === null || row.purchasePrice.amount === 0n;
+
   return (
     <li
       className={`rounded-md border bg-surface-1 p-3 ${
-        incomplete ? 'border-critical' : 'border-edge'
+        incomplete || purchasePriceMissing ? 'border-critical' : 'border-edge'
       }`}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -200,6 +218,9 @@ function EntryView({ row }: { row: StockBookRow }) {
         <span className="flex flex-wrap gap-1.5">
           {row.correctsEntryId && (
             <StatusBadge tone="warning" icon="✎" label="Adjusting entry" />
+          )}
+          {purchasePriceMissing && (
+            <StatusBadge tone="critical" icon="!" label="No purchase price" />
           )}
           {sold
             ? <StatusBadge tone={incomplete ? 'critical' : 'good'} icon={incomplete ? '!' : '✓'}
@@ -215,7 +236,11 @@ function EntryView({ row }: { row: StockBookRow }) {
         </div>
         <div className="flex justify-between gap-3 border-b border-edge py-1">
           <dt className="text-ink-subtle">Purchase price</dt>
-          <dd>{row.purchasePrice ? <Amount value={row.purchasePrice} /> : '—'}</dd>
+          <dd>
+            {purchasePriceMissing
+              ? <span className="text-critical">Not recorded</span>
+              : <Amount value={row.purchasePrice!} />}
+          </dd>
         </div>
         <div className="flex justify-between gap-3 border-b border-edge py-1">
           <dt className="text-ink-subtle">Seller</dt>

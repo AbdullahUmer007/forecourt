@@ -80,7 +80,7 @@ export function MarkForm(
               onClick={() => setSeverity(value)}
               className={`min-h-11 rounded-md border font-medium ${
                 severity === value
-                  ? 'border-brand-600 bg-brand-50 text-brand-700'
+                  ? 'border-brand-600 bg-brand-50 text-link'
                   : 'border-edge-strong bg-surface-1 text-ink-muted hover:bg-surface-3'
               }`}
             >

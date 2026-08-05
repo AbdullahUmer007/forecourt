@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { Card, Empty } from '@/components/ui';
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'New appraisal' };
 
 /**
  * Not built yet, and says so plainly.

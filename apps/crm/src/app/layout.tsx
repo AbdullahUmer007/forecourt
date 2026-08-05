@@ -1,8 +1,17 @@
 import type { ReactNode } from 'react';
 import './globals.css';
 
+/**
+ * `template`, not a single title.
+ *
+ * Every page in the CRM rendered "Forecourt" in the tab. An administrator is
+ * described in the domain skill as somebody at a desk for hours with the stock
+ * list, an invoice and the VAT book open at once — and all three tabs said the
+ * same word, so picking one meant clicking through them. The section name goes
+ * first because a tab strip truncates from the right.
+ */
 export const metadata = {
-  title: 'Forecourt',
+  title: { default: 'Forecourt', template: '%s · Forecourt' },
   description: 'Office CRM for independent used-car dealers.',
 };
 

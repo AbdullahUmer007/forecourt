@@ -333,19 +333,29 @@ function describeRow(
   lowConfidence: boolean,
   floor: number,
 ): string {
+  // The channel's DISPLAY name, never its key.
+  //
+  // This read `${channel}`, which is the internal enum — so the screen said
+  // "Auto Trader — autotrader: £5,730 spent" and "Website test drive —
+  // website_test_drive: no spend recorded". Exactly the defect already fixed
+  // once in the CSV export, surviving in the sentence beside it because each
+  // had its own idea of what a channel is called. There is one label function
+  // and everything dealer-facing goes through it.
+  const name = channelDisplayName(channel);
+
   if (spend === null || spend.amount === 0n) {
-    return `${channel}: no spend recorded, ${leads} lead${leads === 1 ? '' : 's'}, ` +
+    return `${name}: no spend recorded, ${leads} lead${leads === 1 ? '' : 's'}, ` +
       `${sales} sale${sales === 1 ? '' : 's'}, ${format(gross)} gross.`;
   }
   if (leads === 0) {
-    return `${channel}: ${format(spend)} spent and not one lead. Worth a conversation with them.`;
+    return `${name}: ${format(spend)} spent and not one lead. Worth a conversation with them.`;
   }
   if (lowConfidence) {
-    return `${channel}: ${format(spend)} spent, ${leads} leads, ${sales} sale` +
+    return `${name}: ${format(spend)} spent, ${leads} leads, ${sales} sale` +
       `${sales === 1 ? '' : 's'}, ${format(gross)} gross. Too few sales to state a return — ` +
       `${floor} is the point at which the figure means something.`;
   }
-  return `${channel}: ${format(spend)} spent, ${leads} leads, ${sales} sales, ` +
+  return `${name}: ${format(spend)} spent, ${leads} leads, ${sales} sales, ` +
     `${format(gross)} gross — ${roi}× return.`;
 }
 

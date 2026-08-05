@@ -1,10 +1,13 @@
 import Link from 'next/link';
 import { requireSession } from '@/auth/session';
 import { loadInbox, loadLossAnalysis, type LeadRow } from '@/data/leads';
-import { StatusBadge, Empty, Reg, Card, Figure, type Tone } from '@/components/ui';
+import { StatusBadge, Empty, Reg, Card, Figure, ListRow, type Tone } from '@/components/ui';
 import { LOSS_REASON_LABELS, type LeadStage, type LeadSource } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
+
+/** The tab a dealer is looking for, named. */
+export const metadata = { title: 'Leads' };
 
 /**
  * The lead inbox.
@@ -122,7 +125,7 @@ export default async function LeadsPage(
             <div className="mt-2">
               <Link
                 href="/leads?overdue=1"
-                className="text-[13px] leading-[18px] text-brand-700 hover:underline"
+                className="text-[13px] leading-[18px] text-link hover:underline"
               >
                 Show them →
               </Link>
@@ -295,34 +298,33 @@ function LeadRowView({ row }: { row: LeadRow }) {
   const late = open && row.firstResponseAt === null && row.sla.breached;
 
   return (
-    <li>
-      <Link
-        href={`/leads/${row.id}`}
-        className={`flex min-h-11 flex-wrap items-center gap-x-4 gap-y-2 rounded-md border bg-surface-1 p-3 hover:bg-surface-3 ${
-          late ? 'border-critical' : 'border-edge hover:border-edge-strong'
-        }`}
-      >
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-2">
-            <span className="font-medium">{row.contactName}</span>
-            <span className="text-[13px] leading-[18px] text-ink-subtle">
-              {SOURCE_LABELS[row.source]} · {when(row.receivedAt)}
-            </span>
-          </div>
+    <ListRow
+      href={`/leads/${row.id}`}
+      tone={late ? 'alert' : 'default'}
+      reg={row.vehicleRegistration ? <Reg value={row.vehicleRegistration} /> : undefined}
+      title={(
+        <span className="flex flex-wrap items-baseline gap-x-2">
+          {row.contactName}
+          <span className="text-[13px] leading-[18px] font-normal text-ink-subtle">
+            {SOURCE_LABELS[row.source]} · {when(row.receivedAt)}
+          </span>
+        </span>
+      )}
+      meta={(
+        <>
           <div className="truncate text-[13px] leading-[18px] text-ink-muted">
             {row.vehicleDescription ?? 'General enquiry — no particular car'}
             {row.assignedToName ? ` · ${row.assignedToName}` : ' · Nobody assigned'}
           </div>
           {row.message && (
-            <div className="mt-1 truncate text-[13px] leading-[18px] text-ink-subtle">
+            <div className="mt-1 line-clamp-2 text-[13px] leading-[18px] text-ink-subtle">
               “{row.message}”
             </div>
           )}
-        </div>
-
-        {row.vehicleRegistration && <Reg value={row.vehicleRegistration} />}
-
-        <div className="flex flex-wrap items-center gap-1.5">
+        </>
+      )}
+      badges={(
+        <>
           <StatusBadge tone={stage.tone} icon={stage.icon} label={label(row.stage)} />
 
           {open && row.firstResponseAt === null && (
@@ -348,9 +350,9 @@ function LeadRowView({ row }: { row: LeadRow }) {
           {row.stage === 'lost' && row.lossReason && (
             <StatusBadge tone="neutral" icon="✕" label={LOSS_REASON_LABELS[row.lossReason]} />
           )}
-        </div>
-      </Link>
-    </li>
+        </>
+      )}
+    />
   );
 }
 

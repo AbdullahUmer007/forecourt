@@ -202,6 +202,30 @@ export interface SlaState {
 }
 
 /**
+ * A wait, in the units somebody reads it in.
+ *
+ * Under an hour, minutes: that is how a response target is set and how staff
+ * talk about it. Past an hour, hours and minutes — "322 min overdue" is a
+ * number a dealer has to divide before it means anything, and the whole point
+ * of the badge is being understood at a glance from across a forecourt. Past a
+ * day, days and hours, because at that point the minutes are noise.
+ */
+export function describeMinutes(minutes: number): string {
+  const total = Math.abs(Math.round(minutes));
+  if (total < 60) return `${total} min`;
+
+  const hours = Math.floor(total / 60);
+  if (hours < 24) {
+    const rest = total % 60;
+    return rest === 0 ? `${hours}h` : `${hours}h ${rest}m`;
+  }
+
+  const days = Math.floor(hours / 24);
+  const rest = hours % 24;
+  return rest === 0 ? `${days}d` : `${days}d ${rest}h`;
+}
+
+/**
  * The SLA position of a lead.
  *
  * Measured from `firstResponseAt`, which is stamped by the first outbound
@@ -221,8 +245,8 @@ export function slaState(lead: Lead, now: Date): SlaState {
       minutesRemaining: 0,
       responseMinutes,
       label: breached
-        ? `Answered after ${responseMinutes} min — past the target`
-        : `Answered in ${responseMinutes} min`,
+        ? `Answered after ${describeMinutes(responseMinutes)} — past the target`
+        : `Answered in ${describeMinutes(responseMinutes)}`,
     };
   }
 
@@ -230,12 +254,12 @@ export function slaState(lead: Lead, now: Date): SlaState {
   if (minutesRemaining < 0) {
     return {
       breached: true, minutesRemaining, responseMinutes: null,
-      label: `${Math.abs(minutesRemaining)} min overdue`,
+      label: `${describeMinutes(minutesRemaining)} overdue`,
     };
   }
   return {
     breached: false, minutesRemaining, responseMinutes: null,
-    label: `${minutesRemaining} min to respond`,
+    label: `${describeMinutes(minutesRemaining)} to respond`,
   };
 }
 
