@@ -35,7 +35,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["apps/crm/src/*"],
-      "@forecourt/domain": ["packages/domain/src/index.ts"]
+      "@forecourt/domain": ["packages/domain/src/index.ts"],
+      "@forecourt/domain/*": ["packages/domain/src/*.ts"]
     }
   },
   "include": [

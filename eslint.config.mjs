@@ -37,6 +37,7 @@ export default tseslint.config(
     },
     rules: {
       'forecourt/no-raw-hex': 'error',
+      'forecourt/no-domain-barrel-in-client': 'error',
 
       // Deliberately relaxed for now, each for a reason rather than to get to
       // green: the codebase parses external provider payloads (`any` at the
