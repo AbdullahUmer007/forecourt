@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 // Next reads `.env` from the app directory, but ours lives at the repository
 // root so the apps and the database scripts cannot disagree about which
 // database they are pointed at. Loaded here because next.config runs before
@@ -9,6 +10,24 @@ loadEnv();
 export default {
   reactStrictMode: true,
   poweredByHeader: false,
+
+  /**
+   * A self-contained server, for the container image.
+   *
+   * `standalone` traces exactly the files the server needs and emits its own
+   * `server.js`, so the runtime image carries neither pnpm nor the workspace's
+   * node_modules — about a gigabyte per service that would otherwise be copied
+   * three times and rebuilt on every deploy.
+   *
+   * `outputFileTracingRoot` has to be the REPOSITORY root, not the app
+   * directory: pnpm puts the real packages in a root `node_modules/.pnpm`
+   * store and symlinks into it, so tracing from the app directory follows the
+   * links out of its own root and silently drops them from the output. The
+   * symptom is a container that builds cleanly and then cannot find `postgres`
+   * at runtime.
+   */
+  output: 'standalone',
+  outputFileTracingRoot: fileURLToPath(new URL('../..', import.meta.url)),
   // The domain package is plain TypeScript compiled by Next itself rather than
   // a pre-built artefact — one less build step between a change and seeing it.
   experimental: { externalDir: true },

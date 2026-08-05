@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { sql, withSession } from '@/data/db';
+import { sql, withSession, type Tx } from '@/data/db';
 import { loadStock } from '@/data/stock';
 import { loadInbox } from '@/data/leads';
 import { loadDeals } from '@/data/deals';
@@ -195,5 +195,127 @@ describe.runIf(process.env['DATABASE_URL'])('the loaders the screens actually ca
     const ours = book.rows.reduce(
       (acc, r) => acc + (r.margin?.amount ?? 0n), 0n);
     expect(book.period.marginTotal.amount).toBe(ours);
+  });
+});
+
+/**
+ * The PUBLIC SITE's door — the other half, and the half that was missing.
+ *
+ * Everything above goes through `withSession` and the CRM's loaders. Nothing
+ * went through `withTenant` and `app_public`, and the cost of that gap was
+ * immediate: the same change that closed the CRM leak by adding
+ * `SET LOCAL ROLE` to both doors ALSO broke the public site outright, because
+ * `app_public` had never been granted SELECT on `tenants` — the table is
+ * handled outside the loop that grants as it goes, since it has no
+ * `tenant_id`. Every page the site served returned 500, and it took building a
+ * container and curling it to find out.
+ *
+ * A door has two failure modes and both matter: letting through what it should
+ * refuse, and refusing what it must let through. These test the second as
+ * carefully as the block above tests the first.
+ */
+describe.runIf(process.env['DATABASE_URL'])('the public site’s door', () => {
+  const KENNINGTON = '11111111-1111-4111-8111-111111111111';
+
+  /**
+   * The site's own door, copied rather than imported: `@/` is the CRM.
+   *
+   * `Tx` is the NAMED type, not `Parameters<Parameters<typeof sql.begin>[0]>[0]`.
+   * `sql.begin` is overloaded, so deriving it picks the wrong signature and
+   * every `tx` silently becomes `never` — which type-checks perfectly until
+   * something calls a method on it. The comment in `apps/site/src/data/db.ts`
+   * warns about this exact trap; writing it out here reproduced it first try.
+   */
+  const withPublicTenant = async <T>(
+    tenantId: string, fn: (tx: Tx) => Promise<T>,
+  ): Promise<T> => sql.begin(async (tx: Tx) => {
+    await tx`SET LOCAL ROLE app_public`;
+    await tx`SELECT set_tenant_context(${tenantId}::uuid, NULL, '{}'::uuid[], true)`;
+    return fn(tx);
+  }) as Promise<T>;
+
+  it('can read the dealership it is rendering', async () => {
+    // Not a formality. Every page names the dealer — the masthead, the FCA
+    // disclosure in the footer, the AutoDealer JSON-LD — so a site that cannot
+    // read `tenants` cannot render anything at all.
+    const rows = await withPublicTenant(KENNINGTON, async (tx) =>
+      tx`SELECT id, name FROM tenants`);
+    expect(rows.length, 'app_public cannot read tenants — the whole site 500s')
+      .toBeGreaterThan(0);
+    expect(rows.every((r) => r['id'] === KENNINGTON)).toBe(true);
+  });
+
+  it('can read the tables a shopfront is made of', async () => {
+    for (const table of [
+      'brands', 'domains', 'sites', 'vehicles', 'vehicle_media', 'vehicle_prices',
+      'mot_records', 'representative_examples', 'search_events',
+    ]) {
+      await expect(
+        withPublicTenant(KENNINGTON, async (tx) => tx.unsafe(`SELECT 1 FROM ${table} LIMIT 1`)),
+        `app_public cannot read ${table}`,
+      ).resolves.toBeDefined();
+    }
+  });
+
+  it('sees only its own tenant, on a connection that could see everything', async () => {
+    const [all] = await sql<{ n: number }[]>`SELECT count(*)::int AS n FROM tenants`;
+    expect(all?.n, 'the fixtures should have created several tenants').toBeGreaterThan(1);
+
+    const rows = await withPublicTenant(KENNINGTON, async (tx) => tx`SELECT id FROM tenants`);
+    expect(rows.length).toBe(1);
+
+    const cars = await withPublicTenant(KENNINGTON, async (tx) =>
+      tx`SELECT tenant_id FROM vehicles`);
+    expect(cars.every((c) => c['tenant_id'] === KENNINGTON)).toBe(true);
+  });
+
+  it('is READ-ONLY as a privilege, not as a convention', async () => {
+    // The door's comment claims the public site cannot write. That has to be
+    // something the database refuses, not something the code happens not to do
+    // — an injected UPDATE does not care what the code intended.
+    await expect(
+      withPublicTenant(KENNINGTON, async (tx) =>
+        tx`UPDATE tenants SET name = 'owned' WHERE id = ${KENNINGTON}::uuid`),
+    ).rejects.toThrow(/permission denied/i);
+
+    await expect(
+      withPublicTenant(KENNINGTON, async (tx) =>
+        tx`UPDATE vehicles SET retail_price_pence = 1 WHERE tenant_id = ${KENNINGTON}::uuid`),
+    ).rejects.toThrow(/permission denied/i);
+  });
+
+  it('cannot read the CRM’s side of the business', async () => {
+    // A shopfront renders stock. It has no reason to reach a customer record,
+    // a lead, a deal, an invoice, a payment or the evidence ledger — and until
+    // this was written it held SELECT on all of them, plus the CRM's own
+    // `sessions` table, because `apply_tenant_policies` granted `app_public`
+    // every tenant-scoped table it looped over.
+    //
+    // Row-level security still confined it to one dealership, so this was
+    // never a cross-tenant leak. It was worse in a different direction: the
+    // role behind the page a stranger loads could read everything that dealer
+    // holds, and only the absence of a bug stood between the two.
+    for (const table of [
+      'users', 'sessions', 'auth_attempts', 'platform_operators',
+      'contacts', 'contact_consents', 'leads', 'messages',
+      'deals', 'deal_evidence', 'invoices', 'payments', 'stock_book_entries',
+      'audit_events',
+    ]) {
+      const [row] = await sql<{ granted: boolean }[]>`
+        SELECT has_table_privilege('app_public', ${table}, 'SELECT') AS granted`;
+      expect(row?.granted, `app_public should not be able to read ${table}`).toBe(false);
+    }
+  });
+
+  it('cannot write anywhere except the demand signal', async () => {
+    // One exception, and it is INSERT only: `search_events` records what
+    // buyers looked for and did not find. Append-only evidence of demand.
+    const rows = await sql<{ table_name: string; privilege_type: string }[]>`
+      SELECT table_name, privilege_type
+      FROM information_schema.role_table_grants
+      WHERE grantee = 'app_public' AND privilege_type <> 'SELECT'`;
+
+    expect(rows.map((r) => `${r.table_name}:${r.privilege_type}`).sort())
+      .toEqual(['search_events:INSERT']);
   });
 });

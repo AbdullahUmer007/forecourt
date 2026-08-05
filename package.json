@@ -9,6 +9,8 @@
     "audit": "node apps/audit/src/index.mjs",
     "audit:fixture": "node apps/audit/src/index.mjs --fixture apps/audit/fixtures/kenningtoncarsales.json",
     "build": "pnpm --filter @forecourt/crm build && pnpm --filter @forecourt/site build && pnpm --filter @forecourt/admin build",
+    "db:deploy": "node packages/db/scripts/deploy-db.mjs",
+    "db:domain": "node packages/db/scripts/add-domain.mjs",
     "db:migrate": "node packages/db/scripts/migrate.mjs",
     "db:policies": "node packages/db/scripts/verify-policies.mjs",
     "db:seed": "tsx packages/db/scripts/seed-demo.mjs",

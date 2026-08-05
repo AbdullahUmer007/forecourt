@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3000",
     "build": "next build",
-    "start": "next start"
+    "start": "next start --port ${PORT:-3000}"
   },
   "dependencies": {
     "next": "^15.1.0",

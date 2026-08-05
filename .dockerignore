@@ -1,0 +1,34 @@
+# What must never enter the build context.
+#
+# `node_modules` is the one that matters and it is not about image size: the
+# build stage does `COPY . .` on top of an already-installed workspace, so a
+# host `node_modules` would overwrite the Linux install with whatever was built
+# on the developer's machine. On Windows that means Windows binaries for sharp
+# and @node-rs/argon2, and a container that fails at runtime with a module it
+# can see but cannot load.
+node_modules
+**/node_modules
+
+# Build output. Stale artefacts from a host build would be copied over and
+# then partially overwritten, which is worse than either alone.
+.next
+**/.next
+dist
+**/dist
+*.tsbuildinfo
+
+# Secrets. `.env` holds a real DATABASE_URL and .tokens.json holds live
+# session credentials; neither belongs in an image layer, where it survives
+# even if a later layer deletes it.
+.env
+.env.*
+!.env.example
+.tokens.json
+.token
+
+.git
+.github
+coverage
+demo/preview
+.media
+*.log
