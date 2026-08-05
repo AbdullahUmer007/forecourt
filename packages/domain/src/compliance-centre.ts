@@ -257,7 +257,15 @@ export function breachClock(input: {
   reportedToIcoAt: Date | null;
   notReportableReason: string | null;
   subjectsNotifiedAt: Date | null;
-  highRisk: boolean;
+  /**
+   * Article 34: is this a HIGH risk to the people affected?
+   *
+   * Three states, not two. `null` means nobody has assessed it yet, which is
+   * a finding in its own right and is NOT the same as "low risk" — treating
+   * an unassessed breach as low risk is the report deciding the question on
+   * the firm's behalf, in the direction that requires no work.
+   */
+  highRisk: boolean | null;
   asAt: Date;
 }): BreachClock {
   const deadline = new Date(input.becameAwareAt.getTime() + ICO_NOTIFY_HOURS * 3_600_000);
@@ -297,7 +305,15 @@ export function breachClock(input: {
     ));
   }
 
-  if (input.highRisk && input.subjectsNotifiedAt === null) {
+  if (input.highRisk === null) {
+    statements.push(statement(
+      'breach_risk_not_assessed',
+      'Nobody has recorded whether this is a high risk to the people affected. Until somebody ' +
+      'does, it is not known whether they have to be told — and "not assessed" is not the same ' +
+      'as "low risk".',
+      SOURCES.breachNotifySubjects,
+    ));
+  } else if (input.highRisk && input.subjectsNotifiedAt === null) {
     statements.push(statement(
       'breach_subjects_not_notified',
       'This is recorded as high risk to the people affected, and they have not been told.',

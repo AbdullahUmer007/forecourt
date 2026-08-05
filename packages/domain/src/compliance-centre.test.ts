@@ -154,6 +154,40 @@ describe('the 72-hour ICO clock', () => {
       subjectsNotifiedAt: null, highRisk: false, asAt: AT(0), ...over,
     });
 
+  it('says so when nobody has assessed the risk to the people affected', () => {
+    // Three states, not two. Article 33 asks whether to tell the REGULATOR;
+    // Article 34 asks whether to tell the PEOPLE, and it is a different
+    // question with a different answer. An unassessed breach used to evaluate
+    // as low risk — the report deciding the question on the firm's behalf, in
+    // the direction that requires no work — and the schema had no column to
+    // record the answer in at all.
+    const unassessed = breach({ highRisk: null });
+    expect(unassessed.statements.map((s) => s.code)).toContain('breach_risk_not_assessed');
+
+    // Assessed and judged low risk: no finding, because a decision was made.
+    const low = breach({ highRisk: false });
+    expect(low.statements.map((s) => s.code)).not.toContain('breach_risk_not_assessed');
+    expect(low.statements.map((s) => s.code)).not.toContain('breach_subjects_not_notified');
+
+    // Assessed as high risk and nobody told: the finding Article 34 is for.
+    const high = breach({ highRisk: true, subjectsNotifiedAt: null });
+    expect(high.statements.map((s) => s.code)).toContain('breach_subjects_not_notified');
+
+    // High risk and the people WERE told: nothing outstanding.
+    const told = breach({ highRisk: true, subjectsNotifiedAt: AT(0) });
+    expect(told.statements.map((s) => s.code)).not.toContain('breach_subjects_not_notified');
+  });
+
+  it('every statement it makes carries a source citation', () => {
+    // §27.4: a dealer's own adviser has to be able to check our reading.
+    for (const clock of [breach({ highRisk: null }), breach({ highRisk: true })]) {
+      for (const st of clock.statements) {
+        expect(st.citation.url).toMatch(/^https?:\/\//);
+        expect(st.citation.reference.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
   it('runs from AWARENESS, not from when the breach happened', () => {
     // The distinction is the whole thing. A laptop taken in March and noticed
     // in June gives 72 hours from June, and a firm that measures from March

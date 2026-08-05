@@ -15,3 +15,8 @@ coverage/
 
 # Local media store (dev only — R2 in production)
 .media/
+
+# Session tokens minted for local verification. Never committed — they are
+# live credentials for a signed-in session.
+.tokens.json
+.token

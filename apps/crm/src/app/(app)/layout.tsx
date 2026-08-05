@@ -28,6 +28,7 @@ const NAV: { href: string; label: string; needs?: string }[] = [
   // and "stock" are different things and the nav already has Stock above.
   { href: '/vat/stock-book', label: 'VAT book', needs: 'stockbook.read' },
   { href: '/reports/channels', label: 'Channel P&L', needs: 'report.read' },
+  { href: '/compliance', label: 'Compliance', needs: 'compliance.read' },
 ];
 
 /**
