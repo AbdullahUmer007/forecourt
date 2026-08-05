@@ -8,6 +8,10 @@ import {
   SESSION_IDLE_MINUTES, SESSION_ABSOLUTE_HOURS, STEP_UP_MINUTES,
   isWellFormedToken, SESSION_TOKEN_LENGTH,
   totpCounters, truncateOtp, TOTP_STEP_SECONDS,
+  rateLimit, MAX_ATTEMPTS_PER_IP, MAX_ATTEMPTS_PER_IDENTIFIER,
+  checkResetToken, resetTokenExpiry, RESET_TOKEN_TTL_MINUTES,
+  RECOVERY_CODE_COUNT, recoveryCodesLow, describeRecoveryCodes,
+  mfaGate,
   type LockoutState, type SessionState,
 } from './auth.js';
 import type { Permission } from './permissions.js';
@@ -283,6 +287,179 @@ describe('session tokens', () => {
     expect(isWellFormedToken('short')).toBe(false);
     expect(isWellFormedToken('+'.repeat(SESSION_TOKEN_LENGTH))).toBe(false);
     expect(isWellFormedToken('='.repeat(SESSION_TOKEN_LENGTH))).toBe(false);
+  });
+});
+
+// ------------------------------------------------------- rate limiting
+
+describe('per-IP rate limiting', () => {
+  const at = (over: Partial<Parameters<typeof rateLimit>[0]> = {}) =>
+    rateLimit({ attemptsFromIp: 0, attemptsForIdentifier: 0, ...over });
+
+  it('allows an ordinary attempt', () => {
+    expect(at().allowed).toBe(true);
+  });
+
+  it('THE hole account lockout cannot close: one password, many accounts', () => {
+    // Lockout counts per account, so spraying a common password across 500
+    // accounts trips nothing — each account sees one failure. Only an IP
+    // counter sees it.
+    const spraying = at({ attemptsFromIp: MAX_ATTEMPTS_PER_IP, attemptsForIdentifier: 1 });
+    expect(spraying.allowed).toBe(false);
+    expect(spraying.limited).toBe('ip');
+  });
+
+  it('also limits one email hammered from changing addresses', () => {
+    const decision = at({ attemptsFromIp: 2, attemptsForIdentifier: MAX_ATTEMPTS_PER_IDENTIFIER });
+    expect(decision.allowed).toBe(false);
+    expect(decision.limited).toBe('identifier');
+  });
+
+  it('the message never says WHICH limit was hit', () => {
+    // Telling an attacker "you hit the IP limit" tells them to change address.
+    const byIp = at({ attemptsFromIp: 99 });
+    const byId = at({ attemptsForIdentifier: 99 });
+    expect(byIp.message).toBe(byId.message);
+    // Word-bounded: an unanchored /ip/i matches the "ip" inside "dealership",
+    // which is how a loose assertion fails on correct output.
+    expect(byIp.message).not.toMatch(/\bIP\b|\baddress\b/i);
+  });
+
+  it('the message does not confirm the account exists', () => {
+    expect(at({ attemptsFromIp: 99 }).message).not.toMatch(/account is locked|that account/i);
+  });
+
+  it('says how long to wait and what else to do', () => {
+    const message = at({ attemptsFromIp: 99 }).message!;
+    expect(message).toMatch(/15 minutes/);
+    expect(message).toMatch(/reset your password/);
+  });
+
+  it('the limits are configurable per call site', () => {
+    expect(at({ attemptsFromIp: 4, maxPerIp: 5 }).allowed).toBe(true);
+    expect(at({ attemptsFromIp: 5, maxPerIp: 5 }).allowed).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------- reset tokens
+
+describe('password reset tokens', () => {
+  const AT9 = AT(9);
+
+  it('accepts a fresh unused token', () => {
+    expect(checkResetToken({ expiresAt: AT(10), usedAt: null }, AT9).valid).toBe(true);
+  });
+
+  it('refuses an expired one', () => {
+    expect(checkResetToken({ expiresAt: AT(8), usedAt: null }, AT9).problem).toBe('expired');
+  });
+
+  it('refuses a SECOND use', () => {
+    // A link sitting in an inbox, or in a mail server's logs, must not still
+    // work next month.
+    expect(checkResetToken({ expiresAt: AT(10), usedAt: AT(8) }, AT9).problem)
+      .toBe('already_used');
+  });
+
+  it('refuses an unknown token', () => {
+    expect(checkResetToken(null, AT9).problem).toBe('unknown');
+  });
+
+  it('every refusal reads identically', () => {
+    // "Already used" versus "expired" tells anyone holding a stolen link which
+    // one they are holding.
+    const messages = [
+      checkResetToken(null, AT9).message,
+      checkResetToken({ expiresAt: AT(8), usedAt: null }, AT9).message,
+      checkResetToken({ expiresAt: AT(10), usedAt: AT(8) }, AT9).message,
+    ];
+    expect(new Set(messages).size).toBe(1);
+    expect(messages[0]).toMatch(/ask whoever manages/i);
+  });
+
+  it('expires in half an hour', () => {
+    expect(RESET_TOKEN_TTL_MINUTES).toBe(30);
+    expect(resetTokenExpiry(AT9).getTime() - AT9.getTime()).toBe(30 * 60_000);
+  });
+});
+
+// -------------------------------------------------------- recovery codes
+
+describe('recovery codes', () => {
+  it('ten are issued', () => {
+    expect(RECOVERY_CODE_COUNT).toBe(10);
+  });
+
+  it('warns while there is still time to act', () => {
+    expect(recoveryCodesLow({ total: 10, unused: 4 })).toBe(false);
+    expect(recoveryCodesLow({ total: 10, unused: 3 })).toBe(true);
+  });
+
+  it('says what losing them costs', () => {
+    // Enrolling MFA without recovery codes turns a lost phone into a lost
+    // account, and the person most likely to hold MFA-mandating permissions is
+    // the dealer principal — the one nobody can lock out.
+    expect(describeRecoveryCodes({ total: 10, unused: 0 }))
+      .toMatch(/losing your phone means losing this account/);
+  });
+
+  it('is quiet when there are plenty', () => {
+    expect(describeRecoveryCodes({ total: 10, unused: 9 })).toMatch(/9 of 10 recovery codes/);
+  });
+});
+
+// -------------------------------------------------------------- MFA gate
+
+describe('the MFA gate', () => {
+  const gate = (over: Partial<Parameters<typeof mfaGate>[0]> = {}) => mfaGate({
+    permissions: SENSITIVE, mfaEnrolled: true, mfaSatisfiedAt: AT(9), ...over,
+  });
+
+  it('lets an account through once the second factor is done', () => {
+    expect(gate().satisfied).toBe(true);
+  });
+
+  it('does not ask an account that does not need MFA', () => {
+    expect(gate({ permissions: SAFE, mfaEnrolled: false, mfaSatisfiedAt: null }).satisfied)
+      .toBe(true);
+  });
+
+  it('A PASSWORD ALONE IS NOT ENOUGH when MFA is required', () => {
+    // The load-bearing half. A session created after a correct password but
+    // before a second factor exists — the user is mid-sign-in — and must not
+    // reach a single row.
+    const pending = gate({ mfaSatisfiedAt: null });
+    expect(pending.satisfied).toBe(false);
+    expect(pending.challengeRequired).toBe(true);
+  });
+
+  it('demands enrolment when the permissions require MFA and there is none', () => {
+    const unenrolled = gate({ mfaEnrolled: false, mfaSatisfiedAt: null });
+    expect(unenrolled.satisfied).toBe(false);
+    expect(unenrolled.enrolmentRequired).toBe(true);
+    expect(unenrolled.challengeRequired).toBe(false);
+    expect(unenrolled.reason).toMatch(/authenticator app/);
+  });
+
+  it('is driven by PERMISSIONS, so granting one turns it on', () => {
+    expect(gate({ permissions: SAFE, mfaEnrolled: false, mfaSatisfiedAt: null })
+      .enrolmentRequired).toBe(false);
+    expect(gate({ permissions: SENSITIVE, mfaEnrolled: false, mfaSatisfiedAt: null })
+      .enrolmentRequired).toBe(true);
+  });
+
+  it('property: satisfied is never true while a challenge or enrolment is outstanding', () => {
+    fc.assert(fc.property(
+      fc.boolean(), fc.boolean(), fc.boolean(),
+      (sensitive, enrolled, done) => {
+        const g = mfaGate({
+          permissions: sensitive ? SENSITIVE : SAFE,
+          mfaEnrolled: enrolled,
+          mfaSatisfiedAt: done ? AT(9) : null,
+        });
+        if (g.challengeRequired || g.enrolmentRequired) expect(g.satisfied).toBe(false);
+      },
+    ));
   });
 });
 

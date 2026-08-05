@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { sql } from '@/data/db';
 import {
   checkSession, sessionExpiry, stepUpSatisfied, isWellFormedToken,
-  decideSignIn, recordFailure, recordSuccess,
+  decideSignIn, recordFailure, recordSuccess, mfaGate, rateLimit, RATE_WINDOW_MINUTES,
   type Permission, type Scope, type SignInDecision,
 } from '@forecourt/domain';
 import {
@@ -28,6 +28,14 @@ export interface Session {
   stepUpSatisfiedAt: Date | null;
   /** True when a sensitive permission needs re-authentication right now. */
   stepUpValid: boolean;
+  /**
+   * The session has a correct password but has not completed a second factor
+   * that its permissions require. It EXISTS — the user is mid-sign-in — and it
+   * must not reach a single row until this is false.
+   */
+  mfaPending: boolean;
+  /** MFA is required by these permissions and no authenticator is set up. */
+  mfaEnrolmentRequired: boolean;
 }
 
 /**
@@ -101,6 +109,18 @@ export async function getSession(): Promise<Session | null> {
   const siteRows = await sql<{ site_id: string }[]>`
     SELECT site_id FROM user_sites WHERE membership_id = ${row.membership_id}::uuid`;
 
+  const [mfaRow] = await sql<{ enrolled: boolean }[]>`
+    SELECT mfa_enrolled_at IS NOT NULL AS enrolled FROM users WHERE id = ${row.user_id}::uuid`;
+
+  // Enforced on the READ path, not at creation. The alternative — a "pending"
+  // session in a second table — is a second thing some code path forgets to
+  // distinguish from a real one.
+  const gate = mfaGate({
+    permissions: row.permissions as readonly Permission[],
+    mfaEnrolled: Boolean(mfaRow?.enrolled),
+    mfaSatisfiedAt: row.mfa_satisfied_at,
+  });
+
   return {
     sessionId: row.session_id,
     userId: row.user_id,
@@ -116,6 +136,8 @@ export async function getSession(): Promise<Session | null> {
     mfaSatisfiedAt: row.mfa_satisfied_at,
     stepUpSatisfiedAt: row.step_up_satisfied_at,
     stepUpValid: stepUpSatisfied(row.step_up_satisfied_at, now),
+    mfaPending: gate.challengeRequired,
+    mfaEnrolmentRequired: gate.enrolmentRequired,
   };
 }
 
@@ -156,6 +178,19 @@ export async function signIn(
 ): Promise<SignInResult> {
   const now = new Date();
   const hdrs = await headers();
+  const ip = clientIp(hdrs);
+
+  // Per-IP first, before we touch the user table at all.
+  //
+  // Account lockout counts failures against ONE account, so one common
+  // password sprayed across five hundred accounts trips nothing — each sees a
+  // single failure. That is the attack that works against a small business,
+  // and only an address-level counter can see it.
+  const limit = await checkRateLimit('password', ip, email, now);
+  if (!limit.allowed) {
+    await recordAttempt('password', ip, email, null, false);
+    return { ok: false, ...(limit.message ? { message: limit.message } : {}) };
+  }
 
   const rows = await sql<{
     id: string; email: string; name: string; password_hash: string | null;
@@ -197,6 +232,11 @@ export async function signIn(
     mfaEnrolled: Boolean(user?.mfa_enrolled_at),
     asAt: now,
   });
+
+  // Logged whether or not the account exists. An attempt against a
+  // non-existent user still has to count towards the address's budget, or
+  // enumerating who has an account here is free.
+  await recordAttempt('password', ip, email, user?.id ?? null, decision.ok);
 
   if (!decision.ok) {
     if (user && decision.countsAsFailedAttempt) {
@@ -247,6 +287,44 @@ export async function signOut(): Promise<void> {
               WHERE token_hash = ${hashSessionToken(token)} AND revoked_at IS NULL`;
   }
   jar.delete(SESSION_COOKIE);
+}
+
+export type AttemptKind =
+  'password' | 'mfa' | 'recovery_code' | 'password_reset_request' | 'password_reset';
+
+/**
+ * Count recent failures through the SECURITY DEFINER function.
+ *
+ * `auth_attempts` grants the application INSERT and nothing else, so the
+ * limiter can count without ever being able to ask who the attempts were for —
+ * a table the app can read row by row is one an injection can enumerate.
+ */
+export async function checkRateLimit(
+  kind: AttemptKind,
+  ip: string | null,
+  identifier: string | null,
+  asAt: Date,
+): Promise<ReturnType<typeof rateLimit>> {
+  const since = new Date(asAt.getTime() - RATE_WINDOW_MINUTES * 60_000);
+  const [counts] = await sql<{ by_ip: number; by_identifier: number }[]>`
+    SELECT * FROM count_auth_attempts(${kind}::auth_attempt_kind, ${ip}, ${identifier}, ${since})`;
+
+  return rateLimit({
+    attemptsFromIp: counts?.by_ip ?? 0,
+    attemptsForIdentifier: counts?.by_identifier ?? 0,
+  });
+}
+
+export async function recordAttempt(
+  kind: AttemptKind,
+  ip: string | null,
+  identifier: string | null,
+  userId: string | null,
+  succeeded: boolean,
+): Promise<void> {
+  await sql`
+    INSERT INTO auth_attempts (kind, ip, identifier, user_id, succeeded)
+    VALUES (${kind}::auth_attempt_kind, ${ip}, ${identifier}, ${userId}, ${succeeded})`;
 }
 
 const clientIp = (hdrs: Headers): string | null =>

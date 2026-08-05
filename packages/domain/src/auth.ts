@@ -313,6 +313,206 @@ export const SESSION_TOKEN_LENGTH = 43; // ceil(32 / 3) * 4 minus padding
 export const isWellFormedToken = (token: string): boolean =>
   token.length === SESSION_TOKEN_LENGTH && /^[A-Za-z0-9_-]+$/.test(token);
 
+// ------------------------------------------------------- rate limiting
+
+/**
+ * Per-IP limits, which is the gap account lockout cannot close.
+ *
+ * Lockout counts failures against ONE account. An attacker who takes a common
+ * password and tries it against five hundred accounts never trips it: each
+ * account sees a single failure and nothing looks wrong. That is the attack
+ * that actually works against a small business, and it is invisible to a
+ * per-account counter by construction.
+ *
+ * The identifier limit sits alongside it for the ordinary case — one person
+ * hammering one email from a changing address.
+ */
+export const RATE_WINDOW_MINUTES = 15;
+export const MAX_ATTEMPTS_PER_IP = 30;
+export const MAX_ATTEMPTS_PER_IDENTIFIER = 12;
+
+export interface RateLimitDecision {
+  allowed: boolean;
+  /** Which budget ran out, for the log — never for the person being refused. */
+  limited: 'ip' | 'identifier' | null;
+  retryAfterMinutes: number;
+  /** What the person actually sees. Deliberately identical either way. */
+  message: string | null;
+}
+
+/**
+ * Whether an attempt may proceed.
+ *
+ * The message does not say WHICH limit was hit, and does not distinguish being
+ * rate-limited from being wrong: telling an attacker "you have hit the IP
+ * limit" tells them to change address, and telling them "that account is
+ * locked" confirms the account exists.
+ */
+export function rateLimit(input: {
+  attemptsFromIp: number;
+  attemptsForIdentifier: number;
+  windowMinutes?: number;
+  maxPerIp?: number;
+  maxPerIdentifier?: number;
+}): RateLimitDecision {
+  const window = input.windowMinutes ?? RATE_WINDOW_MINUTES;
+  const ipLimit = input.maxPerIp ?? MAX_ATTEMPTS_PER_IP;
+  const idLimit = input.maxPerIdentifier ?? MAX_ATTEMPTS_PER_IDENTIFIER;
+
+  const limited: 'ip' | 'identifier' | null =
+    input.attemptsFromIp >= ipLimit ? 'ip'
+      : input.attemptsForIdentifier >= idLimit ? 'identifier'
+        : null;
+
+  if (!limited) {
+    return { allowed: true, limited: null, retryAfterMinutes: 0, message: null };
+  }
+
+  return {
+    allowed: false,
+    limited,
+    retryAfterMinutes: window,
+    message:
+      `Too many attempts. Wait ${window} minutes and try again, or ask whoever manages ` +
+      'your dealership account to reset your password.',
+  };
+}
+
+// ---------------------------------------------------------- reset tokens
+
+/** Short, because a reset link is a live credential for its whole lifetime. */
+export const RESET_TOKEN_TTL_MINUTES = 30;
+export const RESET_TOKEN_BYTES = 32;
+
+export interface ResetTokenState {
+  expiresAt: Date;
+  usedAt: Date | null;
+}
+
+export type ResetTokenProblem = 'expired' | 'already_used' | 'unknown';
+
+export interface ResetTokenCheck {
+  valid: boolean;
+  problem?: ResetTokenProblem;
+  message?: string;
+}
+
+/**
+ * Whether a reset token may be spent.
+ *
+ * Single-use is the part that matters: a link sitting in an inbox, or in a
+ * mail server's logs, must not still work next month. Every refusal gets the
+ * same instruction, because "already used" versus "expired" tells anyone
+ * holding a stolen link which one they have.
+ */
+export function checkResetToken(
+  state: ResetTokenState | null,
+  asAt: Date,
+): ResetTokenCheck {
+  const refuse = (problem: ResetTokenProblem): ResetTokenCheck => ({
+    valid: false,
+    problem,
+    message:
+      'That reset link is no longer valid. Ask whoever manages your dealership account for a new one.',
+  });
+
+  if (!state) return refuse('unknown');
+  if (state.usedAt !== null) return refuse('already_used');
+  if (state.expiresAt.getTime() <= asAt.getTime()) return refuse('expired');
+  return { valid: true };
+}
+
+export const resetTokenExpiry = (issuedAt: Date): Date =>
+  new Date(issuedAt.getTime() + RESET_TOKEN_TTL_MINUTES * 60_000);
+
+// -------------------------------------------------------- recovery codes
+
+/**
+ * Ten codes, issued at enrolment and shown once.
+ *
+ * Not "offered afterwards": a recovery code somebody has to remember to
+ * generate is one they generate the day after they needed it. Enrolling MFA
+ * without them turns a lost phone into a lost account, and the person most
+ * likely to hold MFA-mandating permissions is the dealer principal — the one
+ * nobody can lock out.
+ */
+export const RECOVERY_CODE_COUNT = 10;
+/** Below this many unused codes, tell them. */
+export const RECOVERY_CODES_LOW = 3;
+
+export interface RecoveryCodeState {
+  total: number;
+  unused: number;
+}
+
+export const recoveryCodesLow = (state: RecoveryCodeState): boolean =>
+  state.unused <= RECOVERY_CODES_LOW;
+
+export const describeRecoveryCodes = (state: RecoveryCodeState): string =>
+  state.unused === 0
+    ? 'You have no recovery codes left. Generate a new set now — without one, losing your phone means losing this account.'
+    : recoveryCodesLow(state)
+      ? `${state.unused} of ${state.total} recovery codes left. Generate a new set before you run out.`
+      : `${state.unused} of ${state.total} recovery codes remaining.`;
+
+// ------------------------------------------------------ the MFA gate
+
+export interface MfaGate {
+  /** The session may see data. */
+  satisfied: boolean;
+  /** MFA is required and has not been completed on this session. */
+  challengeRequired: boolean;
+  /** Required by permissions but never set up. */
+  enrolmentRequired: boolean;
+  reason: string | null;
+}
+
+/**
+ * Whether a session that has passed a password may actually see anything.
+ *
+ * This is the load-bearing half of MFA, and the easy thing to get wrong: a
+ * session created after a correct password but before a second factor must not
+ * be usable. It exists — the user is mid-sign-in — but it may not reach a
+ * single row until `mfaSatisfiedAt` is set.
+ *
+ * Enforced on the READ path rather than at creation, because the alternative
+ * is a "pending" session in a second table that some code path forgets to
+ * distinguish from a real one.
+ */
+export function mfaGate(input: {
+  permissions: readonly Permission[];
+  mfaEnrolled: boolean;
+  mfaSatisfiedAt: Date | null;
+}): MfaGate {
+  const required = requiresMfa(input.permissions);
+
+  if (!required) {
+    return { satisfied: true, challengeRequired: false, enrolmentRequired: false, reason: null };
+  }
+
+  if (!input.mfaEnrolled) {
+    return {
+      satisfied: false,
+      challengeRequired: false,
+      enrolmentRequired: true,
+      reason:
+        'This account can see commission, evidence exports or permissions, so it needs an ' +
+        'authenticator app before it can be used.',
+    };
+  }
+
+  if (input.mfaSatisfiedAt === null) {
+    return {
+      satisfied: false,
+      challengeRequired: true,
+      enrolmentRequired: false,
+      reason: 'Enter the six-digit code from your authenticator app.',
+    };
+  }
+
+  return { satisfied: true, challengeRequired: false, enrolmentRequired: false, reason: null };
+}
+
 // ------------------------------------------------------------------ TOTP
 
 export const TOTP_STEP_SECONDS = 30;

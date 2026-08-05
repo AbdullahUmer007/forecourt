@@ -56,7 +56,15 @@ for (const r of rows) {
 // scoped on `id`; `users` is global by design and scoped via membership.
 // Both leaked before this check existed.
 // ---------------------------------------------------------------------------
-const SPECIAL = ['tenants', 'users'];
+// `auth_attempts`, `mfa_recovery_codes` and `password_reset_tokens` carry no
+// tenant_id either — deliberately, because credentials belong to a USER and an
+// attacker spraying one password across many dealerships is exactly what a
+// per-tenant table cannot see. Listed here so the gate can see them, which is
+// the whole point of this second half existing.
+const SPECIAL = [
+  'tenants', 'users',
+  'auth_attempts', 'mfa_recovery_codes', 'password_reset_tokens',
+];
 const special = await sql`
   SELECT c.relname AS table_name,
          c.relrowsecurity AS rls_enabled,

@@ -70,6 +70,11 @@ export const session: Session = {
   mfaSatisfiedAt: null,
   stepUpSatisfiedAt: null,
   stepUpValid: false,
+  // The integration fixtures use an owner with `*`, which mandates MFA. These
+  // suites exercise the DATA path, not the auth path, so the gate is recorded
+  // as already satisfied rather than left ambiguous.
+  mfaPending: false,
+  mfaEnrolmentRequired: false,
 };
 
 /** Stage ids, filled by `ensureFixtures`. */

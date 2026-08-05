@@ -25,6 +25,12 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const session = await getSession();
   if (!session) redirect('/sign-in');
 
+  // A correct password is not a signed-in session when the permissions mandate
+  // a second factor. This redirect is the whole enforcement: every
+  // authenticated route is in this group, so there is no page that renders
+  // above it and no page that has to remember to check.
+  if (session.mfaPending || session.mfaEnrolmentRequired) redirect('/mfa');
+
   async function endSession() {
     'use server';
     await signOut();

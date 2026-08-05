@@ -1,7 +1,7 @@
 import { hash as argonHash, verify as argonVerify } from '@node-rs/argon2';
 import { randomBytes, createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import {
-  SESSION_TOKEN_BYTES, totpCounters, truncateOtp, TOTP_DIGITS,
+  SESSION_TOKEN_BYTES, RESET_TOKEN_BYTES, totpCounters, truncateOtp, TOTP_DIGITS,
 } from '@forecourt/domain';
 
 /**
@@ -135,6 +135,50 @@ export function verifyTotp(secret: string, code: string, asAt: Date): boolean {
   }
   return matched;
 }
+
+// -------------------------------------------------------- recovery codes
+
+/**
+ * A recovery code, in the shape people can read off a printout without
+ * transcription errors.
+ *
+ * Crockford's alphabet: no I, L, O or U, so there is no 1/I or 0/O confusion
+ * and no accidental profanity. Ten bytes of entropy per code, which is far
+ * more than a six-digit TOTP and is the point — this is the credential that
+ * replaces the phone.
+ */
+const RECOVERY_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+
+export function newRecoveryCode(): string {
+  const bytes = randomBytes(10);
+  let out = '';
+  for (const b of bytes) out += RECOVERY_ALPHABET[b % RECOVERY_ALPHABET.length];
+  return `${out.slice(0, 5)}-${out.slice(5)}`;
+}
+
+/**
+ * Normalised before hashing, so a code typed in lower case with the dash
+ * missing still works. Somebody is reading this off paper, probably in a
+ * hurry, probably because they have lost their phone.
+ */
+export const normaliseRecoveryCode = (code: string): string =>
+  code.toUpperCase().replace(/[^0-9A-Z]/g, '');
+
+/**
+ * Hashed with SHA-256 rather than Argon2id, for the same reason a session
+ * token is: 10 bytes of CSPRNG output has no low-entropy guess to slow down,
+ * and a set of ten is verified by lookup rather than by trying each one.
+ */
+export const hashRecoveryCode = (code: string): string =>
+  createHash('sha256').update(normaliseRecoveryCode(code)).digest('hex');
+
+// ---------------------------------------------------------- reset tokens
+
+export const newResetToken = (): string =>
+  randomBytes(RESET_TOKEN_BYTES).toString('base64url');
+
+export const hashResetToken = (token: string): string =>
+  createHash('sha256').update(token).digest('hex');
 
 /** The `otpauth://` URI an authenticator app scans. */
 export const totpUri = (secret: string, email: string, issuer = 'Forecourt'): string =>
