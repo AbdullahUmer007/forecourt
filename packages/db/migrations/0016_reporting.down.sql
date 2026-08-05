@@ -1,0 +1,10 @@
+BEGIN;
+
+DROP TABLE IF EXISTS report_schedules CASCADE;
+DROP TABLE IF EXISTS saved_reports CASCADE;
+DROP TABLE IF EXISTS channel_costs CASCADE;
+
+DROP TYPE IF EXISTS schedule_period;
+DROP TYPE IF EXISTS report_format;
+
+COMMIT;

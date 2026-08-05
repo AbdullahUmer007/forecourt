@@ -182,7 +182,11 @@ const TENANT_TABLES = [
   'account_mappings',
   'posting_batches',
   'postings',
-  // M18+ — created by later migrations; each skips until its table exists
+  // M18 — reporting & Channel P&L
+  'channel_costs',
+  'saved_reports',
+  'report_schedules',
+  // M19+ — created by later migrations; each skips until its table exists
   'appointments',
 ] as const;
 
@@ -261,6 +265,8 @@ const A_PREP_STAGE = 'cccccca1-cccc-4ccc-8ccc-cccccccccee1';
 const B_PREP_STAGE = 'cccccca2-cccc-4ccc-8ccc-cccccccccee2';
 const A_PREP_CARD = 'cccccca1-cccc-4ccc-8ccc-cccccccccff1';
 const B_PREP_CARD = 'cccccca2-cccc-4ccc-8ccc-cccccccccff2';
+const A_REPORT = 'aaaaaac1-aaaa-4aaa-8aaa-aaaaaaaaddd1';
+const B_REPORT = 'aaaaaac2-aaaa-4aaa-8aaa-aaaaaaaaddd2';
 const A_ACCT = 'eeeeeea1-eeee-4eee-8eee-eeeeeeeeaaa1';
 const B_ACCT = 'eeeeeea2-eeee-4eee-8eee-eeeeeeeeaaa2';
 const A_CHANNEL = 'dddddda1-dddd-4ddd-8ddd-ddddddddeee1';
@@ -578,6 +584,18 @@ const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
       'total_debit_pence, total_credit_pence, idempotency_key',
     values: `'${TENANT_B}', '${B_ACCT}', 'sales_invoice', '${B_VEHICLE}', ` +
       `'[]'::jsonb, 0, 0, 'smuggled-posting'`,
+  },
+  channel_costs: {
+    columns: 'tenant_id, channel_label, period_month, amount_pence',
+    values: `'${TENANT_B}', 'Smuggled Trader', date_trunc('month', now())::date, 185000`,
+  },
+  saved_reports: {
+    columns: 'tenant_id, report_key, name',
+    values: `'${TENANT_B}', 'channel_pnl', 'Smuggled view'`,
+  },
+  report_schedules: {
+    columns: 'tenant_id, saved_report_id, period, recipient_ids',
+    values: `'${TENANT_B}', '${B_REPORT}', 'monthly', ARRAY['${B_USER}']::uuid[]`,
   },
 };
 
@@ -1053,6 +1071,28 @@ async function seedRivalData(): Promise<void> {
           ('${A}'::uuid,'${A_ACCT}'::uuid,'sales_invoice'::posting_source,'${A_VEHICLE}'::uuid,'[]'::jsonb,0::bigint,0::bigint,'key-post-a'),
           ('${B}'::uuid,'${B_ACCT}'::uuid,'sales_invoice'::posting_source,'${B_VEHICLE}'::uuid,'[]'::jsonb,0::bigint,0::bigint,'key-post-b')) v
         WHERE NOT EXISTS (SELECT 1 FROM postings WHERE idempotency_key = 'key-post-a');
+    `);
+  }
+
+  // M18 tables — reporting and the Channel P&L.
+  if (await tableExists('channel_costs')) {
+    await sql.unsafe(`
+      INSERT INTO channel_costs (tenant_id, channel_label, period_month, amount_pence)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'Auto Trader',date_trunc('month', now())::date,185000::bigint),
+          ('${B}'::uuid,'Auto Trader',date_trunc('month', now())::date,185000::bigint)) v
+        WHERE NOT EXISTS (SELECT 1 FROM channel_costs WHERE tenant_id = '${A}');
+
+      INSERT INTO saved_reports (id, tenant_id, report_key, name) VALUES
+        ('${A_REPORT}','${A}','channel_pnl','Tenant A view'),
+        ('${B_REPORT}','${B}','channel_pnl','Tenant B view')
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO report_schedules (tenant_id, saved_report_id, period, recipient_ids)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_REPORT}'::uuid,'monthly'::schedule_period,ARRAY['${USER_A}']::uuid[]),
+          ('${B}'::uuid,'${B_REPORT}'::uuid,'monthly'::schedule_period,ARRAY['${B_USER}']::uuid[])) v
+        WHERE NOT EXISTS (SELECT 1 FROM report_schedules WHERE saved_report_id = '${A_REPORT}');
     `);
   }
 
