@@ -293,6 +293,13 @@ export interface DelistDecision {
  * enough that pulling the advert costs the dealer the next buyer. Selling is
  * what ends an advert.
  */
+/** A date as a dealer reads it: 12 Aug 2026, 14:30. */
+const humanDate = (d: Date): string =>
+  d.toLocaleString('en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London',
+  });
+
 export function delistDecision(input: {
   trigger: DelistTrigger | null;
   triggeredAt: Date | null;
@@ -323,10 +330,13 @@ export function delistDecision(input: {
     required: true,
     dueAt,
     overdue,
+    // Written the way a dealer reads a date, not the way a machine writes
+    // one. "2026-08-02T12:39:02.369Z" on a screen is a string somebody has to
+    // decode before they can act on it, and this message exists to be acted on.
     reason: overdue
-      ? `Should have come down at ${dueAt.toISOString()} — it is still advertised, and enquiries `
+      ? `Should have come down on ${humanDate(dueAt)} — it is still advertised, and enquiries `
         + 'for it cannot be fulfilled.'
-      : `Comes down at ${dueAt.toISOString()}.`,
+      : `Comes down on ${humanDate(dueAt)}.`,
   };
 }
 

@@ -75,6 +75,18 @@ beforeAll(async () => {
               true, ${T.user}::uuid)
       ON CONFLICT (id) DO NOTHING`;
 
+    // Reset the assessment explicitly. ON CONFLICT DO NOTHING leaves an
+    // earlier run's row untouched, and rolling migration 0021 back DROPS the
+    // column — which is exactly what its down migration warns about, and
+    // which turned this fixture's `true` into NULL between two runs.
+    await sql`
+      UPDATE data_breaches SET high_risk = true, high_risk_reason = NULL,
+        subjects_notified_at = NULL
+      WHERE id = ${BRE(2)}::uuid`;
+    await sql`
+      UPDATE data_breaches SET high_risk = NULL, high_risk_reason = NULL
+      WHERE id = ${BRE(1)}::uuid`;
+
     await sql`
       INSERT INTO compliance_registers (id, tenant_id, kind, description, expires_on, created_by)
       VALUES (${REG(1)}::uuid, ${T.tenant}::uuid, 'motor_trade_insurance',

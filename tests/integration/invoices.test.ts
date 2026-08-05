@@ -493,7 +493,10 @@ describe.runIf(process.env['DATABASE_URL'])('cash and the AML threshold', () => 
     // Deliberately below the threshold on its own, and enough to cross it
     // together with what is already recorded.
     const headroom = threshold - already;
-    if (headroom <= 0n) {
+    // Below 2p of headroom there is no way to split it into two payments where
+    // the first is under the threshold, so the only assertion available is
+    // that the next payment is refused.
+    if (headroom < 2n) {
       // Already over from earlier runs: the next pound must be blocked.
       const blocked = await withSession(session, (tx) =>
         applyPayment(tx, session, {
@@ -505,7 +508,11 @@ describe.runIf(process.env['DATABASE_URL'])('cash and the AML threshold', () => 
       return;
     }
 
-    const half = headroom / 2n + 1n;
+    // Ceiling of half the headroom. Two of these land AT or over the
+    // threshold while one stays under it — with `headroom / 2n + 1n` a small
+    // headroom put the FIRST payment over, and the test failed on a step it
+    // was not testing.
+    const half = (headroom + 1n) / 2n;
     const first = await withSession(session, (tx) =>
       applyPayment(tx, session, {
         invoiceId: payable!.id, amountPence: half.toString(), method: 'cash', direction: 'in',
