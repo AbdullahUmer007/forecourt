@@ -153,13 +153,24 @@ export interface InvoiceForPosting {
   vatCalculation: VatCalculation | null;
   buyerName: string | null;
   issuedAt: Date | null;
+  /**
+   * The reference as it appears ON the document.
+   *
+   * M11 stores this — "KEN-000142" — because a change to the series prefix
+   * must not retrospectively renumber history. Without it the narrative here
+   * read "sale1", built from series and number, which is not a reference a
+   * bookkeeper can find anything by: they are reconciling against the piece of
+   * paper the customer has.
+   */
+  reference?: string | null;
   /** Split out so add-ons and delivery reach their own accounts. */
   addonTotal?: Money;
   deliveryTotal?: Money;
 }
 
 export const invoiceReference = (invoice: InvoiceForPosting): string =>
-  invoice.number === null ? invoice.series : `${invoice.series}${invoice.number}`;
+  invoice.reference
+  ?? (invoice.number === null ? invoice.series : `${invoice.series}${invoice.number}`);
 
 /**
  * The postings for a sales invoice.

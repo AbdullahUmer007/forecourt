@@ -58,6 +58,29 @@ const lineFor = (posting: { lines: readonly PostingLine[] }, account: AccountKey
 
 // ================================================== THE margin rule
 
+describe('the reference a bookkeeper reconciles against', () => {
+  it('uses the reference printed on the document, not series plus number', () => {
+    // M11 stores "KEN-000142" because changing a series prefix must not
+    // renumber history. Built from series and number the narrative read
+    // "sale1", which is not a string anybody can find a document by.
+    const withReference = invoiceReference({
+      id: 'x', kind: 'sale', number: 1n, series: 'sale', reference: 'KEN-000001',
+      vatScheme: 'margin', netTotal: money(0n), vatTotal: money(0n), grossTotal: money(0n),
+      vatCalculation: null, buyerName: null, issuedAt: new Date(),
+    });
+    expect(withReference).toBe('KEN-000001');
+  });
+
+  it('falls back to series and number where no reference was stored', () => {
+    const without = invoiceReference({
+      id: 'x', kind: 'sale', number: 42n, series: 'KEN-',
+      vatScheme: 'margin', netTotal: money(0n), vatTotal: money(0n), grossTotal: money(0n),
+      vatCalculation: null, buyerName: null, issuedAt: new Date(),
+    });
+    expect(without).toBe('KEN-42');
+  });
+});
+
 describe('a margin-scheme sale', () => {
   // M11 enforces at four layers that a margin INVOICE shows no VAT. This is
   // the other half of the same rule, in the ledger.

@@ -30,6 +30,7 @@ const NAV: { href: string; label: string; needs?: string }[] = [
   { href: '/reports/channels', label: 'Channel P&L', needs: 'report.read' },
   { href: '/channels', label: 'Channels', needs: 'channel.read' },
   { href: '/compliance', label: 'Compliance', needs: 'compliance.read' },
+  { href: '/accounting', label: 'Accounting', needs: 'report.financial.read' },
 ];
 
 /**
