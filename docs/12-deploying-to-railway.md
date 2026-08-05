@@ -165,15 +165,31 @@ If you want the demo dealership for a walkthrough, seed it and then change the
 passwords, or take the CRM off its public domain when you are not using it:
 
 ```bash
-pnpm db:seed            # Kennington Car Sales, 14 cars
-pnpm db:seed:crm        # two staff accounts — prints the password
+pnpm db:seed            # Kennington Car Sales, 14 cars — no accounts
+pnpm db:seed:crm        # two staff accounts
 pnpm db:seed:leads      # and prep / deals / invoices / spend / compliance /
                         # channels / accounting, as you need them
 ```
 
-Both seeded accounts have MFA enrolled, so a leaked password alone is not a
-session. That is the only thing standing between a public URL and a stranger,
-and it is not a lot.
+`db:seed:crm` creates `owner@kenningtoncarsales.co.uk` and
+`sales@kenningtoncarsales.co.uk` with a password that is **written in
+`packages/db/scripts/seed-crm.mjs`** — so it is known to everyone who can read
+the repository. Fine on a laptop. Not fine on a public URL.
+
+Neither account gets an authenticator. The owner's permissions require one, so
+its first sign-in is an **enrolment** screen — which means whoever signs in
+first claims the second factor, and it does not have to be you. On a public URL
+that is a hijack, not a theoretical risk.
+
+So if you seed accounts, do these two immediately, in this order:
+
+```bash
+pnpm db:password owner@kenningtoncarsales.co.uk    # reads stdin, not an argument
+pnpm db:password sales@kenningtoncarsales.co.uk
+```
+
+then sign in and complete MFA enrolment before anybody else can. `db:password`
+revokes every existing session as it goes.
 
 ---
 
