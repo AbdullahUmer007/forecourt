@@ -177,7 +177,12 @@ const TENANT_TABLES = [
   'channel_overrides',
   'channel_sync_events',
   'channel_rules',
-  // M17+ — created by later migrations; each skips until its table exists
+  // M17 — accounting sync
+  'accounting_connections',
+  'account_mappings',
+  'posting_batches',
+  'postings',
+  // M18+ — created by later migrations; each skips until its table exists
   'appointments',
 ] as const;
 
@@ -256,6 +261,8 @@ const A_PREP_STAGE = 'cccccca1-cccc-4ccc-8ccc-cccccccccee1';
 const B_PREP_STAGE = 'cccccca2-cccc-4ccc-8ccc-cccccccccee2';
 const A_PREP_CARD = 'cccccca1-cccc-4ccc-8ccc-cccccccccff1';
 const B_PREP_CARD = 'cccccca2-cccc-4ccc-8ccc-cccccccccff2';
+const A_ACCT = 'eeeeeea1-eeee-4eee-8eee-eeeeeeeeaaa1';
+const B_ACCT = 'eeeeeea2-eeee-4eee-8eee-eeeeeeeeaaa2';
 const A_CHANNEL = 'dddddda1-dddd-4ddd-8ddd-ddddddddeee1';
 const B_CHANNEL = 'dddddda2-dddd-4ddd-8ddd-ddddddddeee2';
 const A_PREP_TASK = 'cccccca1-cccc-4ccc-8ccc-ccccccccc111';
@@ -553,6 +560,24 @@ const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   channel_rules: {
     columns: 'tenant_id, channel_id, min_photos',
     values: `'${TENANT_B}', '${B_CHANNEL}', 8`,
+  },
+  accounting_connections: {
+    columns: 'tenant_id, provider, organisation_name',
+    values: `'${TENANT_B}', 'xero', 'Smuggled Ltd'`,
+  },
+  account_mappings: {
+    columns: 'tenant_id, connection_id, account_key, account_code',
+    values: `'${TENANT_B}', '${B_ACCT}', 'debtors', '1100'`,
+  },
+  posting_batches: {
+    columns: 'tenant_id, connection_id, dry_run',
+    values: `'${TENANT_B}', '${B_ACCT}', true`,
+  },
+  postings: {
+    columns: 'tenant_id, connection_id, source, source_id, lines, ' +
+      'total_debit_pence, total_credit_pence, idempotency_key',
+    values: `'${TENANT_B}', '${B_ACCT}', 'sales_invoice', '${B_VEHICLE}', ` +
+      `'[]'::jsonb, 0, 0, 'smuggled-posting'`,
   },
 };
 
@@ -999,6 +1024,35 @@ async function seedRivalData(): Promise<void> {
           ('${A}'::uuid,'${A_CHANNEL}'::uuid,8),
           ('${B}'::uuid,'${B_CHANNEL}'::uuid,8)) v
         WHERE NOT EXISTS (SELECT 1 FROM channel_rules WHERE channel_id = '${A_CHANNEL}');
+    `);
+  }
+
+  // M17 tables — accounting sync.
+  if (await tableExists('accounting_connections')) {
+    await sql.unsafe(`
+      INSERT INTO accounting_connections (id, tenant_id, provider, organisation_name) VALUES
+        ('${A_ACCT}','${A}','xero','Tenant A Ltd'),
+        ('${B_ACCT}','${B}','xero','Tenant B Ltd')
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO account_mappings (tenant_id, connection_id, account_key, account_code)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_ACCT}'::uuid,'debtors','1100'),
+          ('${B}'::uuid,'${B_ACCT}'::uuid,'debtors','1100')) v
+        WHERE NOT EXISTS (SELECT 1 FROM account_mappings WHERE connection_id = '${A_ACCT}');
+
+      INSERT INTO posting_batches (tenant_id, connection_id, dry_run)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_ACCT}'::uuid,true),
+          ('${B}'::uuid,'${B_ACCT}'::uuid,true)) v
+        WHERE NOT EXISTS (SELECT 1 FROM posting_batches WHERE connection_id = '${A_ACCT}');
+
+      INSERT INTO postings (tenant_id, connection_id, source, source_id, lines,
+                            total_debit_pence, total_credit_pence, idempotency_key)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_ACCT}'::uuid,'sales_invoice'::posting_source,'${A_VEHICLE}'::uuid,'[]'::jsonb,0::bigint,0::bigint,'key-post-a'),
+          ('${B}'::uuid,'${B_ACCT}'::uuid,'sales_invoice'::posting_source,'${B_VEHICLE}'::uuid,'[]'::jsonb,0::bigint,0::bigint,'key-post-b')) v
+        WHERE NOT EXISTS (SELECT 1 FROM postings WHERE idempotency_key = 'key-post-a');
     `);
   }
 

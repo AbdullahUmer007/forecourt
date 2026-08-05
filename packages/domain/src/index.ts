@@ -23,6 +23,7 @@ export * from './appraisal.js';
 export * from './auth.js';
 export * from './prep.js';
 export * from './feeds.js';
+export * from './accounting.js';
 
 /**
  * Every name above is unique across the barrel, and that is load-bearing:
