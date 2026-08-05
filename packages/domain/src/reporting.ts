@@ -310,7 +310,11 @@ export function channelPnl(input: {
       leads: totalLeads,
       sales: totalSales,
       grossProfit: totalGross,
-      roi: asMultiple(totalGross, totalSpend),
+      // The SAME floor the rows respect. Stating "3.8× overall" while every
+      // row says "too few sales to tell" is the report contradicting itself
+      // in the space of one screen — and the overall figure is the one a
+      // dealer would quote back, so it is the more dangerous of the two.
+      roi: totalSales >= floor ? asMultiple(totalGross, totalSpend) : null,
     },
     from: input.from,
     to: input.to,
@@ -375,9 +379,14 @@ export const MIN_SALES_FOR_AVERAGE = 5;
  * is the truth.
  */
 export function ownerDashboard(input: {
-  stock: readonly { totalCost: Money; daysInStock: number; state: string }[];
-  soldThisMonth: readonly { grossProfit: Money; daysToSell: number }[];
-  soldPreviousMonth: readonly { daysToSell: number }[];
+  /** `daysInStock` is null when the car has no book-in date recorded. A car
+   *  whose age is unknown still HAS a value, and still counts as stock. */
+  stock: readonly { totalCost: Money; daysInStock: number | null; state: string }[];
+  /** `daysToSell` is null when it cannot be computed. The sale still counts as
+   *  a unit — how long it took is a different question from whether it
+   *  happened, and conflating them lost real sales off the units tile. */
+  soldThisMonth: readonly { grossProfit: Money; daysToSell: number | null }[];
+  soldPreviousMonth: readonly { daysToSell: number | null }[];
   unitsTarget?: number | null;
   leadsToday: number;
   leadsAwaitingFirstResponse: number;
@@ -391,8 +400,21 @@ export function ownerDashboard(input: {
   );
   const stockValueAtCost = sum(held.map((v) => v.totalCost), currency);
 
-  const overage = held.filter((v) => v.daysInStock >= OVERAGE_DAYS);
+  // A car with no book-in date is NOT overage. Its age is unknown, and
+  // claiming a car has been sitting 90 days when nobody knows when it arrived
+  // is the report inventing a fact — the same rule as M19's completeness
+  // score, which never counts an unassessable area as a pass.
+  const overage = held.filter((v) => v.daysInStock !== null && v.daysInStock >= OVERAGE_DAYS);
   const overageCapital = sum(overage.map((v) => v.totalCost), currency);
+
+  const undated = held.filter((v) => v.daysInStock === null).length;
+  if (undated > 0) {
+    caveats.push(
+      `${undated} car${undated === 1 ? ' has' : 's have'} no book-in date, so `
+      + `${undated === 1 ? 'it is' : 'they are'} counted in the stock value but cannot be `
+      + 'assessed for overage.',
+    );
+  }
 
   const sales = input.soldThisMonth;
   const enough = sales.length >= MIN_SALES_FOR_AVERAGE;
@@ -408,15 +430,31 @@ export function ownerDashboard(input: {
     ? money(sum(sales.map((s) => s.grossProfit), currency).amount / BigInt(sales.length), currency)
     : null;
 
-  const averageDaysToSell = enough
-    ? Math.round(sales.reduce((t, s) => t + s.daysToSell, 0) / sales.length)
+  // Averaged only over the sales where it is KNOWN, and reported only when
+  // enough of those exist. Treating an unknown as zero drags the average
+  // towards a figure nobody's cars achieved.
+  const timedSales = sales
+    .map((s) => s.daysToSell)
+    .filter((d): d is number => d !== null);
+
+  const averageDaysToSell = timedSales.length >= MIN_SALES_FOR_AVERAGE
+    ? Math.round(timedSales.reduce((t, d) => t + d, 0) / timedSales.length)
     : null;
 
+  if (sales.length >= MIN_SALES_FOR_AVERAGE && timedSales.length < MIN_SALES_FOR_AVERAGE) {
+    caveats.push(
+      'Days to sell needs a book-in date, and too few of this month’s sales have one.',
+    );
+  }
+
   let trend: OwnerDashboard['daysToSellTrend'] = 'unknown';
-  if (averageDaysToSell !== null && input.soldPreviousMonth.length >= MIN_SALES_FOR_AVERAGE) {
+  const timedPrevious = input.soldPreviousMonth
+    .map((s) => s.daysToSell)
+    .filter((d): d is number => d !== null);
+
+  if (averageDaysToSell !== null && timedPrevious.length >= MIN_SALES_FOR_AVERAGE) {
     const previous = Math.round(
-      input.soldPreviousMonth.reduce((t, s) => t + s.daysToSell, 0)
-        / input.soldPreviousMonth.length,
+      timedPrevious.reduce((t, d) => t + d, 0) / timedPrevious.length,
     );
     // Fewer days to sell is better, so a fall is an improvement.
     trend = averageDaysToSell < previous ? 'improving'
@@ -483,6 +521,34 @@ const cell = (value: string): string =>
 const poundsOrBlank = (m: Money | null): string =>
   m === null ? '' : (Number(m.amount) / 100).toFixed(2);
 
+/**
+ * A channel as a dealer says it.
+ *
+ * Lives here rather than in the screen because the CSV is generated from the
+ * same rows, and a file that says `website_test_drive` where the screen said
+ * "Website test drive" looks unfinished on somebody else's desk — which is
+ * exactly where this file ends up.
+ */
+export function channelDisplayName(channel: string): string {
+  const named: Record<string, string> = {
+    autotrader: 'Auto Trader',
+    ebay: 'eBay',
+    cargurus: 'CarGurus',
+    facebook: 'Facebook',
+    other_marketplace: 'Other marketplace',
+    website_enquiry: 'Website enquiry',
+    website_callback: 'Website callback',
+    website_test_drive: 'Website test drive',
+    website_part_ex: 'Website part-exchange',
+    website_reserve: 'Reserve online',
+    saved_search: 'Saved search alert',
+    phone: 'Phone',
+    walk_in: 'Walk-in',
+  };
+  return named[channel]
+    ?? channel.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+}
+
 export const PNL_COLUMNS = [
   'Channel', 'Spend', 'Leads', 'Cost per lead', 'Sales', 'Cost per sale',
   'Gross profit', 'ROI', 'Note',
@@ -500,7 +566,7 @@ export function pnlToCsv(pnl: ChannelPnl): string {
 
   for (const row of pnl.rows) {
     rows.push([
-      cell(row.channel),
+      cell(channelDisplayName(row.channel)),
       poundsOrBlank(row.spend),
       String(row.leads),
       poundsOrBlank(row.costPerLead),

@@ -295,9 +295,11 @@ describe.runIf(process.env['DATABASE_URL'])('the number series', () => {
   });
 
   it('a credit note takes its own number and never releases the original', async () => {
-    const page = await loadInvoices(session, { limit: 50 });
-    const issued = page.rows.find((r) => r.number !== null && r.kind === 'sale'
-      && r.status !== 'cancelled');
+    // Asked for by STATUS rather than scanned off the first page: drafts sort
+    // first (issued_at DESC NULLS FIRST) and accumulate across runs, so page
+    // one eventually contains nothing but drafts and this found nothing.
+    const page = await loadInvoices(session, { status: 'issued', limit: 50 });
+    const issued = page.rows.find((r) => r.number !== null && r.kind === 'sale');
     expect(issued).toBeDefined();
 
     const credited = await withSession(session, (tx) =>
@@ -320,9 +322,8 @@ describe.runIf(process.env['DATABASE_URL'])('the number series', () => {
   });
 
   it('refuses a credit note with no reason', async () => {
-    const page = await loadInvoices(session, { limit: 50 });
-    const issued = page.rows.find((r) => r.number !== null && r.kind === 'sale'
-      && r.status !== 'cancelled');
+    const page = await loadInvoices(session, { status: 'issued', limit: 50 });
+    const issued = page.rows.find((r) => r.number !== null && r.kind === 'sale');
     if (!issued) return;
 
     const result = await withSession(session, (tx) =>
@@ -427,8 +428,8 @@ describe.runIf(process.env['DATABASE_URL'])('cash and the AML threshold', () => 
   });
 
   it('BLOCKS cash at the threshold for an unregistered dealer', async () => {
-    const page = await loadInvoices(session, { limit: 50 });
-    const payable = page.rows.find((r) => r.number !== null && r.status !== 'cancelled');
+    const page = await loadInvoices(session, { status: 'issued', limit: 50 });
+    const payable = page.rows.find((r) => r.number !== null);
     expect(payable).toBeDefined();
 
     const result = await withSession(session, (tx) =>
@@ -449,8 +450,8 @@ describe.runIf(process.env['DATABASE_URL'])('cash and the AML threshold', () => 
   });
 
   it('refuses an override with no named authoriser or a thin reason', async () => {
-    const page = await loadInvoices(session, { limit: 50 });
-    const payable = page.rows.find((r) => r.number !== null && r.status !== 'cancelled');
+    const page = await loadInvoices(session, { status: 'issued', limit: 50 });
+    const payable = page.rows.find((r) => r.number !== null);
 
     const noAuthoriser = await withSession(session, (tx) =>
       applyPayment(tx, session, {
@@ -480,8 +481,8 @@ describe.runIf(process.env['DATABASE_URL'])('cash and the AML threshold', () => 
     // paying, because `payments` is append-only and a previous run's cash is
     // still there. A test with fixed amounts passes once and then blocks on
     // its own history, which looks like a regression in the rule.
-    const page = await loadInvoices(session, { limit: 50 });
-    const payable = page.rows.find((r) => r.number !== null && r.status !== 'cancelled');
+    const page = await loadInvoices(session, { status: 'issued', limit: 50 });
+    const payable = page.rows.find((r) => r.number !== null);
 
     const [prior] = await sql<{ total: string }[]>`
       SELECT coalesce(sum(amount_pence), 0)::text AS total FROM payments
@@ -522,8 +523,8 @@ describe.runIf(process.env['DATABASE_URL'])('cash and the AML threshold', () => 
   });
 
   it('lets a card payment through and recomputes the balance', async () => {
-    const page = await loadInvoices(session, { limit: 50 });
-    const payable = page.rows.find((r) => r.number !== null && r.status !== 'cancelled');
+    const page = await loadInvoices(session, { status: 'issued', limit: 50 });
+    const payable = page.rows.find((r) => r.number !== null);
 
     const before = await loadInvoice(session, payable!.id, true);
     const result = await withSession(session, (tx) =>
@@ -540,8 +541,8 @@ describe.runIf(process.env['DATABASE_URL'])('cash and the AML threshold', () => 
   });
 
   it('refuses to refund more than was taken', async () => {
-    const page = await loadInvoices(session, { limit: 50 });
-    const payable = page.rows.find((r) => r.number !== null && r.status !== 'cancelled');
+    const page = await loadInvoices(session, { status: 'issued', limit: 50 });
+    const payable = page.rows.find((r) => r.number !== null);
 
     const result = await withSession(session, (tx) =>
       applyPayment(tx, session, {
@@ -554,8 +555,8 @@ describe.runIf(process.env['DATABASE_URL'])('cash and the AML threshold', () => 
   });
 
   it('refuses a refund with no reason', async () => {
-    const page = await loadInvoices(session, { limit: 50 });
-    const payable = page.rows.find((r) => r.number !== null && r.status !== 'cancelled');
+    const page = await loadInvoices(session, { status: 'issued', limit: 50 });
+    const payable = page.rows.find((r) => r.number !== null);
 
     const result = await withSession(session, (tx) =>
       applyPayment(tx, session, {

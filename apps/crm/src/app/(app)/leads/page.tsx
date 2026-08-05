@@ -74,13 +74,18 @@ export default async function LeadsPage(
     assigned: params['assigned'],
     overdueOnly: params['overdue'] === '1',
     includeClosed: closed,
+    // Carried from the Channel P&L's drill-through, so the list a dealer opens
+    // is exactly the leads the number counted.
+    receivedFrom: params['from'],
+    receivedTo: params['to'],
     limit: 50,
     offset: Number(params['offset'] ?? 0) || 0,
   });
 
   const losses = closed ? await loadLossAnalysis(session, 90) : [];
   const filtered = Boolean(
-    params['q'] || params['stage'] || params['source'] || params['assigned'] || params['overdue']);
+    params['q'] || params['stage'] || params['source'] || params['assigned']
+    || params['overdue'] || params['from'] || params['to']);
 
   return (
     <>
@@ -90,6 +95,7 @@ export default async function LeadsPage(
           {page.total.toLocaleString('en-GB')} {closed ? 'lead' : 'open lead'}
           {page.total === 1 ? '' : 's'}
           {filtered && ' matching'}
+          {params['from'] && params['to'] && ` · ${params['from']} to ${params['to']}`}
           {' · '}
           <span className={page.queryMs > 400 ? 'text-warning-ink' : 'text-ink-subtle'}>
             {page.queryMs}ms
@@ -206,6 +212,11 @@ export default async function LeadsPage(
             </Link>
           )}
         </div>
+
+        {/* Carried through the form so filtering does not silently widen a
+            drill-through back to all time. */}
+        {params['from'] && <input type="hidden" name="from" value={params['from']} />}
+        {params['to'] && <input type="hidden" name="to" value={params['to']} />}
 
         <div className="flex flex-wrap items-center gap-4 sm:col-span-4">
           <label className="flex items-center gap-2">

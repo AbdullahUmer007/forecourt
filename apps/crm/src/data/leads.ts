@@ -55,6 +55,12 @@ export interface InboxFilters {
   overdueOnly?: boolean | undefined;
   /** Open leads only. Default true — a closed lead is history, not an inbox. */
   includeClosed?: boolean | undefined;
+  /** Received within a window. Added so the Channel P&L's drill-through opens
+   *  exactly the leads its number counted — a drill-through that shows a
+   *  SUPERSET is worse than none, because the reader checks the count, finds
+   *  it different, and stops believing the report. */
+  receivedFrom?: string | undefined;
+  receivedTo?: string | undefined;
   limit?: number | undefined;
   offset?: number | undefined;
 }
@@ -161,6 +167,12 @@ export async function loadInbox(
       : filters.assigned === 'me' ? tx`AND l.assigned_to = ${session.userId}::uuid`
         : filters.assigned ? tx`AND l.assigned_to = ${filters.assigned}::uuid`
           : tx``;
+    const wFrom = filters.receivedFrom
+      ? tx`AND l.received_at >= ${new Date(filters.receivedFrom)}` : tx``;
+    const wTo = filters.receivedTo
+      // Inclusive of the whole end day: a range typed as "to 31 Aug" means the
+      // 31st, not midnight at its start.
+      ? tx`AND l.received_at < (${new Date(filters.receivedTo)}::date + 1)` : tx``;
     const wOverdue = filters.overdueOnly
       ? tx`AND l.first_response_at IS NULL AND ${due} < now()`
       : tx``;
@@ -189,7 +201,7 @@ export async function loadInbox(
       LEFT JOIN vehicles v ON v.id = l.vehicle_id
       LEFT JOIN users u ON u.id = l.assigned_to
       LEFT JOIN sites s ON s.id = l.site_id
-      WHERE ${wOpen} ${wStage} ${wSource} ${wAssigned} ${wOverdue} ${wSearch}
+      WHERE ${wOpen} ${wStage} ${wSource} ${wAssigned} ${wOverdue} ${wSearch} ${wFrom} ${wTo}
       ORDER BY
         -- Needs-attention order. An unanswered lead outranks an answered one
         -- whatever the timestamps say, and within that the soonest deadline
@@ -204,7 +216,7 @@ export async function loadInbox(
       FROM leads l
       JOIN contacts c ON c.id = l.contact_id
       LEFT JOIN vehicles v ON v.id = l.vehicle_id
-      WHERE ${wOpen} ${wStage} ${wSource} ${wAssigned} ${wOverdue} ${wSearch}`;
+      WHERE ${wOpen} ${wStage} ${wSource} ${wAssigned} ${wOverdue} ${wSearch} ${wFrom} ${wTo}`;
 
     // The strip at the top: the whole book, unfiltered, because "you have six
     // overdue" must not change when somebody filters to one salesperson.

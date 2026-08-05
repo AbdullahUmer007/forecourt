@@ -2,10 +2,22 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getSession, signOut } from '@/auth/session';
+import { holds } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
 
-const NAV = [
+/**
+ * `needs` is the permission the DESTINATION enforces, not a second gate.
+ *
+ * The page itself still refuses — UI hiding is a convenience and never the
+ * control. But a nav entry that leads to a 404 is a worse convenience than
+ * none: it tells somebody the feature exists, then implies the product is
+ * broken when they click it. Both the VAT book and the Channel P&L call
+ * `notFound()` for a principal without the permission, so both were doing
+ * exactly that.
+ */
+const NAV: { href: string; label: string; needs?: string }[] = [
+  { href: '/', label: 'Dashboard' },
   { href: '/appraisals', label: 'Part-exchange' },
   { href: '/prep', label: 'Prep' },
   { href: '/stock', label: 'Stock' },
@@ -14,7 +26,8 @@ const NAV = [
   { href: '/invoices', label: 'Invoices' },
   // Named "VAT book" rather than "Stock book": to a dealer, "the stock book"
   // and "stock" are different things and the nav already has Stock above.
-  { href: '/vat/stock-book', label: 'VAT book' },
+  { href: '/vat/stock-book', label: 'VAT book', needs: 'stockbook.read' },
+  { href: '/reports/channels', label: 'Channel P&L', needs: 'report.read' },
 ];
 
 /**
@@ -35,6 +48,12 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // above it and no page that has to remember to check.
   if (session.mfaPending || session.mfaEnrolmentRequired) redirect('/mfa');
 
+  const principal = {
+    userId: session.userId, tenantId: session.tenantId, roleKey: session.roleKey,
+    permissions: session.permissions, scope: session.scope, siteIds: session.siteIds,
+  };
+  const nav = NAV.filter((item) => !item.needs || holds(principal, item.needs));
+
   async function endSession() {
     'use server';
     await signOut();
@@ -49,7 +68,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           <span className="hidden text-ink-subtle sm:inline">{session.tenantName}</span>
 
           <nav className="ml-auto flex items-center gap-1 overflow-x-auto">
-            {NAV.map((item) => (
+            {nav.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
