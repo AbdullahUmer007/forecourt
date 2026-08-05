@@ -176,6 +176,9 @@ const TENANT_TABLES = [
   'channel_listings',
   'channel_overrides',
   'channel_sync_events',
+  // M20: the log of Forecourt staff reading a customer's data. A log we could
+  // edit would be worth nothing.
+  'impersonation_sessions',
   'channel_rules',
   // M17 — accounting sync
   'accounting_connections',
@@ -186,7 +189,18 @@ const TENANT_TABLES = [
   'channel_costs',
   'saved_reports',
   'report_schedules',
-  // M19+ — created by later migrations; each skips until its table exists
+  // M19 — compliance centre
+  'compliance_registers',
+  'compliance_tasks',
+  'complaints',
+  'data_breaches',
+  // M20 — platform admin & billing
+  'tenant_subscriptions',
+  'feature_flags',
+  'usage_records',
+  'impersonation_grants',
+  'impersonation_sessions',
+  // Later migrations; each skips until its table exists
   'appointments',
 ] as const;
 
@@ -265,6 +279,8 @@ const A_PREP_STAGE = 'cccccca1-cccc-4ccc-8ccc-cccccccccee1';
 const B_PREP_STAGE = 'cccccca2-cccc-4ccc-8ccc-cccccccccee2';
 const A_PREP_CARD = 'cccccca1-cccc-4ccc-8ccc-cccccccccff1';
 const B_PREP_CARD = 'cccccca2-cccc-4ccc-8ccc-cccccccccff2';
+const A_GRANT = 'bbbbbbc1-bbbb-4bbb-8bbb-bbbbbbbbeee1';
+const B_GRANT = 'bbbbbbc2-bbbb-4bbb-8bbb-bbbbbbbbeee2';
 const A_REPORT = 'aaaaaac1-aaaa-4aaa-8aaa-aaaaaaaaddd1';
 const B_REPORT = 'aaaaaac2-aaaa-4aaa-8aaa-aaaaaaaaddd2';
 const A_ACCT = 'eeeeeea1-eeee-4eee-8eee-eeeeeeeeaaa1';
@@ -596,6 +612,43 @@ const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   report_schedules: {
     columns: 'tenant_id, saved_report_id, period, recipient_ids',
     values: `'${TENANT_B}', '${B_REPORT}', 'monthly', ARRAY['${B_USER}']::uuid[]`,
+  },
+  compliance_registers: {
+    columns: 'tenant_id, kind, description',
+    values: `'${TENANT_B}', 'trade_plate', 'Smuggled plate'`,
+  },
+  compliance_tasks: {
+    columns: 'tenant_id, title',
+    values: `'${TENANT_B}', 'Smuggled task'`,
+  },
+  complaints: {
+    columns: 'tenant_id, summary, received_at',
+    values: `'${TENANT_B}', 'Smuggled complaint', now()`,
+  },
+  data_breaches: {
+    columns: 'tenant_id, summary, became_aware_at',
+    values: `'${TENANT_B}', 'Smuggled breach', now()`,
+  },
+  tenant_subscriptions: {
+    columns: 'tenant_id, plan, status',
+    values: `'${TENANT_B}', 'pro', 'active'`,
+  },
+  feature_flags: {
+    columns: 'tenant_id, flag, enabled',
+    values: `'${TENANT_B}', 'smuggled_flag', true`,
+  },
+  usage_records: {
+    columns: 'tenant_id, metric, period_month, quantity',
+    values: `'${TENANT_B}', 'vehicle_lookup', date_trunc('month', now())::date, 10`,
+  },
+  impersonation_grants: {
+    columns: 'tenant_id, granted_by, expires_at',
+    values: `'${TENANT_B}', '${B_USER}', now() + interval '1 day'`,
+  },
+  impersonation_sessions: {
+    columns: 'tenant_id, grant_id, operator_id, reason, expires_at',
+    values: `'${TENANT_B}', '${B_GRANT}', '${B_USER}', ` +
+      `'Smuggled support session reason', now() + interval '2 hours'`,
   },
 };
 
@@ -1093,6 +1146,64 @@ async function seedRivalData(): Promise<void> {
           ('${A}'::uuid,'${A_REPORT}'::uuid,'monthly'::schedule_period,ARRAY['${USER_A}']::uuid[]),
           ('${B}'::uuid,'${B_REPORT}'::uuid,'monthly'::schedule_period,ARRAY['${B_USER}']::uuid[])) v
         WHERE NOT EXISTS (SELECT 1 FROM report_schedules WHERE saved_report_id = '${A_REPORT}');
+    `);
+  }
+
+  // M19 tables — compliance centre.
+  if (await tableExists('compliance_registers')) {
+    await sql.unsafe(`
+      INSERT INTO compliance_registers (tenant_id, kind, description)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'trade_plate'::register_kind,'Plate A'),
+          ('${B}'::uuid,'trade_plate'::register_kind,'Plate B')) v
+        WHERE NOT EXISTS (SELECT 1 FROM compliance_registers WHERE tenant_id = '${A}');
+
+      INSERT INTO compliance_tasks (tenant_id, title)
+        SELECT * FROM (VALUES ('${A}'::uuid,'Task A'),('${B}'::uuid,'Task B')) v
+        WHERE NOT EXISTS (SELECT 1 FROM compliance_tasks WHERE tenant_id = '${A}');
+
+      INSERT INTO complaints (tenant_id, summary, received_at)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'Complaint A',now()),('${B}'::uuid,'Complaint B',now())) v
+        WHERE NOT EXISTS (SELECT 1 FROM complaints WHERE tenant_id = '${A}');
+
+      INSERT INTO data_breaches (tenant_id, summary, became_aware_at)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'Breach A',now()),('${B}'::uuid,'Breach B',now())) v
+        WHERE NOT EXISTS (SELECT 1 FROM data_breaches WHERE tenant_id = '${A}');
+    `);
+  }
+
+  // M20 tables — platform admin & billing.
+  if (await tableExists('tenant_subscriptions')) {
+    await sql.unsafe(`
+      INSERT INTO tenant_subscriptions (tenant_id, plan, status)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'pro'::platform_plan,'active'::subscription_status),
+          ('${B}'::uuid,'pro'::platform_plan,'active'::subscription_status)) v
+        WHERE NOT EXISTS (SELECT 1 FROM tenant_subscriptions WHERE tenant_id = '${A}');
+
+      INSERT INTO feature_flags (tenant_id, flag, enabled)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'beta_prep',true),('${B}'::uuid,'beta_prep',true)) v
+        WHERE NOT EXISTS (SELECT 1 FROM feature_flags WHERE tenant_id = '${A}');
+
+      INSERT INTO usage_records (tenant_id, metric, period_month, quantity)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'vehicle_lookup'::usage_metric,date_trunc('month', now())::date,5),
+          ('${B}'::uuid,'vehicle_lookup'::usage_metric,date_trunc('month', now())::date,5)) v
+        WHERE NOT EXISTS (SELECT 1 FROM usage_records WHERE tenant_id = '${A}');
+
+      INSERT INTO impersonation_grants (id, tenant_id, granted_by, expires_at) VALUES
+        ('${A_GRANT}','${A}','${USER_A}',now() + interval '7 days'),
+        ('${B_GRANT}','${B}','${B_USER}',now() + interval '7 days')
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO impersonation_sessions (tenant_id, grant_id, operator_id, reason, expires_at)
+        SELECT * FROM (VALUES
+          ('${A}'::uuid,'${A_GRANT}'::uuid,'${USER_A}'::uuid,'Support session for tenant A',now() + interval '2 hours'),
+          ('${B}'::uuid,'${B_GRANT}'::uuid,'${B_USER}'::uuid,'Support session for tenant B',now() + interval '2 hours')) v
+        WHERE NOT EXISTS (SELECT 1 FROM impersonation_sessions WHERE tenant_id = '${A}');
     `);
   }
 
