@@ -11,6 +11,10 @@ const NAV = [
   { href: '/stock', label: 'Stock' },
   { href: '/leads', label: 'Leads' },
   { href: '/deals', label: 'Deals' },
+  { href: '/invoices', label: 'Invoices' },
+  // Named "VAT book" rather than "Stock book": to a dealer, "the stock book"
+  // and "stock" are different things and the nav already has Stock above.
+  { href: '/vat/stock-book', label: 'VAT book' },
 ];
 
 /**

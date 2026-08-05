@@ -9,7 +9,7 @@
  */
 
 import type { ReactNode } from 'react';
-import { format, type Money } from '@forecourt/domain';
+import { format, formatRegistration, type Money } from '@forecourt/domain';
 
 export type Tone = 'neutral' | 'good' | 'warning' | 'serious' | 'critical' | 'info';
 
@@ -91,7 +91,10 @@ export const Amount = ({ value, className = '' }: { value: Money; className?: st
 
 /** A registration, in the plate typeface treatment the trade expects. */
 export const Reg = ({ value }: { value: string }) => {
-  const spaced = value.length === 7 ? `${value.slice(0, 4)} ${value.slice(4)}` : value;
+  // The domain's formatter, not a length check. The old rule — "7 characters,
+  // split 4 and 3" — puts a space in the middle of a Northern Ireland plate
+  // (ABC 1234 is 7 characters) and in the middle of some dateless ones.
+  const spaced = formatRegistration(value);
   return (
     <span className="mono inline-block rounded-sm border border-edge-strong bg-surface-3 px-1.5 py-0.5 text-[13px] leading-[18px] font-medium tracking-wide">
       {spaced}

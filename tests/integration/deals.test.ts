@@ -396,13 +396,26 @@ describe.runIf(process.env['DATABASE_URL'])('add-ons are never pre-ticked', () =
 
 describe.runIf(process.env['DATABASE_URL'])('what the list returns', () => {
   it('withholds cost, gross and the margin panel from a principal who may not see them', async () => {
-    const withCost = await loadDeals(session, { limit: 50 }, true);
-    const without = await loadDeals(session, { limit: 50 }, false);
+    const withCost = await loadDeals(session, { limit: 200 }, true);
+    const without = await loadDeals(session, { limit: 200 }, false);
 
     expect(without.rows.every((r) => r.dealGross === null)).toBe(true);
     expect(without.summary.grossMonthToDate).toBeNull();
-    // The list still works — price is what the customer pays, not what we paid.
-    expect(without.rows.length).toBe(withCost.rows.length);
+
+    // The list still works — price is what the customer PAYS, not what we
+    // paid, so redaction removes the figures and not the rows.
+    //
+    // Asserted on a known deal rather than by comparing the two row COUNTS.
+    // Vitest runs test files in parallel and the invoices suite creates deals
+    // in this same tenant, so the counts can legitimately differ between two
+    // sequential loads — a race that only shows up on a pristine database
+    // where both suites start from nothing.
+    const inWith = withCost.rows.find((r) => r.id === DEAL(3));
+    const inWithout = without.rows.find((r) => r.id === DEAL(3));
+    expect(inWith).toBeDefined();
+    expect(inWithout).toBeDefined();
+    expect(inWithout!.totalPrice.amount).toBe(inWith!.totalPrice.amount);
+    expect(inWithout!.dealGross).toBeNull();
 
     const deal = await loadDeal(session, DEAL(3), false);
     expect(deal!.margin).toBeNull();

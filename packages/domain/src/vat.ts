@@ -126,14 +126,27 @@ export function assertInvoiceVatPresentation(
   calc: VatCalculation,
   invoiceLines: readonly { vatAmount: Money }[],
 ): void {
-  if (calc.scheme === 'margin') {
-    const showsVat = invoiceLines.some((l) => l.vatAmount.amount !== 0n);
-    if (showsVat) {
-      throw new Error(
-        'A margin-scheme invoice must not show VAT separately. Showing it makes the ' +
-          'whole sale standard-rated. See VAT Notice 718/1.',
-      );
-    }
+  if (calc.scheme === 'margin') assertMarginInvoiceShowsNoVat(invoiceLines);
+}
+
+/**
+ * The same rule, reachable without a calculation in hand.
+ *
+ * The renderer knows the scheme but does not always have the margin figure —
+ * a draft has no purchase price yet, and a credit note carries the original's
+ * scheme rather than its own calculation. Rather than fabricating a
+ * calculation object to satisfy a signature, both entry points delegate here,
+ * so there is ONE implementation of "a margin invoice shows no VAT" and one
+ * message.
+ */
+export function assertMarginInvoiceShowsNoVat(
+  invoiceLines: readonly { vatAmount: Money }[],
+): void {
+  if (invoiceLines.some((l) => l.vatAmount.amount !== 0n)) {
+    throw new Error(
+      'A margin-scheme invoice must not show VAT separately. Showing it makes the ' +
+        'whole sale standard-rated. See VAT Notice 718/1.',
+    );
   }
 }
 

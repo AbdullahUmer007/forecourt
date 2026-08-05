@@ -36,15 +36,30 @@ export function changedFields(
   const keys = new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})]);
   const diff: Record<string, { from: unknown; to: unknown }> = {};
 
+  // JSON comparison so Dates and nested objects compare by value. bigint is
+  // stringified because JSON.stringify refuses it outright — the same trap the
+  // appraisal payload test ran into.
+  const encode = (v: unknown) =>
+    JSON.stringify(v, (_k, x) => (typeof x === 'bigint' ? x.toString() : x));
+
+  /**
+   * And the STORED value is stringified too, not only the compared one.
+   *
+   * Comparing through a replacer while storing the raw value left bigints in
+   * the diff, which `tx.json` then refused with "Do not know how to serialize
+   * a BigInt" — throwing inside the mutation's own transaction and rolling the
+   * whole thing back. Every money mutation would have failed the first time a
+   * money field actually changed, which invoicing is the first module to do.
+   */
+  const serialisable = (v: unknown): unknown =>
+    v === undefined ? null : JSON.parse(encode(v) ?? 'null');
+
   for (const key of keys) {
     const from = before?.[key];
     const to = after?.[key];
-    // JSON comparison so Dates and nested objects compare by value. bigint is
-    // stringified because JSON.stringify refuses it outright — the same trap
-    // the appraisal payload test ran into.
-    const encode = (v: unknown) =>
-      JSON.stringify(v, (_k, x) => (typeof x === 'bigint' ? x.toString() : x));
-    if (encode(from) !== encode(to)) diff[key] = { from: from ?? null, to: to ?? null };
+    if (encode(from) !== encode(to)) {
+      diff[key] = { from: serialisable(from), to: serialisable(to) };
+    }
   }
 
   return Object.keys(diff).length > 0 ? diff : null;

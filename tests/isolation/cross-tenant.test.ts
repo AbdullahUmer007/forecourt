@@ -218,7 +218,10 @@ const SPECIAL_TABLES = {
 
 /** Append-only tables reject UPDATE via a trigger before RLS is reached. */
 const APPEND_ONLY = new Set<string>([
-  'audit_events', 'deal_evidence', 'stock_book_entries', 'contact_consents',
+  // `stock_book_entries` is NOT here as of migration 0019 — see the
+  // content-freeze test below. Removing it means the cross-tenant UPDATE gate
+  // now runs against it, which is strictly more coverage than before.
+  'audit_events', 'deal_evidence', 'contact_consents',
   'vehicle_status_history', 'vehicle_prices', 'vehicle_lookups', 'search_events',
   'representative_examples', 'initial_disclosure_versions', 'finance_promotion_log', 'compliance_rules',
   // M9/M10 evidence: a consent withdrawal, a suppression, a merge record and
@@ -1462,7 +1465,7 @@ describeDb('cross-tenant isolation', () => {
   // Gate 4 — append-only tables reject mutation.
   // -------------------------------------------------------------------
   it.each([
-    'deal_evidence', 'stock_book_entries', 'contact_consents', 'search_events',
+    'deal_evidence', 'contact_consents', 'search_events',
     // M8: what we advertised, and what the rulebook said when we advertised it.
     'compliance_rules', 'representative_examples', 'initial_disclosure_versions', 'finance_promotion_log',
     // M9/M10 evidence.
@@ -1480,6 +1483,50 @@ describeDb('cross-tenant isolation', () => {
       expect(Number(trigger?.['n'] ?? 0), `${table} must carry the append_only trigger`).toBeGreaterThan(0);
     },
   );
+
+  /**
+   * The stock book is content-frozen, not blanket append-only.
+   *
+   * M11 declared it `make_append_only` while its own column comments said the
+   * sale side is "completed at invoice" — which the blanket trigger made
+   * impossible, so the twelve mandatory fields could never all be present.
+   * Migration 0019 replaced it with a freeze that is STRICTER where it counts:
+   * deletion always refused, the purchase side immutable from creation, and
+   * the sale side writable exactly once.
+   *
+   * Asserted as behaviour, not by trigger name. The version of this test that
+   * demanded `append_only` by name is what let the contradiction ship: a name
+   * is satisfied by a trigger that does nothing.
+   */
+  it('stock_book_entries refuses deletion and freezes the purchase side', async () => {
+    if (!(await tableExists('stock_book_entries'))) return;
+
+    const [entry] = await sql`
+      SELECT id FROM stock_book_entries LIMIT 1`;
+    if (!entry) return;
+    const entryId = String(entry['id']);
+
+    await expect(sql`DELETE FROM stock_book_entries WHERE id = ${entryId}::uuid`)
+      .rejects.toThrow(/cannot be deleted/i);
+
+    await expect(sql`
+      UPDATE stock_book_entries SET purchase_price_pence = 1 WHERE id = ${entryId}::uuid`)
+      .rejects.toThrow(/purchase side/i);
+
+    await expect(sql`
+      UPDATE stock_book_entries SET entry_number = entry_number + 1000000
+      WHERE id = ${entryId}::uuid`).rejects.toThrow(/entry number/i);
+
+    // And a sale already recorded cannot be re-recorded.
+    const [sold] = await sql`
+      SELECT id FROM stock_book_entries WHERE sale_date IS NOT NULL LIMIT 1`;
+    if (sold) {
+      await expect(sql`
+        UPDATE stock_book_entries SET selling_price_pence = 1
+        WHERE id = ${String(sold['id'])}::uuid`)
+        .rejects.toThrow(/already recorded|adjusting entry/i);
+    }
+  });
 
   /**
    * `invoices` and `invoice_lines` are NOT blanket append-only, and that is

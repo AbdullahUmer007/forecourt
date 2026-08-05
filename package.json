@@ -14,6 +14,7 @@
     "db:seed": "tsx packages/db/scripts/seed-demo.mjs",
     "db:seed:crm": "node packages/db/scripts/seed-crm.mjs",
     "db:seed:deals": "tsx packages/db/scripts/seed-deals.mjs",
+    "db:seed:invoices": "node packages/db/scripts/seed-invoices.mjs",
     "db:seed:leads": "node packages/db/scripts/seed-leads.mjs",
     "db:seed:prep": "node packages/db/scripts/seed-prep.mjs",
     "db:setup": "node packages/db/scripts/setup-local.mjs",

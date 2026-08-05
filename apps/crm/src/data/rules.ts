@@ -14,7 +14,7 @@
  */
 
 import { sql } from './db';
-import type { ConsumerRightsRule } from '@forecourt/domain';
+import type { ConsumerRightsRule, VatRule, AmlThresholdRule } from '@forecourt/domain';
 
 interface RuleRow {
   parameters: Record<string, unknown>;
@@ -78,11 +78,55 @@ export async function consumerRightsRule(asAt: Date): Promise<ConsumerRightsRule
   };
 }
 
-/** The AML high-value-dealer threshold in force on a date, in pence. */
-export async function amlThresholdPence(asAt: Date): Promise<bigint> {
+/**
+ * The VAT margin fraction in force on a date.
+ *
+ * Keyed on the SALE date. The fraction is 1/6 at a 20% standard rate today; it
+ * was 1/6 at 17.5% until 2011 and would change again if the rate moved, and a
+ * stock book entry from 2010 must still re-derive to the figure HMRC was given
+ * at the time. The rule VERSION is returned with it and stored on the entry
+ * for exactly that reason.
+ */
+export async function vatRule(asAt: Date): Promise<VatRule & { version: number }> {
+  const row = await ruleAsAt('vat.margin_fraction', asAt);
+  if (!row) {
+    throw new Error(
+      'No `vat.margin_fraction` rule is in force for that date. Margin VAT cannot ' +
+      'be computed without one, and 1/6 is not a safe thing to assume.',
+    );
+  }
+  const p = row.parameters;
+  return {
+    key: 'vat.margin_fraction',
+    effectiveFrom: String(p['effective_from'] ?? ''),
+    numerator: BigInt(int(p['numerator'], 'numerator')),
+    denominator: BigInt(int(p['denominator'], 'denominator')),
+    standardRateBps: int(p['standard_rate_bps'], 'standard_rate_bps'),
+    sourceUrl: row.source_url,
+    version: row.version,
+  };
+}
+
+/**
+ * The AML high-value-dealer threshold in force on a date.
+ *
+ * Version 2 converted it from EUR 10,000 to a fixed GBP 10,000 on 30 June
+ * 2026, and version 1 is retained for pre-June-2026 records. Reading today's
+ * rule to assess a payment taken in May would apply a threshold that did not
+ * exist yet.
+ */
+export async function amlRule(asAt: Date): Promise<AmlThresholdRule> {
   const row = await ruleAsAt('aml.hvd_threshold', asAt);
   if (!row) {
     throw new Error('No `aml.hvd_threshold` rule is in force for that date.');
   }
-  return BigInt(int(row.parameters['amount_pence'], 'amount_pence'));
+  const currency = row.parameters['currency'];
+  return {
+    key: 'aml.hvd_threshold',
+    version: row.version,
+    effectiveFrom: String(row.parameters['effective_from'] ?? ''),
+    amountPence: BigInt(int(row.parameters['amount_pence'], 'amount_pence')),
+    currency: currency === 'EUR' ? 'EUR' : 'GBP',
+    sourceUrl: row.source_url,
+  };
 }

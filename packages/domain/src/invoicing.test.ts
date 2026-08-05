@@ -5,6 +5,7 @@ import {
   invoiceBalance, validateRefund,
   type InvoiceSequence, type Payment,
 } from './invoicing.js';
+import { formatRegistration } from './invoice-document.js';
 import { money } from './money.js';
 import type { VatRule } from './vat.js';
 
@@ -294,5 +295,28 @@ describe('money properties', () => {
         expect(invoice.grossTotal.amount + credit.invoice.grossTotal.amount).toBe(0n);
       },
     ), { numRuns: 300 });
+  });
+});
+
+describe('a registration as a human reads it', () => {
+  it('spaces a current-format plate 4 + 3', () => {
+    expect(formatRegistration('WD21KXR')).toBe('WD21 KXR');
+    expect(formatRegistration('wd21 kxr')).toBe('WD21 KXR');
+  });
+
+  it('leaves a Northern Ireland plate alone rather than guessing', () => {
+    // ABC 1234 is also seven characters. The old length-based rule split it
+    // as "ABC1 234", which is not a registration anybody would recognise.
+    expect(formatRegistration('ABC1234')).toBe('ABC1234');
+  });
+
+  it('leaves prefix, suffix and dateless plates alone', () => {
+    expect(formatRegistration('A123BCD')).toBe('A123BCD');
+    expect(formatRegistration('ABC123D')).toBe('ABC123D');
+    expect(formatRegistration('1ABC')).toBe('1ABC');
+  });
+
+  it('normalises before deciding, so stored and typed forms agree', () => {
+    expect(formatRegistration('  wd21kxr ')).toBe('WD21 KXR');
   });
 });

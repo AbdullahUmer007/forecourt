@@ -45,12 +45,34 @@ export const sql = postgres(url, {
  */
 export type Tx = TransactionSql<Record<string, never>>;
 
-/** Every tenant-scoped read and write in the CRM goes through here. */
+/**
+ * Every tenant-scoped read and write in the CRM goes through here.
+ *
+ * `SET LOCAL ROLE app_user` FIRST, before anything else.
+ *
+ * This was missing, and its absence made RLS inert in the running application.
+ * The header above says "RLS then does the work" — but a policy is not
+ * consulted at all for a role with BYPASSRLS, and `postgres` has it. Local dev
+ * connects as `postgres`, so every screen in this app was reading across
+ * tenants; the VAT stock book made it visible by showing nine entries when the
+ * dealership had six. Almost none of these loaders filter by `tenant_id` in
+ * SQL — they were written to rely on RLS — so with RLS bypassed there was no
+ * tenant filter at all.
+ *
+ * The isolation suite never caught it because it does this same `SET LOCAL
+ * ROLE` itself before asserting. It was proving the POLICIES are right, which
+ * they are. Nothing was proving the app arrives at them.
+ *
+ * Setting the role here rather than relying on the connection string makes the
+ * guarantee a property of the code instead of a property of somebody's
+ * deployment configuration. `SET LOCAL` so it ends with the transaction.
+ */
 export async function withSession<T>(
   session: Session,
   fn: (tx: Tx) => Promise<T>,
 ): Promise<T> {
   return sql.begin(async (tx: Tx) => {
+    await tx`SET LOCAL ROLE app_user`;
     await tx`SELECT set_tenant_context(
       ${session.tenantId}::uuid,
       ${session.userId}::uuid,

@@ -50,6 +50,20 @@ export type Tx = TransactionSql<Record<string, never>>;
 /** Every read the public site does goes through here. There is no other path. */
 export async function withTenant<T>(tenantId: string, fn: (tx: Tx) => Promise<T>): Promise<T> {
   return sql.begin(async (tx: Tx) => {
+    // `SET LOCAL ROLE app_public` FIRST — read-only and NOBYPASSRLS.
+    //
+    // The header above claims "the connection uses the app_public role". It
+    // did not: that was a statement about how somebody was expected to write
+    // the connection string, and nothing enforced it. Connected as a
+    // superuser — which local dev is — RLS is not consulted at all and one
+    // dealer's site would render another dealer's stock. Setting the role here
+    // makes it a property of the code rather than of a deployment.
+    //
+    // It also makes the read-only claim true: a write from the public site is
+    // now a privilege the transaction does not hold, rather than a bug we have
+    // to catch.
+    await tx`SET LOCAL ROLE app_public`;
+
     // The public site sees the whole tenant: it renders a dealer's shopfront,
     // not one branch's. Site filtering, when a dealer wants per-site stock, is
     // a query predicate rather than a security boundary.

@@ -21,7 +21,8 @@ import {
   buildInvoice, issueInvoice, creditNoteFor, type Invoice, type InvoiceSequence,
 } from '../../packages/domain/src/invoicing.js';
 import { assertInvoiceVatPresentation, calculateVat, type VatRule } from '../../packages/domain/src/vat.js';
-import { money, format } from '../../packages/domain/src/money.js';
+import { renderInvoice as renderDocument } from '../../packages/domain/src/invoice-document.js';
+import { money } from '../../packages/domain/src/money.js';
 
 const RULE: VatRule = {
   key: 'vat.margin_fraction', effectiveFrom: '2011-01-04',
@@ -33,42 +34,32 @@ const SEQ: InvoiceSequence = { tenantId: 't1', series: 'sale', prefix: 'KEN-', l
 const AUG = (d: number): Date => new Date(Date.UTC(2026, 7, d, 12));
 
 /**
- * Render an invoice the way a document template would.
+ * Render through the PRODUCT'S renderer.
  *
- * The point of rendering rather than inspecting the object: the rule is about
- * what the CUSTOMER receives. A model that carries a zero VAT field but a
- * template that prints a VAT row would pass an object-level assertion and
- * still standard-rate the sale.
+ * This used to be a template defined inside this file, which meant the most
+ * expensive test in the codebase was guarding a fixture: whatever the product
+ * actually printed was unguarded, and the two could drift without a single
+ * test going red. `renderInvoice` now lives in `packages/domain` and is the
+ * only path from an Invoice to something a buyer can read, so this file is a
+ * statement about the product rather than about itself.
+ *
+ * The point of rendering rather than inspecting the object stands: a model
+ * carrying a zero VAT field with a template that prints a VAT row would pass
+ * every object-level assertion and still standard-rate the sale.
  */
 function renderInvoice(inv: Invoice): string {
-  const lines = inv.lines.map((l) =>
-    `<tr><td>${l.description}</td><td>${l.quantity}</td>` +
-    `<td>${format(l.net)}</td>` +
-    // A margin invoice emits NO VAT cell at all — not a zero, not a dash.
-    (inv.vatScheme === 'margin' ? '' : `<td>${format(l.vatAmount)}</td>`) +
-    `<td>${format(l.gross)}</td></tr>`).join('\n');
-
-  const totals = inv.vatScheme === 'margin'
-    ? `<tr><th>Total</th><td>${format(inv.grossTotal)}</td></tr>`
-    : `<tr><th>Net</th><td>${format(inv.netTotal)}</td></tr>` +
-      `<tr><th>VAT</th><td>${format(inv.vatTotal)}</td></tr>` +
-      `<tr><th>Total</th><td>${format(inv.grossTotal)}</td></tr>`;
-
-  const marginNote = inv.vatScheme === 'margin'
-    // The wording HMRC expects on a margin invoice, and the reason no VAT
-    // figure appears above.
-    ? '<p class="vat-note">Margin scheme &mdash; second-hand goods. ' +
-      'This invoice does not give the buyer the right to reclaim VAT.</p>'
-    : '';
-
-  return `<article class="invoice">
-<h1>Invoice ${inv.reference ?? '(draft)'}</h1>
-<p>${inv.buyerName ?? ''}</p>
-<table><tbody>
-${lines}
-</tbody><tfoot>${totals}</tfoot></table>
-${marginNote}
-</article>`;
+  return renderDocument({
+    invoice: inv,
+    seller: {
+      name: 'Kennington Car Sales Ltd',
+      address: '14 Newport Road\nMilton Keynes\nMK1 1AA',
+      vatNumber: 'GB 123 4567 89',
+    },
+    buyer: { name: inv.buyerName ?? '', address: inv.buyerAddress ?? '' },
+    issuedOn: '5 Aug 2026',
+    vehicleDescription: '2022 Tesla Model X',
+    registration: 'WN22 HNL',
+  });
 }
 
 const marginInvoice = (over: Partial<Parameters<typeof buildInvoice>[0]> = {}): Invoice =>
@@ -91,7 +82,11 @@ const marginInvoice = (over: Partial<Parameters<typeof buildInvoice>[0]> = {}): 
  * notice HMRC requires — so this looks for the structures that carry a figure.
  */
 const showsVatCharge = (html: string): boolean =>
-  /<th>\s*VAT\s*<\/th>/i.test(html) ||
+  // `<th ...>` with attributes, not just a bare `<th>`. The product's renderer
+  // emits `<th scope="col">VAT</th>` for accessibility, and a detector written
+  // against a bare tag was blind to it — the negative assertions below were
+  // passing without this branch ever being able to fire.
+  /<t[hd][^>]*>\s*VAT\s*<\/t[hd]>/i.test(html) ||
   /VAT[^<]*[:=]?\s*£/i.test(html) ||
   /£[\d,]+\.\d{2}\s*(?:VAT|vat)/.test(html);
 
@@ -163,7 +158,7 @@ describe('GOLDEN: a margin-scheme invoice never shows VAT', () => {
           lines: [{ description: 'Car', unitPrice: money(sale), vatRateBps: bps }],
         });
         expect(inv.vatTotal.amount).toBe(0n);
-        expect(renderInvoice(inv)).not.toMatch(/<th>VAT<\/th>/);
+        expect(showsVatCharge(renderInvoice(inv))).toBe(false);
       },
     ), { numRuns: 400 });
   });
@@ -179,7 +174,10 @@ describe('a VAT-qualifying invoice DOES show VAT', () => {
       vatRule: RULE,
     });
     const html = renderInvoice(inv);
-    expect(html).toContain('<th>VAT</th>');
+    // Asserted through the same detector the negative cases use, rather than
+    // against exact markup — an assertion coupled to a tag shape breaks every
+    // time the template changes and teaches people to loosen it.
+    expect(showsVatCharge(html)).toBe(true);
     expect(html).toContain('£2,000.00');
     expect(html).not.toContain('Margin scheme');
   });
@@ -191,6 +189,10 @@ describe('the guard itself catches a real breach', () => {
     // protection while protecting nothing. These are the exact shapes a
     // careless template would produce.
     expect(showsVatCharge('<tfoot><tr><th>VAT</th><td>£2,000.00</td></tr></tfoot>')).toBe(true);
+    // With attributes — the shape the product actually emits. Missing this was
+    // a real hole: the detector could not see the renderer it now guards.
+    expect(showsVatCharge('<tr><th scope="row">VAT</th><td>£2,000.00</td></tr>')).toBe(true);
+    expect(showsVatCharge('<td class="line-vat tnum">VAT</td>')).toBe(true);
     expect(showsVatCharge('<p>VAT: £2,000.00</p>')).toBe(true);
     expect(showsVatCharge('<td>£2,000.00 VAT</td>')).toBe(true);
   });

@@ -138,12 +138,26 @@ describe('the audit diff', () => {
       .toBeNull();
   });
 
-  it('survives a bigint, which plain JSON.stringify refuses outright', () => {
+  it('survives a bigint, and STORES it as a string', () => {
     // Money is bigint everywhere in this codebase, so an audit diff that
     // throws on one is an audit diff that never gets written.
+    //
+    // The stored value is a string, not the bigint. This used to keep the raw
+    // value — comparison went through a replacer but the diff did not — and
+    // `tx.json` then refused it with "Do not know how to serialize a BigInt",
+    // throwing INSIDE the mutation's own transaction and rolling the whole
+    // thing back. Every money mutation would have failed the first time a
+    // money field actually changed. Invoicing was the first module to do that,
+    // and it failed on every write until this was fixed.
     expect(() => changedFields({ pence: 1200n }, { pence: 1500n })).not.toThrow();
     expect(changedFields({ pence: 1200n }, { pence: 1500n }))
-      .toEqual({ pence: { from: 1200n, to: 1500n } });
+      .toEqual({ pence: { from: '1200', to: '1500' } });
+
+    // And the result is genuinely serialisable, which is the actual
+    // requirement — asserting the shape without asserting this would have
+    // missed the bug all over again.
+    expect(() => JSON.stringify(changedFields({ pence: 1200n }, { pence: 1500n })))
+      .not.toThrow();
   });
 
   it('treats a newly-set field as a change from nothing', () => {
