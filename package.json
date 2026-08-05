@@ -8,7 +8,7 @@
   "scripts": {
     "audit": "node apps/audit/src/index.mjs",
     "audit:fixture": "node apps/audit/src/index.mjs --fixture apps/audit/fixtures/kenningtoncarsales.json",
-    "build": "pnpm --filter @forecourt/crm build && pnpm --filter @forecourt/site build",
+    "build": "pnpm --filter @forecourt/crm build && pnpm --filter @forecourt/site build && pnpm --filter @forecourt/admin build",
     "db:migrate": "node packages/db/scripts/migrate.mjs",
     "db:policies": "node packages/db/scripts/verify-policies.mjs",
     "db:seed": "tsx packages/db/scripts/seed-demo.mjs",
@@ -23,13 +23,14 @@
     "db:seed:spend": "node packages/db/scripts/seed-spend.mjs",
     "db:setup": "node packages/db/scripts/setup-local.mjs",
     "dev": "pnpm --filter @forecourt/site dev",
+    "dev:admin": "pnpm --filter @forecourt/admin dev",
     "dev:crm": "pnpm --filter @forecourt/crm dev",
     "lint": "eslint .",
     "preview": "tsx demo/build-preview.ts",
     "test": "vitest run",
     "test:isolation": "vitest run tests/isolation",
     "tokens:build": "node packages/tokens/build.mjs",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json && tsc -p apps/admin/tsconfig.json"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

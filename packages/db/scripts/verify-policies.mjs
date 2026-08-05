@@ -61,9 +61,14 @@ for (const r of rows) {
 // attacker spraying one password across many dealerships is exactly what a
 // per-tenant table cannot see. Listed here so the gate can see them, which is
 // the whole point of this second half existing.
+// `platform_operators` is Forecourt's own staff list. Platform data, no
+// tenant_id, and the one table whose contents a dealer's application
+// connection must never see under ANY tenant context — so it carries a
+// deny-all policy rather than a tenant-scoped one.
 const SPECIAL = [
   'tenants', 'users',
   'auth_attempts', 'mfa_recovery_codes', 'password_reset_tokens',
+  'platform_operators', 'operator_sessions',
 ];
 const special = await sql`
   SELECT c.relname AS table_name,
