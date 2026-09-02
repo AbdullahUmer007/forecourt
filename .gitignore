@@ -20,3 +20,8 @@ coverage/
 # live credentials for a signed-in session.
 .tokens.json
 .token
+
+# Account passwords written out by a rotation, so they reach a human without
+# going through a terminal's scrollback. Read it, store the values in a
+# password manager, delete it.
+.credentials.txt

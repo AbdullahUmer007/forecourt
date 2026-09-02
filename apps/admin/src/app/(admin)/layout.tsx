@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getOperatorSession, signOutOperator } from '@/auth/session';
+import { getOperatorSession, operatorAdmitted, signOutOperator, MFA_BYPASS } from '@/auth/session';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export const dynamic = 'force-dynamic';
@@ -22,8 +22,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   if (!session) redirect('/sign-in');
 
   // MFA is required unconditionally here, not per-permission. There is no
-  // read in this application casual enough to skip a second factor for.
-  if (session.mfaPending || session.mfaEnrolmentRequired) redirect('/sign-in?mfa=1');
+  // read in this application casual enough to skip a second factor for —
+  // unless ADMIN_MFA_BYPASS is set, which is temporary and says so on screen.
+  if (!operatorAdmitted(session)) redirect('/sign-in?mfa=1');
 
   async function endSession() {
     'use server';
@@ -37,6 +38,18 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <div className="bg-critical px-4 py-1.5 text-center text-[13px] leading-[18px] font-medium text-white">
         RixDrive staff · you are looking at customers&rsquo; businesses
       </div>
+
+      {/*
+        * Deliberately louder than the banner above it, because it describes a
+        * weaker state than the one this application is supposed to run in.
+        * A bypass nobody can see is a bypass nobody turns off.
+        */}
+      {MFA_BYPASS && (
+        <div className="border-b-2 border-critical bg-warning px-4 py-1.5 text-center text-[13px] leading-[18px] font-semibold text-ink">
+          Second-factor checks are switched off (ADMIN_MFA_BYPASS). A password alone reaches every
+          dealership. Temporary — unset it once MFA enrolment ships.
+        </div>
+      )}
 
       <header className="sticky top-0 z-10 border-b border-edge bg-surface-1">
         <div className="mx-auto flex max-w-[1280px] items-center gap-4 px-4 py-2">

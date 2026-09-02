@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { verify } from '@node-rs/argon2';
-import { getOperatorSession, signInOperator, setOperatorCookie } from '@/auth/session';
+import { getOperatorSession, operatorAdmitted, signInOperator, setOperatorCookie } from '@/auth/session';
 import { Card, Problem } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +23,7 @@ export default async function SignIn(
 ) {
   const params = await searchParams;
   const existing = await getOperatorSession();
-  if (existing && !existing.mfaPending && !existing.mfaEnrolmentRequired) redirect('/');
+  if (existing && operatorAdmitted(existing)) redirect('/');
 
   async function submit(formData: FormData) {
     'use server';

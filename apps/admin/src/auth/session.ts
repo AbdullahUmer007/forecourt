@@ -27,6 +27,37 @@ import { sql } from '@/data/db';
 /** Not `forecourt_session`. A CRM cookie must never be an admin cookie. */
 export const OPERATOR_COOKIE = 'forecourt_operator';
 
+/**
+ * TEMPORARY: stand down the second-factor gate.
+ *
+ * This application requires MFA unconditionally, but the enrolment and
+ * challenge screens have not been built yet — so without this, a correct
+ * password produces a session that `requireOperator` immediately bounces back
+ * to `/sign-in?mfa=1`, forever. The door is finished and the key is not cut.
+ *
+ * Set `ADMIN_MFA_BYPASS=1` and a password alone gets in. That is the entire
+ * protection on an application that reads across every dealership on the
+ * platform, so:
+ *
+ *  - it defaults to OFF, and nothing turns it on but an explicit environment
+ *    variable, so forgetting to configure something fails closed
+ *  - it announces itself in the logs on every boot
+ *  - it puts a banner across the top of every page, so nobody is in any doubt
+ *    which mode they are in
+ *
+ * Delete this constant, and the three uses of `operatorAdmitted`, as soon as
+ * the enrolment and challenge screens exist. `apps/crm/src/auth/mfa.ts`
+ * already has the working TOTP implementation to build them from.
+ */
+export const MFA_BYPASS = process.env['ADMIN_MFA_BYPASS'] === '1';
+
+if (MFA_BYPASS) {
+  console.warn(
+    '[admin] ADMIN_MFA_BYPASS=1 — second-factor checks are DISABLED. A password alone '
+    + 'now reaches every dealership on the platform. Unset this the moment MFA enrolment ships.',
+  );
+}
+
 /** Four hours. A support visit, not a working day. */
 const SESSION_HOURS = 4;
 
@@ -73,6 +104,17 @@ export const OPERATOR_CAN: Record<OperatorRole, readonly string[]> = {
 export const operatorCan = (session: OperatorSession, action: string): boolean =>
   OPERATOR_CAN[session.role].includes(action);
 
+/**
+ * Whether this session may see the application at all.
+ *
+ * The session object stays honest about the second factor either way —
+ * `mfaPending` still means what it says — and the decision to ignore it is
+ * made here, in one place, rather than by three gates each remembering to
+ * check the bypass.
+ */
+export const operatorAdmitted = (session: OperatorSession): boolean =>
+  MFA_BYPASS || (!session.mfaPending && !session.mfaEnrolmentRequired);
+
 export async function getOperatorSession(): Promise<OperatorSession | null> {
   const token = (await cookies()).get(OPERATOR_COOKIE)?.value;
   if (!token) return null;
@@ -111,7 +153,7 @@ export async function getOperatorSession(): Promise<OperatorSession | null> {
 export async function requireOperator(): Promise<OperatorSession> {
   const session = await getOperatorSession();
   if (!session) redirect('/sign-in');
-  if (session.mfaPending || session.mfaEnrolmentRequired) redirect('/sign-in?mfa=1');
+  if (!operatorAdmitted(session)) redirect('/sign-in?mfa=1');
   return session;
 }
 

@@ -12,6 +12,7 @@
     "db:deploy": "node packages/db/scripts/deploy-db.mjs",
     "db:domain": "node packages/db/scripts/add-domain.mjs",
     "db:migrate": "node packages/db/scripts/migrate.mjs",
+    "db:operator": "tsx packages/db/scripts/create-operator.mjs",
     "db:password": "tsx packages/db/scripts/set-password.mjs",
     "db:policies": "node packages/db/scripts/verify-policies.mjs",
     "db:seed": "tsx packages/db/scripts/seed-demo.mjs",
