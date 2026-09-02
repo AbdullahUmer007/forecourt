@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@forecourt/domain": "workspace:*",
+    "@forecourt/media": "workspace:*",
     "@node-rs/argon2": "^2",
     "next": "^15.1.0",
     "postgres": "^3.4.9",

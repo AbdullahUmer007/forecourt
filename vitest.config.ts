@@ -10,6 +10,8 @@ export default defineConfig({
       '@/': `${fileURLToPath(new URL('./apps/crm/src', import.meta.url))}/`,
       '@forecourt/domain': fileURLToPath(
         new URL('./packages/domain/src/index.ts', import.meta.url)),
+      '@forecourt/media': fileURLToPath(
+        new URL('./packages/media/src/index.ts', import.meta.url)),
     },
   },
   test: {

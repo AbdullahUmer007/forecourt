@@ -67,7 +67,11 @@ For each of `site`, `crm` and `admin`, in the dashboard:
    | `APP` | `site` / `crm` / `admin` | Selects which app the image builds. Railway passes service variables to the Docker build as arguments. |
    | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` | A reference, not a copy — it follows the database if it moves. |
    | `NODE_ENV` | `production` | Already set in the image; harmless to repeat. |
-   | `MEDIA_LOCAL_ROOT` | `/var/media` | **crm and site only.** Photographs. Attach a Railway disk mounted at `/var/media` on both services — the container FS is wiped on every deploy. |
+   | `R2_ACCOUNT_ID` | Cloudflare account id | **crm and site only.** Same values on both. See §3.1. |
+   | `R2_ACCESS_KEY_ID` | S3 API token | **crm and site only.** |
+   | `R2_SECRET_ACCESS_KEY` | S3 API token | **crm and site only.** |
+   | `R2_BUCKET` | `rixdrive-media` | **crm and site only.** Private bucket. |
+   | `R2_JURISDICTION` | `eu` | **crm and site only.** Required if the bucket was created in the EU jurisdiction. |
    | `ADMIN_MFA_BYPASS` | `1` | **admin only, temporary.** Second-factor screens are not built yet. Remove the moment they ship. |
 
    Do **not** set `PORT`. Railway injects it and the standalone server reads it.
@@ -92,6 +96,36 @@ If a build fails with `APP must be crm, site or admin — got ''`, the service
 variable is missing. That message is deliberate: without it the build fails
 ninety seconds later inside pnpm with "no projects matched the filter", which
 tells nobody what to do.
+
+### 3.1 Photographs — Cloudflare R2
+
+Railway cannot attach one volume to two services. A disk on crm and a disk
+on site are two different folders, so a photograph the office uploads never
+reaches the public page. R2 is the shared store.
+
+**Do this in Cloudflare, once:**
+
+1. [Dashboard](https://dash.cloudflare.com/) → **Storage & databases → R2 → Overview**. Add the R2 subscription if asked (the free tier is enough to start).
+2. **Create bucket.** Name it `rixdrive-media` (or anything you then put in `R2_BUCKET`). Location: **European Union** — these are UK dealer photographs, and a part-exchange shot is often taken at a customer's house. Do **not** enable public access.
+3. On the R2 overview, **Account details → API Tokens → Manage**.
+4. **Create Account API token** (or User token). Permission: **Object Read & Write**, scoped to that one bucket. Copy **Access Key ID** and **Secret Access Key** now — the secret is shown once.
+5. Account id: the R2 overview, or any zone's right-hand sidebar.
+
+**Then on Railway, on both `forecourt-crm` and `forecourt-site` (not admin):**
+
+| Variable | Value |
+|---|---|
+| `R2_ACCOUNT_ID` | the account id |
+| `R2_ACCESS_KEY_ID` | the token's Access Key ID |
+| `R2_SECRET_ACCESS_KEY` | the token's Secret Access Key |
+| `R2_BUCKET` | `rixdrive-media` |
+| `R2_JURISDICTION` | `eu` |
+
+Same values on both services. Half-set variables refuse to boot (a fallback to disk would look like R2 worked and then lose every photo on deploy). Redeploy both.
+
+The apps keep serving `/media/t/<tenant>/…`. They never expose the R2 host. Unpublished interiors and appraisal photographs stay behind the existing session / published-row checks.
+
+A Railway volume at `/var/media` is now optional. Leave it if you already attached one; it is unused once R2 is fully configured.
 
 ---
 
@@ -276,7 +310,10 @@ Roughly in the order it will matter:
 | Build fails, `APP must be crm, site or admin` | The `APP` service variable is missing. |
 | `DATABASE_URL is not set` in the logs | The variable reference is wrong. It must be `${{Postgres.DATABASE_URL}}`, with the service named exactly as Railway named it. |
 | Every site URL 404s | No verified `domains` row for that host. Run `pnpm db:domain <host>`. Correct behaviour, not a fault. |
-| Photographs vanish after a deploy | The container filesystem is ephemeral. Attach a **persistent disk** to both `crm` and `site`, mount it at `/var/media`, and set `MEDIA_LOCAL_ROOT=/var/media` on both services. They must share the same volume (or the same object store later). |
+| Photographs vanish after a deploy | The container filesystem is ephemeral. Set the four `R2_*` variables (plus `R2_JURISDICTION=eu` for an EU bucket) on **both** crm and site. A Railway disk cannot be shared between those two services. |
+| Photographs upload in the CRM but 404 on the public site | The two services do not have the same `R2_*` values, or site is still on local disk. Compare the variables. |
+| Boot error, `R2 is half-configured` | All four of `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` must be set, or none of them. |
+| `PermanentRedirect` / 301 from R2 | The bucket is in a jurisdiction. Set `R2_JURISDICTION=eu` (or `R2_ENDPOINT` to `https://<ACCOUNT_ID>.eu.r2.cloudflarestorage.com`). |
 | `permission denied for table …` | The schema is older than the code. Run `pnpm db:deploy`, which re-applies the grants. |
 | `permission denied to set role "app_user"` | `db:deploy` never ran against this database, so the login role has no membership of the app roles. |
 | Health check times out | The server is bound to `127.0.0.1`. The image sets `HOSTNAME=0.0.0.0`; something is overriding it. |

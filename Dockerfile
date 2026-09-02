@@ -34,6 +34,7 @@ COPY apps/site/package.json     apps/site/
 COPY apps/admin/package.json    apps/admin/
 COPY packages/domain/package.json packages/domain/
 COPY packages/db/package.json     packages/db/
+COPY packages/media/package.json  packages/media/
 COPY packages/tokens/package.json packages/tokens/
 RUN pnpm install --frozen-lockfile
 

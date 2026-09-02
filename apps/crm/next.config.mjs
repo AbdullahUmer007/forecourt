@@ -35,12 +35,12 @@ export default {
   // must run in the Node runtime — the Edge runtime has no TCP sockets. Same
   // constraint that moved tenant resolution out of middleware on the public
   // site; see apps/site/src/request.ts.
-  serverExternalPackages: ['postgres'],
+  serverExternalPackages: ['postgres', '@aws-sdk/client-s3'],
   // @forecourt/domain ships TypeScript source rather than a build step, so Next
   // has to compile it. That is deliberate: the domain layer is consumed only by
   // apps in this repo, and a build artefact between them is a place for the two
   // to drift.
-  transpilePackages: ['@forecourt/domain'],
+  transpilePackages: ['@forecourt/domain', '@forecourt/media'],
 
   /**
    * `@forecourt/domain` imports its own modules with `.js` specifiers —

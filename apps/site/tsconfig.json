@@ -20,12 +20,16 @@
     ],
     "incremental": true,
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "paths": {
+      "@forecourt/media": ["../../packages/media/src/index.ts"]
+    }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     "../../packages/domain/src/**/*.ts",
+    "../../packages/media/src/**/*.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": [

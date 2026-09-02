@@ -8,6 +8,7 @@
     "start": "next start --port ${PORT:-3000}"
   },
   "dependencies": {
+    "@forecourt/media": "workspace:*",
     "next": "^15.1.0",
     "postgres": "^3.4.9",
     "react": "^19.0.0",

@@ -37,6 +37,8 @@ export default {
   // Next itself, rather than pre-built packages. One less build step between a
   // change and seeing it.
   experimental: { externalDir: true },
+  serverExternalPackages: ['postgres', '@aws-sdk/client-s3'],
+  transpilePackages: ['@forecourt/domain', '@forecourt/media'],
   /**
    * The codebase imports TypeScript with a `.js` specifier — `./src/tenant.js`
    * resolving to `tenant.ts` — which is what `moduleResolution: "Bundler"` and

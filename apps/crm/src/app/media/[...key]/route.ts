@@ -25,7 +25,7 @@ export async function GET(
   }
 
   const body = await readStoredPhoto(key);
-  if (!body) return new NextResponse('That photograph is not on disk.', { status: 404 });
+  if (!body) return new NextResponse('That photograph is not here.', { status: 404 });
 
   return new NextResponse(new Uint8Array(body), {
     headers: {

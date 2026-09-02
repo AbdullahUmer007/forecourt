@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import sharp from 'sharp';
-import { mkdtemp, readFile } from 'node:fs/promises';
+import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { resetMediaBackendForTests } from '@forecourt/media';
 
 /**
  * EXIF stripping, tested against real bytes.
@@ -51,7 +52,14 @@ async function photoWithGps(): Promise<Buffer> {
 let store: typeof import('@/media/store');
 
 beforeAll(async () => {
+  // A developer .env with R2 set would otherwise send these bytes to the
+  // real bucket. The EXIF claim is about the processed object, not the host.
+  delete process.env['R2_ACCOUNT_ID'];
+  delete process.env['R2_ACCESS_KEY_ID'];
+  delete process.env['R2_SECRET_ACCESS_KEY'];
+  delete process.env['R2_BUCKET'];
   process.env['MEDIA_LOCAL_ROOT'] = await mkdtemp(join(tmpdir(), 'forecourt-media-'));
+  resetMediaBackendForTests();
   store = await import('@/media/store');
 });
 
@@ -73,8 +81,9 @@ describe('storing an appraisal photograph', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    const written = await readFile(join(process.env['MEDIA_LOCAL_ROOT']!, result.key));
-    const meta = await sharp(written).metadata();
+    const written = await store.readStoredPhoto(result.key);
+    expect(written).not.toBeNull();
+    const meta = await sharp(written!).metadata();
 
     // Either no EXIF at all, or EXIF that carries none of what was there.
     const raw = meta.exif ? meta.exif.toString('latin1') : '';
@@ -91,8 +100,9 @@ describe('storing an appraisal photograph', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    const written = await readFile(join(process.env['MEDIA_LOCAL_ROOT']!, result.key));
-    expect(written.equals(original)).toBe(false);
+    const written = await store.readStoredPhoto(result.key);
+    expect(written).not.toBeNull();
+    expect(written!.equals(original)).toBe(false);
   });
 
   it('writes under a tenant-prefixed, content-hashed key', async () => {

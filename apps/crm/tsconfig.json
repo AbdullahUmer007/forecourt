@@ -13,13 +13,15 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@forecourt/media": ["../../packages/media/src/index.ts"]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     "../../packages/domain/src/**/*.ts",
+    "../../packages/media/src/**/*.ts",
     "../site/src/render/**/*.ts",
     ".next/types/**/*.ts"
   ],

@@ -1,11 +1,10 @@
 import sharp from 'sharp';
 import { createHash } from 'node:crypto';
-import { mkdir, writeFile, readFile } from 'node:fs/promises';
-import { join, dirname, resolve, sep } from 'node:path';
 import {
   validateUpload, MAX_UPLOAD_BYTES, isTenantOwnedKey, appraisalMediaKey,
   storageKey, brandMediaKey, mediaUrlPath,
 } from '@forecourt/domain';
+import { localMediaRoot, mediaBackend } from '@forecourt/media';
 
 /**
  * Storing an appraisal photograph.
@@ -25,9 +24,10 @@ import {
  *   3. THE KEY IS TENANT-PREFIXED AND CONTENT-HASHED. Two dealers' photographs
  *      never share a path, and the same image uploaded twice is one object.
  *
- * The storage backend is an interface with a local-disk implementation. R2 is
- * the production one and is not wired up — there are no credentials — but
- * nothing above this line knows the difference, so it slots in.
+ * Bytes go through `@forecourt/media`. R2 when the four `R2_*` variables are
+ * set; local disk otherwise. The dealer is waiting on this request, EXIF
+ * must run first, and `workers/` does not exist yet — so PutObject happens
+ * here, not on a queue.
  */
 
 export interface StoredPhoto {
@@ -42,51 +42,10 @@ export interface PhotoRejected {
   error: string;
 }
 
-export interface StorageBackend {
-  put(key: string, body: Buffer, contentType: string): Promise<void>;
-  get(key: string): Promise<Buffer | null>;
-}
+export const mediaRoot = (): string => localMediaRoot();
 
-/**
- * Local disk, for development. Deliberately writes under the SAME key shape
- * production will use, so a bug in the key scheme shows up here rather than
- * the first time a real bucket is attached.
- */
-class LocalDiskStorage implements StorageBackend {
-  constructor(private readonly root: string) {}
-
-  private resolveKey(key: string): string | null {
-    if (key.includes('..') || key.startsWith('/') || key.includes('\\')) return null;
-    const path = resolve(join(this.root, key));
-    const root = resolve(this.root) + sep;
-    if (!path.startsWith(root) && path !== resolve(this.root)) return null;
-    return path;
-  }
-
-  async put(key: string, body: Buffer): Promise<void> {
-    const path = this.resolveKey(key);
-    if (!path) throw new Error('Refusing a media key that escapes the store.');
-    await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, body);
-  }
-
-  async get(key: string): Promise<Buffer | null> {
-    const path = this.resolveKey(key);
-    if (!path) return null;
-    try {
-      return await readFile(path);
-    } catch {
-      return null;
-    }
-  }
-}
-
-export const mediaRoot = (): string =>
-  process.env['MEDIA_LOCAL_ROOT'] ?? join(process.cwd(), '.media');
-
-const backend: StorageBackend = new LocalDiskStorage(mediaRoot());
-
-export const readStoredPhoto = (key: string): Promise<Buffer | null> => backend.get(key);
+export const readStoredPhoto = (key: string): Promise<Buffer | null> =>
+  mediaBackend().get(key);
 
 /**
  * Validate, strip and store. Returns the key to record on the damage mark.
@@ -148,7 +107,7 @@ export async function storeAppraisalPhoto(
     throw new Error('Refusing to store media under a key that is not this tenant’s.');
   }
 
-  await backend.put(key, processed, 'image/jpeg');
+  await mediaBackend().put(key, processed, 'image/jpeg');
   return { ok: true, key, bytes: processed.byteLength, width, height };
 }
 
@@ -203,7 +162,7 @@ export async function storeVehiclePhoto(
   if (!isTenantOwnedKey(key, tenantId)) {
     throw new Error('Refusing to store media under a key that is not this tenant’s.');
   }
-  await backend.put(key, processed.processed, 'image/jpeg');
+  await mediaBackend().put(key, processed.processed, 'image/jpeg');
   return { ok: true, key, bytes: processed.processed.byteLength, width: processed.width, height: processed.height };
 }
 
@@ -218,7 +177,7 @@ export async function storeBrandLogo(
   if (!isTenantOwnedKey(key, tenantId)) {
     throw new Error('Refusing to store media under a key that is not this tenant’s.');
   }
-  await backend.put(key, processed.processed, 'image/jpeg');
+  await mediaBackend().put(key, processed.processed, 'image/jpeg');
   return { ok: true, key, bytes: processed.processed.byteLength, width: processed.width, height: processed.height };
 }
 

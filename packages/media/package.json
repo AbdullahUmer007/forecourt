@@ -1,0 +1,12 @@
+{
+  "name": "@forecourt/media",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.758.0"
+  }
+}
