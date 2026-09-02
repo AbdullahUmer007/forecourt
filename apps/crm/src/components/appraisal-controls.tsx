@@ -6,6 +6,7 @@ import {
   takeIntoStock, withdrawAppraisal,
 } from '@/data/appraisal-actions';
 import { LABEL_CLASS, INPUT_CLASS, BUTTON_CLASS } from './styles';
+import { CatalogueFields } from '@/components/catalogue-fields';
 
 export function AppraisalOfferForm({ appraisalId }: { appraisalId: string }) {
   const [error, setError] = useState<string | null>(null);
@@ -85,18 +86,7 @@ export function AppraisalIdentityForm(
     <form action={onSubmit} className="grid gap-2 sm:grid-cols-2">
       {error && <p className="sm:col-span-2 text-critical">{error}</p>}
       <input type="hidden" name="appraisalId" value={appraisalId} />
-      <label className="grid gap-1">
-        <span className={LABEL_CLASS}>Make</span>
-        <input className={INPUT_CLASS} name="make" defaultValue={make} />
-      </label>
-      <label className="grid gap-1">
-        <span className={LABEL_CLASS}>Model</span>
-        <input className={INPUT_CLASS} name="model" defaultValue={model} />
-      </label>
-      <label className="grid gap-1 sm:col-span-2">
-        <span className={LABEL_CLASS}>Derivative — confirm, do not guess</span>
-        <input className={INPUT_CLASS} name="derivative" defaultValue={derivative} />
-      </label>
+      <CatalogueFields make={make} model={model} derivative={derivative} />
       <label className="grid gap-1 sm:col-span-2">
         <span className={LABEL_CLASS}>VAT invoice from a VAT-registered seller</span>
         <select className={INPUT_CLASS} name="vatInvoice" defaultValue="">

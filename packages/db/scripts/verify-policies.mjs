@@ -69,6 +69,7 @@ const SPECIAL = [
   'tenants', 'users',
   'auth_attempts', 'mfa_recovery_codes', 'password_reset_tokens',
   'platform_operators', 'operator_sessions',
+  'vehicle_makes', 'vehicle_models', 'vehicle_variants',
 ];
 const special = await sql`
   SELECT c.relname AS table_name,

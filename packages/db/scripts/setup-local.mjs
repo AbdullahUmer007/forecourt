@@ -59,6 +59,7 @@ async function setup() {
     console.log(`This database already has ${existing.n} tables — it is already set up.`);
     console.log('');
     console.log('  To verify it:      pnpm db:policies');
+    console.log('  To load makes:     pnpm db:seed:catalogue');
     console.log('  To seed demo data: pnpm db:seed');
     console.log('  To rebuild it from scratch (DESTROYS ALL LOCAL DATA):');
     console.log('                     pnpm db:setup --reset');
@@ -109,7 +110,7 @@ async function setup() {
   const [{ n }] = await sql`
     SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'public'`;
   console.log(`\n✓ ${migrations.length} migrations applied, ${n} tables.`);
-  console.log('  Now run: pnpm db:policies && pnpm db:seed');
+  console.log('  Now run: pnpm db:policies && pnpm db:seed:catalogue && pnpm db:seed');
 }
 
 try {

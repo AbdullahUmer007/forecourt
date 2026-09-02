@@ -143,6 +143,7 @@ export DATABASE_URL='postgresql://postgres:...@turntable.proxy.rlwy.net:12345/ra
 
 pnpm db:deploy --check    # says what it would do, changes nothing
 pnpm db:deploy            # extensions, roles, migrations, policy verification
+pnpm db:seed:catalogue    # make / model / variant (~46k rows) from vehicle_details/
 ```
 
 `db:deploy` is the deployment counterpart of `db:setup`, which refuses any host

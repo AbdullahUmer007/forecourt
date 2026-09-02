@@ -34,6 +34,7 @@ import type { Tx } from './db';
 import { toPence } from './db';
 import type { Session } from '@/auth/session';
 import { writeAudit } from './audit';
+import { matchCatalogue } from './catalogue';
 import {
   assessBookIn,
   formatStockNumber,
@@ -362,6 +363,26 @@ export async function applyBookIn(
   }
   const { parsed } = parseResult;
 
+  const catalogue = await matchCatalogue(tx, {
+    make: parsed.draft.make,
+    model: parsed.draft.model,
+    derivative: parsed.draft.derivative,
+  });
+  if (!catalogue.ok) {
+    return fail(
+      'Pick the make, model and derivative from the list. We do not invent a trim.',
+      catalogue.problems.map((p) => ({
+        field: p.field,
+        code: 'catalogue_unknown',
+        severity: 'error' as const,
+        message: p.message,
+      })),
+    );
+  }
+  if (catalogue.match.make) parsed.draft.make = catalogue.match.make.name;
+  if (catalogue.match.model) parsed.draft.model = catalogue.match.model.name;
+  if (catalogue.match.variant) parsed.draft.derivative = catalogue.match.variant.label;
+
   const assessment = assessBookIn(parsed.draft, now);
   if (!assessment.ok) {
     return fail(
@@ -436,7 +457,8 @@ export async function applyBookIn(
       const [row] = await sp<{ id: string }[]>`
       INSERT INTO vehicles (
         tenant_id, site_id, stock_number, stock_sequence, registration, vin,
-        make, model, derivative, body_style, doors, transmission, fuel_type, engine_cc,
+        make, model, derivative, make_id, model_id, variant_id,
+        body_style, doors, transmission, fuel_type, engine_cc,
         colour, mileage, first_registered_on, mot_expires_on, former_keepers,
         state, state_changed_at, booked_in_at,
         vat_scheme, purchase_source, purchase_date, purchase_price_pence,
@@ -447,7 +469,11 @@ export async function applyBookIn(
       ) VALUES (
         ${session.tenantId}::uuid, ${parsed.siteId}::uuid,
         ${allocated.stockNumber}, ${allocated.sequence}, ${registrationValue}, ${parsed.vin},
-        ${d.make}, ${d.model}, ${d.derivative}, ${parsed.bodyStyle}, ${parsed.doors},
+        ${d.make}, ${d.model}, ${d.derivative},
+        ${catalogue.match.make?.id ?? null}::uuid,
+        ${catalogue.match.model?.id ?? null}::uuid,
+        ${catalogue.match.variant?.id ?? null}::uuid,
+        ${parsed.bodyStyle}, ${parsed.doors},
         ${parsed.transmission}, ${parsed.fuelType}, ${parsed.engineCc},
         ${parsed.colour}, ${d.mileage}, ${d.firstRegisteredOn}, ${parsed.motExpiresOn},
         ${parsed.formerKeepers},
@@ -578,6 +604,26 @@ export async function applyVehicleEdit(
   }
   const { parsed } = parseResult;
 
+  const catalogue = await matchCatalogue(tx, {
+    make: parsed.draft.make,
+    model: parsed.draft.model,
+    derivative: parsed.draft.derivative,
+  });
+  if (!catalogue.ok) {
+    return fail(
+      'Pick the make, model and derivative from the list. We do not invent a trim.',
+      catalogue.problems.map((p) => ({
+        field: p.field,
+        code: 'catalogue_unknown',
+        severity: 'error' as const,
+        message: p.message,
+      })),
+    );
+  }
+  if (catalogue.match.make) parsed.draft.make = catalogue.match.make.name;
+  if (catalogue.match.model) parsed.draft.model = catalogue.match.model.name;
+  if (catalogue.match.variant) parsed.draft.derivative = catalogue.match.variant.label;
+
   // The price is owned by applyReprice. Assess against the stored price so a
   // stale hidden field cannot make the assessment disagree with the database.
   const storedRetail = before['retail_price_pence'] === null
@@ -644,6 +690,9 @@ export async function applyVehicleEdit(
         registration = ${registrationValue},
         vin = ${parsed.vin},
         make = ${d.make}, model = ${d.model}, derivative = ${d.derivative},
+        make_id = ${catalogue.match.make?.id ?? null}::uuid,
+        model_id = ${catalogue.match.model?.id ?? null}::uuid,
+        variant_id = ${catalogue.match.variant?.id ?? null}::uuid,
         body_style = ${parsed.bodyStyle}, doors = ${parsed.doors},
         transmission = ${parsed.transmission}, fuel_type = ${parsed.fuelType},
         engine_cc = ${parsed.engineCc}, colour = ${parsed.colour},

@@ -6,6 +6,7 @@ import { bookInVehicle, updateVehicle } from '@/data/vehicle-actions';
 import type { VehicleOutcome } from '@/data/vehicle-apply';
 import type { SiteOption } from '@/data/stock';
 import { INPUT_CLASS, LABEL_CLASS } from '@/components/styles';
+import { CatalogueFields } from '@/components/catalogue-fields';
 import {
   PURCHASE_SOURCES,
   PURCHASE_SOURCE_LABELS,
@@ -169,17 +170,12 @@ export function VehicleForm({
         />
         <Field name="vin" label="VIN" error={errors.get('vin')} defaultValue={shown.vin}
           className="mono" maxLength={17} placeholder="WVWZZZAUZNW123456" />
-        <Field name="make" label="Make" error={errors.get('make')} defaultValue={shown.make} placeholder="Volkswagen" />
-        <Field name="model" label="Model" defaultValue={shown.model} placeholder="Golf" />
-        <Field
-          name="derivative"
-          label="Derivative"
-          error={errors.get('derivative')}
-          defaultValue={shown.derivative}
-          placeholder="1.5 TSI EVO Match 5dr"
-          hint={shown.derivativeCandidateCount > 1
-            ? `The lookup found ${shown.derivativeCandidateCount} trims for this plate — pick the right one.`
-            : 'The trim level. It sets the price and the description, so it is worth getting right.'}
+        <CatalogueFields
+          make={shown.make}
+          model={shown.model}
+          derivative={shown.derivative}
+          makeError={errors.get('make')}
+          derivativeError={errors.get('derivative')}
         />
         <Field name="colour" label="Colour" defaultValue={shown.colour} placeholder="Reflex Silver" />
         <Field name="fuelType" label="Fuel" defaultValue={shown.fuelType} placeholder="Petrol" />

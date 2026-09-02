@@ -25,6 +25,7 @@
     "db:seed:leads": "node packages/db/scripts/seed-leads.mjs",
     "db:seed:prep": "node packages/db/scripts/seed-prep.mjs",
     "db:seed:spend": "node packages/db/scripts/seed-spend.mjs",
+    "db:seed:catalogue": "node packages/db/scripts/seed-vehicle-catalogue.mjs",
     "db:setup": "node packages/db/scripts/setup-local.mjs",
     "dev": "pnpm --filter @forecourt/site dev",
     "dev:admin": "pnpm --filter @forecourt/admin dev",

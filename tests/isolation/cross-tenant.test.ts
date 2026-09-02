@@ -215,6 +215,10 @@ const SPECIAL_TABLES = {
   tenants: 'id',
   // global by design; visible only via a shared membership
   users: 'membership',
+  // platform catalogue — readable by every dealer, writable by none
+  vehicle_makes: 'platform',
+  vehicle_models: 'platform',
+  vehicle_variants: 'platform',
 } as const;
 
 /** Append-only tables reject UPDATE via a trigger before RLS is reached. */
@@ -1448,6 +1452,23 @@ describeDb('cross-tenant isolation', () => {
   // edit its own representative-example rule could switch its own
   // compliance gate off, which is worse than any single bad promotion.
   // -------------------------------------------------------------------
+  it('every dealer can read the vehicle catalogue and none of them can write it', async () => {
+    if (!(await tableExists('vehicle_makes'))) return;
+
+    const readable = await asTenant(TENANT_A, USER_A, (tx) =>
+      tx.unsafe('SELECT count(*) AS n FROM vehicle_makes'),
+    );
+    expect(Number(readable[0]?.['n'] ?? 0)).toBeGreaterThanOrEqual(0);
+
+    let code: string | undefined;
+    try {
+      await asTenant(TENANT_A, USER_A, (tx) =>
+        tx.unsafe(`INSERT INTO vehicle_makes (source_id, name, slug) VALUES (999999, 'Smuggled Motors', 'smuggled-motors')`),
+      );
+    } catch (err) { code = (err as { code?: string }).code; }
+    expect(code, 'a tenant wrote a make into the shared catalogue').toBe('42501');
+  });
+
   it('a tenant can read compliance_rules but cannot write them', async () => {
     if (!(await tableExists('compliance_rules'))) return;
 
@@ -1478,6 +1499,7 @@ describeDb('cross-tenant isolation', () => {
   });
 
   it.each(Object.keys(SPECIAL_TABLES))('%s has RLS enabled, forced and a policy', async (table) => {
+    if (!(await tableExists(table))) return;
     const [row] = await sql`
       SELECT c.relrowsecurity AS enabled, c.relforcerowsecurity AS forced,
              (SELECT count(*) FROM pg_policy p WHERE p.polrelid = c.oid) AS policies

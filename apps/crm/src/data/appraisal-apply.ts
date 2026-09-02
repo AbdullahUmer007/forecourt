@@ -7,6 +7,7 @@ import { withSession } from './db';
 import { applyBookIn, type VehicleFormInput } from './vehicle-apply';
 import { loadAppraisal } from './appraisals';
 import { loadSites } from './stock';
+import { matchCatalogue } from './catalogue';
 import type { Session } from '@/auth/session';
 
 export type AppraisalWrite = { ok: true; id?: string; vehicleId?: string } | { ok: false; error: string };
@@ -239,12 +240,26 @@ export async function confirmAppraisalDerivative(
 
   try {
     await withSession(session, async (tx) => {
+      const catalogue = await matchCatalogue(tx, {
+        make: input.make.trim() || null,
+        model: input.model.trim() || null,
+        derivative: input.derivative.trim() || null,
+      });
+      if (!catalogue.ok) {
+        throw new Error(catalogue.problems[0]?.message ?? 'Pick the make, model and derivative from the list.');
+      }
+      const make = catalogue.match.make?.name ?? (input.make.trim() || null);
+      const model = catalogue.match.model?.name ?? (input.model.trim() || null);
+      const derivative = catalogue.match.variant?.label ?? (input.derivative.trim() || null);
       await tx`
         UPDATE appraisals SET
-          make = ${input.make.trim() || null},
-          model = ${input.model.trim() || null},
-          derivative = ${input.derivative.trim() || null},
-          derivative_confirmed = ${input.derivative.trim() !== ''},
+          make = ${make},
+          model = ${model},
+          derivative = ${derivative},
+          make_id = ${catalogue.match.make?.id ?? null}::uuid,
+          model_id = ${catalogue.match.model?.id ?? null}::uuid,
+          variant_id = ${catalogue.match.variant?.id ?? null}::uuid,
+          derivative_confirmed = ${Boolean(derivative)},
           vat_invoice_received = ${input.vatInvoice === 'yes' ? true : input.vatInvoice === 'no' ? false : null},
           updated_at = now(), updated_by = ${session.userId}::uuid
          WHERE id = ${appraisalId}::uuid`;

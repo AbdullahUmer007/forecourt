@@ -114,7 +114,7 @@ export async function loadStock(
       WHERE v.deleted_at IS NULL
         AND (${q}::text IS NULL OR v.search_vector @@ plainto_tsquery('english', ${q}))
         AND (${state}::text IS NULL OR v.state::text = ${state})
-        AND (${make}::text IS NULL OR v.make = ${make})
+        AND (${make}::text IS NULL OR lower(v.make) = lower(${make}))
         AND (${siteId}::text IS NULL OR v.site_id = ${siteId}::uuid)
         AND (NOT ${overage} OR (v.booked_in_at IS NOT NULL
              AND v.booked_in_at < now() - interval '90 days'))
@@ -127,7 +127,7 @@ export async function loadStock(
         WHERE v.deleted_at IS NULL
           AND (${q}::text IS NULL OR v.search_vector @@ plainto_tsquery('english', ${q}))
           AND (${state}::text IS NULL OR v.state::text = ${state})
-          AND (${make}::text IS NULL OR v.make = ${make})
+          AND (${make}::text IS NULL OR lower(v.make) = lower(${make}))
           AND (${siteId}::text IS NULL OR v.site_id = ${siteId}::uuid)
           AND (NOT ${overage} OR (v.booked_in_at IS NOT NULL
                AND v.booked_in_at < now() - interval '90 days'))`,
@@ -142,7 +142,7 @@ export async function loadStock(
         SELECT v.state::text AS state, count(*)::int AS n FROM vehicles v
         WHERE v.deleted_at IS NULL
           AND (${q}::text IS NULL OR v.search_vector @@ plainto_tsquery('english', ${q}))
-          AND (${make}::text IS NULL OR v.make = ${make})
+          AND (${make}::text IS NULL OR lower(v.make) = lower(${make}))
           AND (${siteId}::text IS NULL OR v.site_id = ${siteId}::uuid)
         GROUP BY v.state ORDER BY count(*) DESC`,
     ]);
