@@ -318,7 +318,6 @@ export default async function VehiclePage(
             <ul className="mt-4 grid gap-2">
               {photos.map((p) => (
                 <li key={p.id}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.url} alt="" className="aspect-[4/3] w-full rounded-sm object-cover" />
                 </li>
               ))}

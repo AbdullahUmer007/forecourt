@@ -48,7 +48,6 @@ export function VehicleMediaPanel(
         <ul className="grid gap-3 sm:grid-cols-2">
           {photos.map((p) => (
             <li key={p.id} className="rounded-md border border-edge p-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.url} alt="" className="aspect-[4/3] w-full rounded-sm object-cover bg-surface-3" />
               <div className="mt-2 flex flex-wrap gap-2 text-[13px]">
                 {p.isHero && <span className="font-medium">Hero</span>}

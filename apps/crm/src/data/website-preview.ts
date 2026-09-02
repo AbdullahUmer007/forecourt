@@ -1,3 +1,4 @@
+import { defaultSiteTheme, FONT_STACKS } from '@forecourt/domain';
 import { requireSession } from '@/auth/session';
 import { loadWebsiteSettings } from './website';
 import { renderHomePage } from '../../../site/src/render/home.js';
@@ -12,6 +13,7 @@ export async function renderWebsitePreview(tenantId: string): Promise<string> {
   }
   const settings = await loadWebsiteSettings(session);
   const name = session.tenantName;
+  const fallback = defaultSiteTheme(settings?.themeId ?? 'classic');
 
   return renderHomePage({
     dealer: {
@@ -41,11 +43,11 @@ export async function renderWebsitePreview(tenantId: string): Promise<string> {
       priceRange: '££',
     },
     theme: {
-      brandPrimary: settings?.brandPrimary ?? '#0E5A6B',
-      brandPrimaryHover: settings?.brandPrimary ?? '#0B4553',
-      radius: settings?.radius ?? 'soft',
-      cardStyle: settings?.cardStyle ?? 'bordered',
-      fontStack: 'Inter, system-ui, sans-serif',
+      brandPrimary: settings?.brandPrimary ?? fallback.brandPrimary,
+      brandPrimaryHover: fallback.brandPrimaryHover,
+      radius: settings?.radius ?? fallback.radius,
+      cardStyle: settings?.cardStyle ?? fallback.cardStyle,
+      fontStack: FONT_STACKS[settings?.fontPairing ?? fallback.fontPairing],
     },
     ...(settings?.homeHeadline ? { headline: settings.homeHeadline } : {}),
     ...(settings?.homeLead ? { lead: settings.homeLead } : {}),

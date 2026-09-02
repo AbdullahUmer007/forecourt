@@ -81,7 +81,6 @@ export function WebsiteForm({ settings }: { settings: WebsiteSettings }) {
         <label className="grid gap-1 sm:col-span-2">
           <span className={LABEL_CLASS}>Logo</span>
           {settings.logoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
             <img src={settings.logoUrl} alt="" className="mb-2 h-12 w-auto" />
           )}
           <input className={INPUT_CLASS} name="logo" type="file" accept="image/*" />
