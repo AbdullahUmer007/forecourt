@@ -143,7 +143,7 @@ main p,main li{color:var(--ink-muted);margin:0 0 12px}
 .px-form{display:grid;gap:12px;margin-top:24px;max-width:24rem}
 .px-form label{display:grid;gap:4px;font-size:13px}
 .px-form input{min-height:44px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-md);font:inherit}
-.px-form button{min-height:44px;border:0;border-radius:var(--radius-md);background:var(--brand);color:#fff;font:inherit;font-weight:600}
+.px-form button{min-height:44px;border:0;border-radius:var(--radius-md);background:var(--brand);color:var(--on-brand);font:inherit;font-weight:600}
 </style>
 </head>
 <body>

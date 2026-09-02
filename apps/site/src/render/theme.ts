@@ -45,6 +45,7 @@ export function criticalCss(theme: BrandTheme = DEFAULT_THEME): string {
   return `
 :root{color-scheme:light dark;
 --brand:${theme.brandPrimary};--brand-hover:${theme.brandPrimaryHover};
+--on-brand:#FFFFFF;
 /* The brand colour has TWO jobs and they need different values in dark mode.
    --brand fills a surface (white text sits on it); --brand-text IS the text.
    brand-600 is 7.80:1 on white but only 1.8:1 on the dark surface, so brand
