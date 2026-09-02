@@ -270,6 +270,19 @@ export function appraisalMediaKey(p: {
   return `t/${p.tenantId}/a/${p.appraisalId}/${p.contentHash.slice(0, 12)}.${p.extension ?? 'jpg'}`;
 }
 
+/** Logo or other brand asset. Same tenant prefix as every other object. */
+export function brandMediaKey(p: {
+  tenantId: string;
+  kind: 'logo-light' | 'logo-dark';
+  contentHash: string;
+  extension?: string;
+}): string {
+  return `t/${p.tenantId}/b/${p.kind}/${p.contentHash.slice(0, 12)}.${p.extension ?? 'jpg'}`;
+}
+
+/** Public URL path for a stored key. The serve routes resolve this. */
+export const mediaUrlPath = (key: string): string => `/media/${key}`;
+
 // ---------------------------------------------------------------- processing
 
 export type ProcessingStep =

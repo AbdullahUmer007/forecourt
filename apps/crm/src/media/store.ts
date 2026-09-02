@@ -1,9 +1,10 @@
 import sharp from 'sharp';
 import { createHash } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { join, dirname, resolve, sep } from 'node:path';
 import {
   validateUpload, MAX_UPLOAD_BYTES, isTenantOwnedKey, appraisalMediaKey,
+  storageKey, brandMediaKey, mediaUrlPath,
 } from '@forecourt/domain';
 
 /**
@@ -43,6 +44,7 @@ export interface PhotoRejected {
 
 export interface StorageBackend {
   put(key: string, body: Buffer, contentType: string): Promise<void>;
+  get(key: string): Promise<Buffer | null>;
 }
 
 /**
@@ -52,16 +54,39 @@ export interface StorageBackend {
  */
 class LocalDiskStorage implements StorageBackend {
   constructor(private readonly root: string) {}
+
+  private resolveKey(key: string): string | null {
+    if (key.includes('..') || key.startsWith('/') || key.includes('\\')) return null;
+    const path = resolve(join(this.root, key));
+    const root = resolve(this.root) + sep;
+    if (!path.startsWith(root) && path !== resolve(this.root)) return null;
+    return path;
+  }
+
   async put(key: string, body: Buffer): Promise<void> {
-    const path = join(this.root, key);
+    const path = this.resolveKey(key);
+    if (!path) throw new Error('Refusing a media key that escapes the store.');
     await mkdir(dirname(path), { recursive: true });
     await writeFile(path, body);
   }
+
+  async get(key: string): Promise<Buffer | null> {
+    const path = this.resolveKey(key);
+    if (!path) return null;
+    try {
+      return await readFile(path);
+    } catch {
+      return null;
+    }
+  }
 }
 
-const backend: StorageBackend = new LocalDiskStorage(
-  process.env['MEDIA_LOCAL_ROOT'] ?? join(process.cwd(), '.media'),
-);
+export const mediaRoot = (): string =>
+  process.env['MEDIA_LOCAL_ROOT'] ?? join(process.cwd(), '.media');
+
+const backend: StorageBackend = new LocalDiskStorage(mediaRoot());
+
+export const readStoredPhoto = (key: string): Promise<Buffer | null> => backend.get(key);
 
 /**
  * Validate, strip and store. Returns the key to record on the damage mark.
@@ -126,3 +151,75 @@ export async function storeAppraisalPhoto(
   await backend.put(key, processed, 'image/jpeg');
   return { ok: true, key, bytes: processed.byteLength, width, height };
 }
+
+async function processUpload(file: File): Promise<
+  | { ok: true; processed: Buffer; width: number; height: number; digest: string }
+  | PhotoRejected
+> {
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return {
+      ok: false,
+      error: `That photo is ${(file.size / 1_048_576).toFixed(1)}MB. The limit is ` +
+        `${MAX_UPLOAD_BYTES / 1_048_576}MB — most phones let you send a smaller copy.`,
+    };
+  }
+  const raw = Buffer.from(await file.arrayBuffer());
+  const verdict = validateUpload({
+    size: raw.byteLength,
+    mimeType: file.type,
+    head: new Uint8Array(raw.subarray(0, 32)),
+  });
+  if (!verdict.ok) return { ok: false, error: verdict.reason };
+  try {
+    const pipeline = sharp(raw, { failOn: 'error' }).rotate().jpeg({ quality: 82, mozjpeg: true });
+    const { data, info } = await pipeline.toBuffer({ resolveWithObject: true });
+    return {
+      ok: true,
+      processed: data,
+      width: info.width,
+      height: info.height,
+      digest: createHash('sha256').update(data).digest('hex'),
+    };
+  } catch {
+    return {
+      ok: false,
+      error: 'That file has an image extension but is not an image we can read. ' +
+        'Try taking the photo again, or send it as a JPEG.',
+    };
+  }
+}
+
+export async function storeVehiclePhoto(
+  tenantId: string,
+  vehicleId: string,
+  mediaId: string,
+  file: File,
+): Promise<StoredPhoto | PhotoRejected> {
+  const processed = await processUpload(file);
+  if (!processed.ok) return processed;
+  const key = storageKey({
+    tenantId, vehicleId, mediaId, contentHash: processed.digest, format: 'original',
+  });
+  if (!isTenantOwnedKey(key, tenantId)) {
+    throw new Error('Refusing to store media under a key that is not this tenant’s.');
+  }
+  await backend.put(key, processed.processed, 'image/jpeg');
+  return { ok: true, key, bytes: processed.processed.byteLength, width: processed.width, height: processed.height };
+}
+
+export async function storeBrandLogo(
+  tenantId: string,
+  kind: 'logo-light' | 'logo-dark',
+  file: File,
+): Promise<StoredPhoto | PhotoRejected> {
+  const processed = await processUpload(file);
+  if (!processed.ok) return processed;
+  const key = brandMediaKey({ tenantId, kind, contentHash: processed.digest });
+  if (!isTenantOwnedKey(key, tenantId)) {
+    throw new Error('Refusing to store media under a key that is not this tenant’s.');
+  }
+  await backend.put(key, processed.processed, 'image/jpeg');
+  return { ok: true, key, bytes: processed.processed.byteLength, width: processed.width, height: processed.height };
+}
+
+export { mediaUrlPath };

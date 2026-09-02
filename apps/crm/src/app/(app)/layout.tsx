@@ -32,6 +32,8 @@ const NAV: (NavItem & { needs?: string })[] = [
   { href: '/channels', label: 'Channels', icon: 'channels', needs: 'channel.read' },
   { href: '/compliance', label: 'Compliance', icon: 'compliance', needs: 'compliance.read' },
   { href: '/accounting', label: 'Accounting', icon: 'accounting', needs: 'report.financial.read' },
+  { href: '/settings/website', label: 'Website', icon: 'website', needs: 'website.update' },
+  { href: '/settings/staff', label: 'People', icon: 'people', needs: 'user.invite' },
 ];
 
 /**

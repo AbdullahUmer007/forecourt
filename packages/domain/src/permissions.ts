@@ -19,6 +19,7 @@ export const PERMISSIONS = {
   vehicle: ['read', 'create', 'update', 'delete', 'publish', 'cost.read', 'cost.update', 'margin.read', 'price.update'],
   contact: ['read', 'create', 'update', 'delete', 'export', 'dob.read', 'vulnerability.read', 'vulnerability.update'],
   lead: ['read', 'create', 'update', 'assign', 'delete'],
+  appraisal: ['read', 'create', 'update'],
   deal: ['read', 'create', 'update', 'delete', 'discount.approve', 'margin.read'],
   finance: ['read', 'create', 'update', 'commission.read', 'commission.edit', 'evidence.export'],
   invoice: ['read', 'create', 'void', 'refund'],
@@ -117,7 +118,7 @@ export const SYSTEM_ROLES: readonly RoleDefinition[] = [
     name: 'Manager',
     description: 'Everything operational. No billing, no tenant deletion, no editing permissions above their own level.',
     permissions: expand(
-      'vehicle.*', 'contact.*', 'lead.*', 'deal.*', 'finance.*', 'invoice.*', 'payment.*',
+      'vehicle.*', 'contact.*', 'lead.*', 'appraisal.*', 'deal.*', 'finance.*', 'invoice.*', 'payment.*',
       'stockbook.*', 'prep.*', 'supplier.*', 'website.*', 'channel.*', 'report.*',
       'compliance.*', 'staff.*', 'settings.read', 'settings.update', 'user.invite', 'user.update',
     ),
@@ -133,6 +134,7 @@ export const SYSTEM_ROLES: readonly RoleDefinition[] = [
       'vehicle.read',
       'contact.read', 'contact.create', 'contact.update',
       'lead.read', 'lead.create', 'lead.update',
+      'appraisal.read', 'appraisal.create', 'appraisal.update',
       'deal.read', 'deal.create', 'deal.update',
       'finance.read', 'finance.create',
       'invoice.read',
@@ -149,7 +151,7 @@ export const SYSTEM_ROLES: readonly RoleDefinition[] = [
     description: 'Full deal, invoice, finance, document and compliance access. No cost editing unless granted.',
     permissions: [
       'vehicle.read', 'vehicle.update',
-      ...expand('contact.*', 'lead.*', 'deal.*', 'finance.*', 'invoice.*', 'payment.*', 'compliance.*'),
+      ...expand('contact.*', 'lead.*', 'appraisal.*', 'deal.*', 'finance.*', 'invoice.*', 'payment.*', 'compliance.*'),
       'stockbook.read', 'stockbook.export',
       'report.read', 'report.export',
       'settings.read',
@@ -163,7 +165,7 @@ export const SYSTEM_ROLES: readonly RoleDefinition[] = [
     name: 'Buyer / Stock Controller',
     description: 'Full stock, purchase, valuation and supplier access. Read-only on CRM.',
     permissions: [
-      ...expand('vehicle.*', 'supplier.*', 'prep.*'),
+      ...expand('vehicle.*', 'supplier.*', 'prep.*', 'appraisal.*'),
       'contact.read', 'lead.read', 'report.read', 'stockbook.read',
       'channel.read', 'channel.publish',
     ],

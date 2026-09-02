@@ -161,6 +161,132 @@ export interface TenantDetail extends TenantRow {
   }[];
 }
 
+export interface TenantDomain {
+  hostname: string;
+  verified: boolean;
+  isPrimary: boolean;
+}
+
+export interface TenantOwner {
+  email: string;
+  name: string;
+}
+
+export async function loadTenantExtras(tenantId: string): Promise<{
+  domains: TenantDomain[];
+  owners: TenantOwner[];
+} | null> {
+  return acrossTenants(async (tx) => {
+    const [exists] = await tx`SELECT id FROM tenants WHERE id = ${tenantId}::uuid AND deleted_at IS NULL`;
+    if (!exists) return null;
+    const domains = await tx`
+      SELECT hostname, verified_at, is_primary FROM domains
+       WHERE tenant_id = ${tenantId}::uuid ORDER BY is_primary DESC, hostname`;
+    const owners = await tx`
+      SELECT u.email, u.name
+        FROM tenant_memberships m
+        JOIN users u ON u.id = m.user_id
+        JOIN roles r ON r.id = m.role_id
+       WHERE m.tenant_id = ${tenantId}::uuid
+         AND m.status = 'active' AND m.deleted_at IS NULL
+         AND r.key = 'owner'`;
+    return {
+      domains: (domains as Record<string, unknown>[]).map((d) => ({
+        hostname: String(d['hostname']),
+        verified: d['verified_at'] !== null,
+        isPrimary: Boolean(d['is_primary']),
+      })),
+      owners: (owners as Record<string, unknown>[]).map((o) => ({
+        email: String(o['email']),
+        name: String(o['name']),
+      })),
+    };
+  });
+}
+
+export async function setTenantStatus(
+  tenantId: string,
+  status: 'provisioning' | 'trial' | 'live' | 'suspended' | 'cancelled',
+  actorId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await acrossTenants(async (tx) => {
+      const [current] = await tx<{ status: string; name: string }[]>`
+        SELECT status::text AS status, name FROM tenants
+         WHERE id = ${tenantId}::uuid AND deleted_at IS NULL`;
+      if (!current) throw new Error('That dealership is not on the platform.');
+      await tx`
+        UPDATE tenants
+           SET status = ${status}::tenant_status,
+               deleted_at = ${status === 'cancelled' ? new Date() : null},
+               updated_at = now()
+         WHERE id = ${tenantId}::uuid`;
+      await tx`
+        INSERT INTO audit_events (
+          tenant_id, actor_type, actor_id, resource_type, resource_id, action, diff
+        ) VALUES (
+          ${tenantId}::uuid, 'platform', ${actorId}::uuid,
+          'tenant', ${tenantId}::uuid, 'update',
+          ${tx.json({ before: { status: current.status }, after: { status } })}
+        )`;
+    });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : 'The status could not be changed.' };
+  }
+}
+
+export async function connectDomain(
+  tenantId: string,
+  hostnameRaw: string,
+  actorId: string,
+  markVerified: boolean,
+): Promise<{ ok: true; hostname: string } | { ok: false; error: string }> {
+  const hostname = hostnameRaw.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/[:/].*$/, '');
+  if (!/^[a-z0-9.-]+$/.test(hostname)) {
+    return { ok: false, error: `"${hostnameRaw}" does not look like a hostname.` };
+  }
+  try {
+    const result = await acrossTenants(async (tx) => {
+      const [taken] = await tx`
+        SELECT tenant_id FROM domains WHERE lower(hostname) = ${hostname}`;
+      if (taken && String(taken['tenant_id']) !== tenantId) {
+        throw new Error(`${hostname} is already connected to another dealership.`);
+      }
+      const [brand] = await tx<{ id: string }[]>`
+        SELECT id FROM brands WHERE tenant_id = ${tenantId}::uuid
+         ORDER BY is_default DESC, created_at LIMIT 1`;
+      if (!brand) throw new Error('That dealership has no brand to attach a domain to.');
+      const token = `admin-${hostname}`;
+      const verifiedAt = markVerified ? new Date() : null;
+      await tx`
+        INSERT INTO domains (tenant_id, brand_id, hostname, is_primary,
+                             verification_token, verified_at, ssl_status)
+        VALUES (
+          ${tenantId}::uuid, ${brand.id}::uuid, ${hostname},
+          NOT EXISTS (SELECT 1 FROM domains WHERE tenant_id = ${tenantId}::uuid AND is_primary),
+          ${token}, ${verifiedAt}, ${verifiedAt ? 'active' : 'pending'}
+        )
+        ON CONFLICT (hostname) DO UPDATE
+          SET verified_at = EXCLUDED.verified_at,
+              ssl_status = EXCLUDED.ssl_status,
+              updated_at = now()`;
+      await tx`
+        INSERT INTO audit_events (
+          tenant_id, actor_type, actor_id, resource_type, resource_id, action, diff
+        ) VALUES (
+          ${tenantId}::uuid, 'platform', ${actorId}::uuid,
+          'domain', ${tenantId}::uuid, 'update',
+          ${tx.json({ after: { hostname, verified: markVerified } })}
+        )`;
+      return hostname;
+    });
+    return { ok: true, hostname: result };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : 'The hostname could not be connected.' };
+  }
+}
+
 export async function loadTenant(tenantId: string): Promise<TenantDetail | null> {
   const view = await loadPlatform();
   const base = view.tenants.find((t) => t.id === tenantId);

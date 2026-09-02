@@ -31,15 +31,23 @@ export default async function Directory() {
 
   return (
     <>
-      <div className="mb-4">
-        <h1 className="text-[28px] leading-[34px] font-semibold">Dealerships</h1>
-        <p className="text-ink-muted">
-          {view.summary.tenants} on the platform
-          {' · '}
-          <span className={view.queryMs > 500 ? 'text-warning-ink' : 'text-ink-subtle'}>
-            {view.queryMs}ms
-          </span>
-        </p>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-[28px] leading-[34px] font-semibold">Dealerships</h1>
+          <p className="text-ink-muted">
+            {view.summary.tenants} on the platform
+            {' · '}
+            <span className={view.queryMs > 500 ? 'text-warning-ink' : 'text-ink-subtle'}>
+              {view.queryMs}ms
+            </span>
+          </p>
+        </div>
+        <Link
+          href="/tenants/new"
+          className="inline-flex min-h-11 items-center rounded-md border border-brand-600 bg-brand-600 px-4 font-medium text-white hover:bg-brand-700"
+        >
+          Create dealership
+        </Link>
       </div>
 
       <div className="mb-4 grid gap-2 sm:grid-cols-4">

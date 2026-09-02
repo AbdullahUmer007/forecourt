@@ -8,9 +8,10 @@
  *      calls `set_tenant_context` before anything else. RLS then does the work
  *      — the site could ask for every vehicle in the platform and get back
  *      only this dealer's.
- *   2. The connection uses the `app_public` role, which is NOBYPASSRLS and has
- *      SELECT only. A write from the public site is not a bug we have to catch;
- *      it is a privilege the connection does not hold.
+ *   2. The connection uses the `app_public` role, which is NOBYPASSRLS. It can
+ *      SELECT the public-readable tables and INSERT only on `search_events`
+ *      plus the part-exchange write path (contact, lead, draft appraisal).
+ *      Everything else is a privilege the connection does not hold.
  *
  * `SET LOCAL` inside a transaction matters with a pooled connection: a plain
  * `SET` would leak the last request's tenant into the next request that
@@ -59,9 +60,8 @@ export async function withTenant<T>(tenantId: string, fn: (tx: Tx) => Promise<T>
     // dealer's site would render another dealer's stock. Setting the role here
     // makes it a property of the code rather than of a deployment.
     //
-    // It also makes the read-only claim true: a write from the public site is
-    // now a privilege the transaction does not hold, rather than a bug we have
-    // to catch.
+    // Writes that are not granted (the PX path and search_events) fail here
+    // rather than being a bug we have to catch after the fact.
     await tx`SET LOCAL ROLE app_public`;
 
     // The public site sees the whole tenant: it renders a dealer's shopfront,

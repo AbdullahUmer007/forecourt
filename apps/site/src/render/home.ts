@@ -67,6 +67,8 @@ export interface HomeInput {
   browseByMake: readonly BrowseEntry[];
   theme?: BrandTheme;
   now?: Date;
+  headline?: string;
+  lead?: string;
 }
 
 const fmtPrice = (pence: bigint | null): string =>
@@ -118,6 +120,7 @@ export function renderHomePage(input: HomeInput): string {
   const {
     dealer, stockCount, fromPricePence, justArrived,
     browseByBody, browseByMake, theme = DEFAULT_THEME,
+    headline, lead,
   } = input;
 
   const url = canonicalUrl(dealer.url, '/');
@@ -158,8 +161,8 @@ ${masthead(dealer, input.now ? { now: input.now } : {})}
        mind; a stock photograph of a car they cannot buy wastes the fold. -->
   <section class="home-hero">
     <div class="wrap">
-      <h1>Used cars${place ? ` in ${esc(place)}` : ''}, sold straight.</h1>
-      <p>Every car history checked before it goes on sale, the full MOT record published, and any mark on the paintwork photographed and named — so nothing is a surprise when you get here.</p>
+      <h1>${esc(headline || `Used cars${place ? ` in ${place}` : ''}, sold straight.`)}</h1>
+      <p>${esc(lead || 'Every car history checked before it goes on sale, the full MOT record published, and any mark on the paintwork photographed and named — so nothing is a surprise when you get here.')}</p>
 
       <form class="home-search" method="get" action="/used-cars" role="search">
         <label class="visually-hidden" for="hq">Make, model or registration</label>
@@ -228,7 +231,7 @@ ${masthead(dealer, input.now ? { now: input.now } : {})}
     <div class="enq">
       <div>
         <h2 class="h2-lg">Thinking of part-exchanging?</h2>
-        <p>Tell us what you are driving and we will give you a figure against anything on the forecourt. Bring it down and we will confirm it in person — the number we give you is the number we honour.</p>
+        <p>Tell us the registration and mileage. We will ring you with a figure — this form does not value the car on the spot.</p>
         <p><a href="/part-exchange">Value my part-exchange</a></p>
       </div>
       <div>

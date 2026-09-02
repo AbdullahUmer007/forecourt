@@ -40,7 +40,8 @@ function Svg({ size = 20, className = '', children }: IconProps & { children: Re
 
 export type IconName =
   | 'dashboard' | 'appraisal' | 'prep' | 'stock' | 'leads' | 'deals'
-  | 'invoices' | 'vat' | 'channels' | 'reports' | 'compliance' | 'accounting';
+  | 'invoices' | 'vat' | 'channels' | 'reports' | 'compliance' | 'accounting'
+  | 'people' | 'website';
 
 export function DashboardIcon(p: IconProps) {
   return (
@@ -174,6 +175,26 @@ export function AccountingIcon(p: IconProps) {
   );
 }
 
+export function PeopleIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3.5 19c.4-3 2.6-4.5 5.5-4.5s5.1 1.5 5.5 4.5" />
+      <circle cx="17" cy="9" r="2.4" />
+      <path d="M16 14.6c2.2.3 3.8 1.6 4.2 3.9" />
+    </Svg>
+  );
+}
+
+export function WebsiteIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <rect x="3.5" y="5" width="17" height="14" rx="2" />
+      <path d="M3.5 9h17M8 5v4" />
+    </Svg>
+  );
+}
+
 export const NAV_ICONS: Record<IconName, (p: IconProps) => React.ReactElement> = {
   dashboard: DashboardIcon,
   appraisal: AppraisalIcon,
@@ -187,6 +208,8 @@ export const NAV_ICONS: Record<IconName, (p: IconProps) => React.ReactElement> =
   channels: ChannelsIcon,
   compliance: ComplianceIcon,
   accounting: AccountingIcon,
+  people: PeopleIcon,
+  website: WebsiteIcon,
 };
 
 // ------------------------------------------------------------------ chrome

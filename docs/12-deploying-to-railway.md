@@ -67,6 +67,8 @@ For each of `site`, `crm` and `admin`, in the dashboard:
    | `APP` | `site` / `crm` / `admin` | Selects which app the image builds. Railway passes service variables to the Docker build as arguments. |
    | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` | A reference, not a copy — it follows the database if it moves. |
    | `NODE_ENV` | `production` | Already set in the image; harmless to repeat. |
+   | `MEDIA_LOCAL_ROOT` | `/var/media` | **crm and site only.** Photographs. Attach a Railway disk mounted at `/var/media` on both services — the container FS is wiped on every deploy. |
+   | `ADMIN_MFA_BYPASS` | `1` | **admin only, temporary.** Second-factor screens are not built yet. Remove the moment they ship. |
 
    Do **not** set `PORT`. Railway injects it and the standalone server reads it.
 
@@ -274,6 +276,7 @@ Roughly in the order it will matter:
 | Build fails, `APP must be crm, site or admin` | The `APP` service variable is missing. |
 | `DATABASE_URL is not set` in the logs | The variable reference is wrong. It must be `${{Postgres.DATABASE_URL}}`, with the service named exactly as Railway named it. |
 | Every site URL 404s | No verified `domains` row for that host. Run `pnpm db:domain <host>`. Correct behaviour, not a fault. |
+| Photographs vanish after a deploy | The container filesystem is ephemeral. Attach a **persistent disk** to both `crm` and `site`, mount it at `/var/media`, and set `MEDIA_LOCAL_ROOT=/var/media` on both services. They must share the same volume (or the same object store later). |
 | `permission denied for table …` | The schema is older than the code. Run `pnpm db:deploy`, which re-applies the grants. |
 | `permission denied to set role "app_user"` | `db:deploy` never ran against this database, so the login role has no membership of the app roles. |
 | Health check times out | The server is bound to `127.0.0.1`. The image sets `HOSTNAME=0.0.0.0`; something is overriding it. |

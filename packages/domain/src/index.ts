@@ -29,6 +29,7 @@ export * from './reporting.js';
 export * from './compliance-centre.js';
 export * from './platform.js';
 export * from './invoice-document.js';
+export * from './site-theme.js';
 
 /**
  * Every name above is unique across the barrel, and that is load-bearing:

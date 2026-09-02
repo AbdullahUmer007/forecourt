@@ -4,6 +4,10 @@ import { loadAppraisal } from '@/data/appraisals';
 import { Card, StatusBadge, Figure, Amount, Reg, Row, Empty, Problem } from '@/components/ui';
 import { DamageMap } from '@/components/damage-map';
 import {
+  AppraisalOfferForm, AppraisalDecision, AppraisalIdentityForm,
+  TakeIntoStockButton, WithdrawAppraisal,
+} from '@/components/appraisal-controls';
+import {
   estimateRecon, valuationPanel, settlementPosition, equityPosition,
   currentOffer, offerExpired, conversionBlockers,
   assessTyres, vatSchemeForSeller,
@@ -45,6 +49,16 @@ export default async function AppraisalDetail(
     'vehicle.cost.read',
   );
 
+  const canAppraise = holds(
+    { userId: session.userId, tenantId: session.tenantId, roleKey: session.roleKey,
+      permissions: session.permissions, scope: session.scope, siteIds: session.siteIds },
+    'appraisal.update',
+  );
+  const canCreateVehicle = holds(
+    { userId: session.userId, tenantId: session.tenantId, roleKey: session.roleKey,
+      permissions: session.permissions, scope: session.scope, siteIds: session.siteIds },
+    'vehicle.create',
+  );
   const canEditVehicles = holds(
     { userId: session.userId, tenantId: session.tenantId, roleKey: session.roleKey,
       permissions: session.permissions, scope: session.scope, siteIds: session.siteIds },
@@ -72,6 +86,17 @@ export default async function AppraisalDetail(
               </p>
             </div>
           </div>
+
+          {canAppraise && appraisal.state !== 'converted' && appraisal.state !== 'abandoned' && (
+            <div className="mt-4">
+              <AppraisalIdentityForm
+                appraisalId={appraisal.id}
+                make={appraisal.make ?? ''}
+                model={appraisal.model ?? ''}
+                derivative={appraisal.derivative ?? ''}
+              />
+            </div>
+          )}
 
           {!appraisal.derivativeConfirmed && (
             <div className="mt-3 rounded-md border border-warning/50 bg-surface-1 p-3">
@@ -208,6 +233,16 @@ export default async function AppraisalDetail(
               )}
             </>
           )}
+          {canAppraise && appraisal.state !== 'converted' && appraisal.state !== 'abandoned' && (
+            <div className="mt-4 border-t border-edge pt-3">
+              <AppraisalOfferForm appraisalId={appraisal.id} />
+              {offer && appraisal.state === 'offered' && (
+                <div className="mt-3">
+                  <AppraisalDecision appraisalId={appraisal.id} />
+                </div>
+              )}
+            </div>
+          )}
         </Card>
 
         {/* --------------------------------------------- the valuation */}
@@ -300,7 +335,7 @@ export default async function AppraisalDetail(
           ) : blockers.length === 0 ? (
             <>
               <StatusBadge tone="good" icon="✓" label="Ready" />
-              <p className="mt-2 text-ink-muted">
+              <p className="mt-2 mb-3 text-ink-muted">
                 Everything needed for the stock record and the VAT stock book is captured. The
                 purchase price will be the allowance
                 {offer && <> — <Amount value={offer.breakdown.allowance} /></>}
@@ -310,6 +345,7 @@ export default async function AppraisalDetail(
                   {' '}scheme</>
                 )}.
               </p>
+              {canCreateVehicle && <TakeIntoStockButton appraisalId={appraisal.id} ready />}
             </>
           ) : (
             <ul className="grid gap-3">
@@ -326,6 +362,10 @@ export default async function AppraisalDetail(
             </ul>
           )}
         </Card>
+
+        {canAppraise && (appraisal.state === 'draft' || appraisal.state === 'appraised') && (
+          <WithdrawAppraisal appraisalId={appraisal.id} />
+        )}
       </div>
     </div>
   );

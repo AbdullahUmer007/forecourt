@@ -35,6 +35,7 @@ export interface ChromeDealer {
   fcaReference?: string | null;
   companyNumber?: string | null;
   legalName?: string | null;
+  logoUrl?: string | null;
 }
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
@@ -121,6 +122,9 @@ export function masthead(dealer: ChromeDealer, opts: { now?: Date; nav?: readonl
   return html`<header class="masthead">
   <div class="masthead-in">
     <a class="brand" href="/">
+      ${raw(dealer.logoUrl
+        ? `<img class="brand-logo" src="${esc(dealer.logoUrl)}" alt="" width="160" height="40">`
+        : '')}
       <span class="brand-name">${dealer.name}</span>
       ${raw(status
         ? `<span class="brand-open"><span class="dot${status.open ? '' : ' dot-shut'}" aria-hidden="true"></span>${esc(status.label)}${esc(place)}</span>`
@@ -162,6 +166,8 @@ export function siteFooter(dealer: ChromeDealer): string {
       <div>
         <h2>Buying</h2>
         <ul>
+          <li><a href="/about">About us</a></li>
+          <li><a href="/contact">Contact</a></li>
           <li><a href="/finance">Car finance</a></li>
           <li><a href="/part-exchange">Part-exchange</a></li>
           <li><a href="/warranty">Warranty</a></li>

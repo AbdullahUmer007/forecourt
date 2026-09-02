@@ -87,7 +87,7 @@ export async function GET(request: Request, { params }: Params): Promise<Respons
   if (signal) await recordDemandSignal(tenantId, signal);
 
   const html = renderResultsPage({
-    query, dealer, vehicles, totalCount: total,
+    query, dealer, theme: dealer.theme, vehicles, totalCount: total,
     facetCounts: facets,
     labelFor: labelFor(tenantId),
     countFor: (q) => counts.get(JSON.stringify(q)) ?? 0,

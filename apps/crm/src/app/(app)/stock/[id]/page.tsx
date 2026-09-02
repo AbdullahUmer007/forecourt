@@ -2,8 +2,14 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { requireSession } from '@/auth/session';
 import { loadVehicle } from '@/data/stock';
+import { listVehiclePhotos } from '@/data/media-apply';
 import { Card, StatusBadge, Figure, Amount, Reg, Row, Problem } from '@/components/ui';
-import { holds, goLiveBlockers, OVERAGE_DAYS, format, subtract } from '@forecourt/domain';
+import { VehicleMediaPanel } from '@/components/vehicle-media';
+import { VehicleLifecycle } from '@/components/vehicle-lifecycle';
+import {
+  holds, goLiveBlockers, canTransition, OVERAGE_DAYS, format, subtract,
+  type VehicleState,
+} from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,13 +39,16 @@ export default async function VehiclePage(
     permissions: session.permissions, scope: session.scope, siteIds: session.siteIds,
   };
   const canSeeCost = holds(principal, 'vehicle.cost.read');
+  const canPublish = holds(principal, 'vehicle.publish');
+  const canUpdate = holds(principal, 'vehicle.update');
 
   const vehicle = await loadVehicle(session, id, canSeeCost);
   if (!vehicle) notFound();
+  const photos = await listVehiclePhotos(session, id);
 
   // M3's gate. Every blocker carries whether it can be overridden, because the
   // dealer needs to know what to fix rather than that something is wrong.
-  const blockers = goLiveBlockers({
+  const rawBlockers = goLiveBlockers({
     state: vehicle.state,
     registration: vehicle.registration,
     vatScheme: vehicle.vatScheme as 'margin' | 'qualifying' | 'non_qualifying' | null,
@@ -59,6 +68,30 @@ export default async function VehiclePage(
     highestMotMileage: vehicle.highestMotMileage,
     mileageAnomalyAcknowledgedBy: vehicle.mileageAnomalyAcknowledged ? 'ack' : null,
   });
+  const DEALER_BLOCKER: Record<string, string> = {
+    no_photos: 'Needs a published photograph',
+    no_price: 'Needs a retail price',
+    no_vat_scheme: 'Needs a VAT scheme',
+    no_registration: 'Needs a registration',
+  };
+  const blockers = rawBlockers.map((b) => ({
+    ...b,
+    message: DEALER_BLOCKER[b.code] ?? b.message,
+  }));
+  const state = vehicle.state as VehicleState;
+  const lifecycleActions: { label: string; toState: string }[] = [];
+  if (canPublish && canTransition(state, 'ready') && state !== 'live') {
+    lifecycleActions.push({ label: 'Mark ready', toState: 'ready' });
+  }
+  if (canPublish && canTransition(state, 'live')) {
+    lifecycleActions.push({ label: 'Mark live', toState: 'live' });
+  }
+  if (canUpdate && state === 'live') {
+    lifecycleActions.push({ label: 'Take down from the website', toState: 'ready' });
+  }
+  if (canUpdate && state === 'reserved') {
+    lifecycleActions.push({ label: 'Release reservation', toState: 'live' });
+  }
 
   const description = [vehicle.make, vehicle.model, vehicle.derivative]
     .filter(Boolean).join(' ');
@@ -259,6 +292,16 @@ export default async function VehiclePage(
           </dl>
         </Card>
 
+        <Card title="On the website">
+          <VehicleLifecycle
+            vehicleId={vehicle.id}
+            state={vehicle.state}
+            canArchive={canUpdate}
+            blockers={blockers}
+            actions={lifecycleActions}
+          />
+        </Card>
+
         <Card title="Media">
           <Figure
             label="Published photographs"
@@ -267,6 +310,20 @@ export default async function VehiclePage(
               ? { hint: 'Every portal ranks a listing without pictures last.' }
               : {})}
           />
+          {canUpdate ? (
+            <div className="mt-4">
+              <VehicleMediaPanel vehicleId={vehicle.id} photos={photos} />
+            </div>
+          ) : photos.length > 0 ? (
+            <ul className="mt-4 grid gap-2">
+              {photos.map((p) => (
+                <li key={p.id}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.url} alt="" className="aspect-[4/3] w-full rounded-sm object-cover" />
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </Card>
 
         <Card title="Provenance">

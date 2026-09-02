@@ -20,6 +20,7 @@
     "**/*.ts",
     "**/*.tsx",
     "../../packages/domain/src/**/*.ts",
+    "../site/src/render/**/*.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]

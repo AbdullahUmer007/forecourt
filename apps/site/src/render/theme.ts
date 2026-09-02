@@ -116,6 +116,7 @@ display:flex;align-items:center;gap:12px}
 .brand{display:flex;flex-direction:column;justify-content:center;min-height:44px;
 min-width:0;flex:1 1 auto;text-decoration:none;color:inherit}
 .brand:hover{color:inherit}
+.brand-logo{height:40px;width:auto;max-width:160px;object-fit:contain;display:block}
 .brand-name{font-size:clamp(15px,1.7vw,21px);font-weight:700;letter-spacing:-.022em;
 line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brand-open{display:flex;align-items:center;gap:5px;font-size:var(--t-2xs);line-height:15px;

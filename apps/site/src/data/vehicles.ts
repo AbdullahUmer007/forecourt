@@ -16,6 +16,10 @@ import { withTenant, toPence, toInt, toIsoDate, toDate, type Tx } from './db.js'
 import type { VdpInput, MediaView, MotTestView } from '../render/vdp.js';
 import type { SitemapVehicle, SitemapStaticPage, SimilarVehicle } from '../../../../packages/domain/src/seo.js';
 import { slugify } from '../../../../packages/domain/src/seo.js';
+import {
+  parseSiteTheme, brandThemeTokens, type SiteThemeConfig,
+} from '../../../../packages/domain/src/site-theme.js';
+import { mediaUrlPath } from '../../../../packages/domain/src/media.js';
 
 const ADVERTISABLE = ['live', 'reserved'] as const;
 
@@ -210,26 +214,37 @@ export async function loadStaticPages(_tenantId: string): Promise<SitemapStaticP
     { path: '/', updatedAt: now, priority: 1 },
     { path: '/used-cars', updatedAt: now, priority: 0.9 },
     { path: '/finance', updatedAt: now },
+    { path: '/part-exchange', updatedAt: now },
+    { path: '/about', updatedAt: now },
+    { path: '/contact', updatedAt: now },
     { path: '/initial-disclosure', updatedAt: now },
     { path: '/complaints-procedure', updatedAt: now },
     { path: '/privacy-policy', updatedAt: now },
+    { path: '/terms', updatedAt: now },
+    { path: '/warranty', updatedAt: now },
   ];
 }
 
 export type LoadedDealer = VdpInput['dealer'] & {
   fcaFrn: string | null;
-  theme: undefined;
+  theme: ReturnType<typeof brandThemeTokens>;
+  siteTheme: SiteThemeConfig;
 };
 
 export async function loadDealer(tenantId: string, origin: string): Promise<LoadedDealer> {
   return withTenant(tenantId, async (tx) => {
     const rows = await tx`
       SELECT t.name, t.legal_name, t.fca_frn, t.settings AS tenant_settings,
-             s.address, s.phone, s.email, s.lat, s.lng, s.opening_hours
+             s.address, s.phone, s.email, s.lat, s.lng, s.opening_hours,
+             b.theme AS brand_theme, b.logo_light_key
         FROM tenants t
         LEFT JOIN LATERAL (
           SELECT * FROM sites WHERE tenant_id = t.id ORDER BY created_at LIMIT 1
         ) s ON true
+        LEFT JOIN LATERAL (
+          SELECT theme, logo_light_key FROM brands
+           WHERE tenant_id = t.id ORDER BY is_default DESC, created_at LIMIT 1
+        ) b ON true
        WHERE t.id = ${tenantId}::uuid`;
     const r = (rows[0] ?? {}) as Row;
     const address = (r['address'] as Record<string, string> | null) ?? {};
@@ -237,10 +252,13 @@ export async function loadDealer(tenantId: string, origin: string): Promise<Load
     // dealer answers, and it does not change per branch.
     const settings = (r['tenant_settings'] as Record<string, string> | null) ?? {};
     const hours = (r['opening_hours'] as VdpInput['dealer']['openingHours'] | null) ?? [];
+    const siteTheme = parseSiteTheme(r['brand_theme']);
+    const logoKey = r['logo_light_key'] === null || r['logo_light_key'] === undefined
+      ? null : String(r['logo_light_key']);
     return {
       name: String(r['name'] ?? 'Used cars'),
       url: origin,
-      logoUrl: null,
+      logoUrl: logoKey ? mediaUrlPath(logoKey) : null,
       telephone: (r['phone'] as string) ?? null,
       email: (r['email'] as string) ?? null,
       whatsapp: settings['whatsapp'] ?? null,
@@ -258,7 +276,8 @@ export async function loadDealer(tenantId: string, origin: string): Promise<Load
       reviewCount: null,
       priceRange: '££',
       fcaFrn: (r['fca_frn'] as string) ?? null,
-      theme: undefined,
+      theme: brandThemeTokens(siteTheme),
+      siteTheme,
     };
   });
 }
