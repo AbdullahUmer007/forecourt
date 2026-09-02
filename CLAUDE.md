@@ -1,10 +1,10 @@
-# CLAUDE.md — Forecourt
+# CLAUDE.md — RixDrive
 
 Repository conventions for AI assistants and humans. Keep this file short enough that it is always read.
 
 ## What this is
 
-**Forecourt** is a multi-tenant SaaS platform for UK independent used-car dealers. Two products, one dataset:
+**RixDrive** is a multi-tenant SaaS platform for UK independent used-car dealers. Two products, one dataset:
 
 1. **Office CRM** — stock, prep, pricing, leads, deals, finance, compliance, accounting
 2. **Public dealer website** — a fast, brandable shopfront per dealer, driven by the same inventory

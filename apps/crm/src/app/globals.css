@@ -14,42 +14,68 @@
  * downstream references var(--color-…) and never a literal.
  */
 @theme {
-  --color-brand-50: #E6F4F1;
-  --color-brand-100: #C7E5E1;
-  --color-brand-300: #5EC7DC;
-  --color-brand-600: #0E5A6B;
-  --color-brand-700: #0B4553;
+  /*
+   * RixDrive indigo.
+   *
+   * Every step below is measured, not picked. The two that carry text do the
+   * work: brand-600 is 6.29:1 on white as a link and as a button ground under
+   * white text, brand-700 is 7.91:1. The pale steps are grounds only and never
+   * carry text of their own.
+   */
+  --color-brand-50: #EEF2FF;
+  --color-brand-100: #E0E7FF;
+  --color-brand-200: #C7D2FE;
+  --color-brand-300: #A5B4FC;
+  --color-brand-500: #6366F1;
+  --color-brand-600: #4F46E5;
+  --color-brand-700: #4338CA;
 
   /*
    * Accent TEXT, as its own token.
    *
-   * Every link in the CRM was `text-brand-700`, which is 10.55:1 on white and
-   * correct — but `brand-700`'s chosen dark value is #0E5A6B, and that is
-   * 2.28:1 on the dark surface. Measured, not guessed: every link, every
-   * drill-through and the whole `info` badge tone were failing AA in dark mode
-   * on every screen, which the design system's rule 10 exists to prevent.
+   * Every link in the CRM was `text-brand-700`, which is correct on white —
+   * but brand-700's chosen dark value is a mid indigo, and that is far under
+   * AA on the dark surface. Measured, not guessed: every link, every
+   * drill-through and the whole `info` badge tone would fail in dark mode on
+   * every screen, which the design system's rule 10 exists to prevent.
    *
    * `brand-700` could not simply be re-pointed because it is also the primary
    * button's hover BACKGROUND, where a light value would fail the other way.
-   * Two jobs, two tokens. The values are the ones the design system already
-   * names for the purpose — brand-700 on light (10.55:1), brand-300 on dark
-   * (9.03:1 on #16181D) — so nothing here is a new colour.
+   * Two jobs, two tokens.
    */
-  --color-link: #0B4553;
+  --color-link: #4338CA;
 
   --color-accent-500: #F59E0B;
   --color-accent-700: #B45309;
 
+  /*
+   * The greys carry a trace of the brand hue rather than being neutral.
+   *
+   * A pure-neutral grey beside a saturated indigo reads as two unrelated
+   * palettes bolted together; the shared hue is most of what makes a screen
+   * look designed rather than assembled.
+   */
   --color-surface-1: #FFFFFF;
-  --color-surface-2: #F8FAFC;
-  --color-surface-3: #F1F5F9;
+  --color-surface-2: #F6F7FB;
+  --color-surface-3: #EFF1F7;
 
-  --color-edge: #E2E8F0;
-  --color-edge-strong: #CBD5E1;
+  --color-edge: #E3E6EF;
+  --color-edge-strong: #C9CFDE;
 
-  --color-ink: #0F172A;
-  --color-ink-muted: #475569;
-  --color-ink-subtle: #64748B;
+  --color-ink: #0F1729;
+  --color-ink-muted: #4A5468;
+  /*
+   * Measured against the darkest plane it lands on, not against white.
+   *
+   * The obvious lighter grey clears 4.69:1 on white and looks fine in a
+   * swatch — but `ink-subtle` is the hue that carries meta lines, figure
+   * hints and table headers, and those sit on surface-2 and surface-3 far
+   * more often than on a card. There it measured 4.38:1 and 4.15:1, so the
+   * text most likely to be squinted at was the only text failing AA. This is
+   * the same hue two steps down: 5.18:1 on white, 4.84:1 on surface-2,
+   * 4.59:1 on surface-3.
+   */
+  --color-ink-subtle: #656D80;
 
   --color-good: #0CA30C;
   --color-warning: #FAB219;
@@ -57,57 +83,110 @@
   --color-serious: #EC835A;
   --color-critical: #D03B3B;
 
+  /*
+   * The 4px scale, in px, because `html` is 14px.
+   *
+   * Tailwind's spacing unit defaults to 0.25rem, and rem is the ROOT font
+   * size — which this file sets to 14px so that body copy is 14/20. The two
+   * interact: 0.25rem resolved to 3.5px, so the design system's "4px scale"
+   * was silently a 3.5px scale, and every `min-h-11` in the product — written
+   * throughout to mean the 44px touch target rule 7 requires — measured
+   * 38.5px. Every button, every row, every checkbox, on every phone.
+   *
+   * Pinning the unit to an absolute 4px makes the scale mean what the design
+   * system says it means and decouples it from the type size.
+   */
+  --spacing: 4px;
+
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 10px;
 
-  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /*
+   * Four levels, and nothing else — rule 3 of the design system. Flat is the
+   * default and a border is the first move; these exist for the three cases
+   * where something genuinely floats above the page.
+   */
+  --shadow-raised: 0 1px 2px rgb(15 23 42 / 0.06);
+  --shadow-overlay: 0 8px 24px rgb(15 23 42 / 0.12);
+  --shadow-modal: 0 24px 48px rgb(15 23 42 / 0.18);
+
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 /*
  * Dark mode is SELECTED, not flipped: every value below was chosen against the
  * dark surface, not derived by inverting the light one. Rule 10 of the design
  * system.
+ *
+ * It is also CHOSEN BY THE DEALER, not by their laptop. Following
+ * `prefers-color-scheme` meant a machine set to dark got a dark CRM with no
+ * way to say otherwise, which is the opposite of a preference. The attribute
+ * is the only switch; light is what you get without one.
  */
 @layer base {
   :root {
     color-scheme: light;
+
+    /*
+     * The sidebar width is a custom property, not a React value, so that a
+     * dealer who collapsed it does not watch it snap in from 248px on every
+     * navigation. The attribute is written in <head> before first paint; React
+     * only mirrors it for `aria-expanded`.
+     */
+    --nav-w: 248px;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      color-scheme: dark;
+  :root[data-nav="collapsed"] {
+    --nav-w: 68px;
+  }
 
-      --color-brand-50: #0A2E38;
-      --color-brand-100: #0B3A47;
-      --color-brand-600: #177A8F;
-      --color-brand-700: #0E5A6B;
-      /* brand-300 — the value the design system names for dark accent text. */
-      --color-link: #5EC7DC;
+  /* Same reasoning: the labels go with the width, in the same frame. */
+  :root[data-nav="collapsed"] .nav-label {
+    display: none;
+  }
 
-      --color-surface-1: #16181D;
-      --color-surface-2: #0E1013;
-      --color-surface-3: #1D2027;
+  :root[data-theme="dark"] {
+    color-scheme: dark;
 
-      --color-edge: #2A2E36;
-      --color-edge-strong: #3A404A;
+    --color-brand-50: #1E1B4B;
+    --color-brand-100: #272258;
+    --color-brand-200: #312E81;
+    --color-brand-300: #A5B4FC;
+    --color-brand-500: #6366F1;
+    --color-brand-600: #5551E0;
+    --color-brand-700: #4338CA;
+    /* brand-300 — 8.91:1 on the dark card surface, measured. */
+    --color-link: #A5B4FC;
 
-      --color-ink: #FFFFFF;
-      --color-ink-muted: #94A3B8;
-      --color-ink-subtle: #7A8598;
+    --color-surface-1: #16181D;
+    --color-surface-2: #0E1013;
+    --color-surface-3: #1D2027;
 
-      --color-warning-ink: #FAB219;
-      /*
-       * `critical` had no dark value, so it inherited the light one and
-       * measured 3.70:1 against surface-1 dark — a fail, on the most urgent
-       * text in the product. Unlike `warning` and `serious`, which the design
-       * system states are sub-3:1 by design with icon+label as the mitigation,
-       * `critical` was chosen to PASS (4.80:1 on white). This is the nearest
-       * red to it that clears 4.5:1 on the dark surface: 4.83:1, measured.
-       */
-      --color-critical: #DE5A5A;
-    }
+    --color-edge: #2A2E36;
+    --color-edge-strong: #3A404A;
+
+    --color-ink: #FFFFFF;
+    --color-ink-muted: #A0A9BA;
+    --color-ink-subtle: #7A8598;
+
+    --color-warning-ink: #FAB219;
+    /*
+     * `critical` had no dark value, so it inherited the light one and
+     * measured 3.70:1 against surface-1 dark — a fail, on the most urgent
+     * text in the product. Unlike `warning` and `serious`, which the design
+     * system states are sub-3:1 by design with icon+label as the mitigation,
+     * `critical` was chosen to PASS (4.80:1 on white). This is the nearest
+     * red to it that clears 4.5:1 on the dark surface: 4.83:1, measured.
+     */
+    --color-critical: #DE5A5A;
+
+    /* A shadow tuned for white light is invisible on a dark plane; depth there
+       comes from a deeper black, not a darker grey. */
+    --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.5);
+    --shadow-modal: 0 24px 48px rgb(0 0 0 / 0.6);
   }
 
   html {
@@ -115,6 +194,11 @@
     /* body 14/20 — the CRM is a dense tool, not a marketing page. */
     font-size: 14px;
     line-height: 20px;
+    /* Inter's own optical sizing plus the two features that matter at 14px:
+       contextual alternates, and disambiguated zero/one in a product full of
+       registrations and stock numbers. */
+    font-optical-sizing: auto;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
@@ -123,6 +207,16 @@
     margin: 0;
     -webkit-font-smoothing: antialiased;
   }
+
+  /*
+   * Headings tighten as they grow.
+   *
+   * Inter at default tracking looks loose above about 20px, which is most of
+   * why a screen can be correctly built and still read as unconsidered.
+   */
+  h1 { letter-spacing: -0.02em; }
+  h2 { letter-spacing: -0.015em; }
+  h3 { letter-spacing: -0.01em; }
 
   /*
    * Rule 8: a visible focus ring on everything interactive, 2px brand-600 at

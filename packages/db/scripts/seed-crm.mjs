@@ -28,6 +28,8 @@ const OWNER = '22222222-0000-4000-8000-000000000001';
 const EXEC = '22222222-0000-4000-8000-000000000002';
 const ROLE_OWNER = '33333333-0000-4000-8000-000000000001';
 const ROLE_EXEC = '33333333-0000-4000-8000-000000000002';
+const BUYER = '22222222-0000-4000-8000-000000000003';
+const ROLE_BUYER = '33333333-0000-4000-8000-000000000003';
 const CONTACT_A = '44444444-0000-4000-8000-00000000000a';
 const CONTACT_B = '44444444-0000-4000-8000-00000000000b';
 const APPRAISAL_A = '55555555-0000-4000-8000-00000000000a';
@@ -53,6 +55,25 @@ const EXEC_PERMISSIONS = [
   'appraisal.update',
 ];
 
+/**
+ * Buyer / Stock Controller — the person who actually books cars in.
+ *
+ * Worth having as its own account rather than testing book-in as the owner,
+ * for two reasons. It is the role that does this job in a real dealership, and
+ * unlike the owner it holds none of `MFA_REQUIRED_PERMISSIONS`, so it can
+ * reach the stock screens without an authenticator app. An owner demoing the
+ * product on a fresh machine cannot see a single row until they have enrolled.
+ */
+const BUYER_PERMISSIONS = [
+  'vehicle.read', 'vehicle.create', 'vehicle.update', 'vehicle.publish',
+  'vehicle.cost.read', 'vehicle.cost.update', 'vehicle.margin.read', 'vehicle.price.update',
+  'supplier.read', 'supplier.create', 'supplier.update',
+  'prep.read', 'prep.update', 'prep.cost.create',
+  'contact.read', 'lead.read', 'report.read', 'stockbook.read',
+  'channel.read', 'channel.publish',
+  'appraisal.read', 'appraisal.update',
+];
+
 async function seed() {
   const [tenant] = await sql`SELECT id FROM tenants WHERE id = ${TENANT}::uuid`;
   if (!tenant) {
@@ -69,7 +90,9 @@ async function seed() {
       INSERT INTO roles (id, tenant_id, key, name, is_system, permissions, scope_all_sites) VALUES
         (${ROLE_OWNER}::uuid, ${TENANT}::uuid, 'owner', 'Owner', true, ${sql.json(['*'])}, true),
         (${ROLE_EXEC}::uuid, ${TENANT}::uuid, 'sales_executive', 'Sales Executive', true,
-         ${sql.json(EXEC_PERMISSIONS)}, false)
+         ${sql.json(EXEC_PERMISSIONS)}, false),
+        (${ROLE_BUYER}::uuid, ${TENANT}::uuid, 'buyer', 'Buyer / Stock Controller', true,
+         ${sql.json(BUYER_PERMISSIONS)}, true)
       ON CONFLICT (id) DO NOTHING`;
   });
 
@@ -82,18 +105,31 @@ async function seed() {
       algorithm: Algorithm.Argon2id, memoryCost: 19_456, timeCost: 2, parallelism: 1,
     });
 
+    /*
+     * People, not job titles.
+     *
+     * The dashboard greets you by the first word of your name, so seeding
+     * these as 'Dealer Principal' and 'Stock Buyer' put a heading reading
+     * "Dealer" — or, worse, "Stock" on the page that is not the stock page —
+     * at the top of the first screen anyone sees of the product. The role is
+     * already named on the account chip in the sidebar; this field is for the
+     * person.
+     */
     await sql`
       INSERT INTO users (id, email, name, password_hash) VALUES
-        (${OWNER}::uuid, 'owner@kenningtoncarsales.co.uk', 'Dealer Principal', ${passwordHash}),
-        (${EXEC}::uuid, 'sales@kenningtoncarsales.co.uk', 'Sales Executive', ${passwordHash})
-      ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash`;
+        (${OWNER}::uuid, 'owner@kenningtoncarsales.co.uk', 'Ray Kennington', ${passwordHash}),
+        (${EXEC}::uuid, 'sales@kenningtoncarsales.co.uk', 'Jade Whitfield', ${passwordHash}),
+        (${BUYER}::uuid, 'buyer@kenningtoncarsales.co.uk', 'Marcus Ellery', ${passwordHash})
+      ON CONFLICT (id) DO UPDATE
+        SET password_hash = EXCLUDED.password_hash, name = EXCLUDED.name`;
   });
 
   await step('memberships', async () => {
     await sql`
       INSERT INTO tenant_memberships (tenant_id, user_id, role_id, scope_all_sites, status) VALUES
         (${TENANT}::uuid, ${OWNER}::uuid, ${ROLE_OWNER}::uuid, true, 'active'),
-        (${TENANT}::uuid, ${EXEC}::uuid, ${ROLE_EXEC}::uuid, false, 'active')
+        (${TENANT}::uuid, ${EXEC}::uuid, ${ROLE_EXEC}::uuid, false, 'active'),
+        (${TENANT}::uuid, ${BUYER}::uuid, ${ROLE_BUYER}::uuid, true, 'active')
       ON CONFLICT DO NOTHING`;
     if (site) {
       // user_sites hangs off the MEMBERSHIP, not the user — one person can
@@ -264,6 +300,7 @@ async function seed() {
   console.log(`  Password for both accounts: ${DEMO_PASSWORD}`);
   console.log('    owner@kenningtoncarsales.co.uk   sees cost prices, can record damage');
   console.log('    sales@kenningtoncarsales.co.uk   sees neither the breakdown nor the trade value');
+  console.log('    buyer@kenningtoncarsales.co.uk   books cars in — and needs no authenticator app');
   console.log('  Then: pnpm dev:crm → http://localhost:3002');
 }
 

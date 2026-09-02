@@ -1,4 +1,4 @@
-# Forecourt — AI Toolkit Setup
+# RixDrive — AI Toolkit Setup
 
 **Version:** 1.0 — August 2026
 **What this is:** the tooling you asked for — skills, a system prompt, and repo conventions — so that whoever builds this (you, a team, or an AI agent) produces the same product to the same standard every time.

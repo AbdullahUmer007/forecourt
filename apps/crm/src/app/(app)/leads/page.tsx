@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { requireSession } from '@/auth/session';
 import { loadInbox, loadLossAnalysis, type LeadRow } from '@/data/leads';
-import { StatusBadge, Empty, Reg, Card, Figure, ListRow, type Tone } from '@/components/ui';
+import {
+  StatusBadge, Empty, Reg, Card, Figure, ListRow, PageHeader, QueryTime, type Tone,
+} from '@/components/ui';
 import { LOSS_REASON_LABELS, type LeadStage, type LeadSource } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
@@ -92,19 +94,18 @@ export default async function LeadsPage(
 
   return (
     <>
-      <div className="mb-4">
-        <h1 className="text-[28px] leading-[34px] font-semibold">Leads</h1>
-        <p className="text-ink-muted">
-          {page.total.toLocaleString('en-GB')} {closed ? 'lead' : 'open lead'}
-          {page.total === 1 ? '' : 's'}
-          {filtered && ' matching'}
-          {params['from'] && params['to'] && ` · ${params['from']} to ${params['to']}`}
-          {' · '}
-          <span className={page.queryMs > 400 ? 'text-warning-ink' : 'text-ink-subtle'}>
-            {page.queryMs}ms
-          </span>
-        </p>
-      </div>
+      <PageHeader
+        title="Leads"
+        meta={(
+          <>
+            {page.total.toLocaleString('en-GB')} {closed ? 'lead' : 'open lead'}
+            {page.total === 1 ? '' : 's'}
+            {filtered && ' matching'}
+            {params['from'] && params['to'] && ` · ${params['from']} to ${params['to']}`}
+            <QueryTime ms={page.queryMs} budget={400} />
+          </>
+        )}
+      />
 
       {/* The strip counts the whole open book, never the filtered page. "You
           have six overdue" must not change when somebody filters to one

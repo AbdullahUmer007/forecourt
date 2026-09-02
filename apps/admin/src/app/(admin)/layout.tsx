@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getOperatorSession, signOutOperator } from '@/auth/session';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +35,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     <>
       {/* Permanently visible, at the top of every page. */}
       <div className="bg-critical px-4 py-1.5 text-center text-[13px] leading-[18px] font-medium text-white">
-        Forecourt staff · you are looking at customers&rsquo; businesses
+        RixDrive staff · you are looking at customers&rsquo; businesses
       </div>
 
       <header className="sticky top-0 z-10 border-b border-edge bg-surface-1">
@@ -45,14 +46,18 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             {session.role.replace(/_/g, ' ')}
           </span>
 
-          <form action={endSession} className="ml-auto">
-            <button
-              type="submit"
-              className="inline-flex min-h-11 items-center rounded-md px-3 text-ink-muted hover:bg-surface-3 hover:text-ink"
-            >
-              Sign out
-            </button>
-          </form>
+          <div className="ml-auto flex items-center gap-1">
+            <ThemeToggle />
+
+            <form action={endSession}>
+              <button
+                type="submit"
+                className="inline-flex min-h-11 items-center rounded-md px-3 text-ink-muted hover:bg-surface-3 hover:text-ink"
+              >
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
       </header>
 

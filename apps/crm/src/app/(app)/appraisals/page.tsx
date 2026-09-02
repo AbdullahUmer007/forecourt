@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { requireSession } from '@/auth/session';
 import { listAppraisals, type AppraisalSummary } from '@/data/appraisals';
-import { StatusBadge, Empty, Amount, Reg, type Tone } from '@/components/ui';
+import {
+  StatusBadge, Empty, Amount, Reg, PageHeader, ButtonLink, type Tone,
+} from '@/components/ui';
 import type { AppraisalState } from '@forecourt/domain';
 /** The tab a dealer is looking for, named. */
 export const metadata = { title: 'Part-exchange' };
@@ -29,21 +31,16 @@ export default async function AppraisalsPage() {
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-[28px] leading-[34px] font-semibold">Part-exchange</h1>
-          <p className="text-ink-muted">
+      <PageHeader
+        title="Part-exchange"
+        meta={(
+          <>
             Appraise a customer&rsquo;s car, agree a figure, and take it into stock.
-          </p>
-        </div>
-        {/* One primary action per view — rule 4. */}
-        <Link
-          href="/appraisals/new"
-          className="inline-flex min-h-11 items-center rounded-md border border-brand-600 bg-brand-600 px-4 font-medium text-white hover:bg-brand-700"
-        >
-          Appraise a car
-        </Link>
-      </div>
+          </>
+        )}
+        // One primary action per view — rule 4.
+        action={<ButtonLink href="/appraisals/new" variant="primary">Appraise a car</ButtonLink>}
+      />
 
       {appraisals.length === 0 ? (
         <Empty title="No appraisals yet">

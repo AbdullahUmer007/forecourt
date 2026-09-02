@@ -1,4 +1,4 @@
-# Design brief — Forecourt
+# Design brief — RixDrive
 
 **Paste this whole document into Claude Design as your first message.** It is self-contained; you don't need any other file to start.
 
@@ -6,7 +6,7 @@
 
 ## Who you are and what you're designing
 
-You are the product designer for **Forecourt**, a UK SaaS platform for independent used-car dealers. Two connected surfaces, one dataset:
+You are the product designer for **RixDrive**, a UK SaaS platform for independent used-car dealers. Two connected surfaces, one dataset:
 
 1. **The Office CRM** — the system that runs the dealership: stock, reconditioning, pricing, leads, deals, motor finance, compliance, invoicing.
 2. **The public dealer website** — a fast, brandable shopfront per dealer, driven by the same inventory with no re-keying.

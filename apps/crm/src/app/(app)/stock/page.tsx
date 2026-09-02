@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { requireSession } from '@/auth/session';
 import { loadStock, type StockRow } from '@/data/stock';
-import { StatusBadge, Empty, Amount, Reg, ListRow, type Tone } from '@/components/ui';
+import {
+  StatusBadge, Empty, Amount, Reg, ListRow, PageHeader, ButtonLink, QueryTime, type Tone,
+} from '@/components/ui';
 import {
   holds, goLiveBlockers, OVERAGE_DAYS, format, subtract,
   type VehicleState,
@@ -79,21 +81,20 @@ export default async function StockPage(
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-[28px] leading-[34px] font-semibold">Stock</h1>
-          <p className="text-ink-muted">
+      <PageHeader
+        title="Stock"
+        meta={(
+          <>
             {page.total.toLocaleString('en-GB')} car{page.total === 1 ? '' : 's'}
             {filtered && ' matching'}
-            {' · '}
-            {/* The budget, on the page. CLAUDE.md asks for under 400ms and a
-                number nobody can see is a number nobody keeps. */}
-            <span className={page.queryMs > 400 ? 'text-warning-ink' : 'text-ink-subtle'}>
-              {page.queryMs}ms
-            </span>
-          </p>
-        </div>
-      </div>
+            <QueryTime ms={page.queryMs} budget={400} />
+          </>
+        )}
+        // The one primary action on this screen.
+        action={holds(principal, 'vehicle.create')
+          ? <ButtonLink href="/stock/new" variant="primary">Book a car in</ButtonLink>
+          : undefined}
+      />
 
       {/* A GET form: no JavaScript, and the filter state lives in the URL. */}
       <form method="GET" className="mb-4 grid gap-2 rounded-md border border-edge bg-surface-1 p-3 sm:grid-cols-[1fr_auto_auto_auto]">
@@ -178,12 +179,30 @@ export default async function StockPage(
         </label>
       </form>
 
+      {/* Set by a screen that turned the dealer away — say which permission,
+          and who can grant it, rather than only that they cannot. */}
+      {params['denied'] && (
+        <p role="alert" className="mb-4 rounded-md border border-critical/40 bg-surface-1 p-3 text-ink-muted">
+          <span aria-hidden="true">✕</span> You do not have permission to do that
+          (<span className="mono">{params['denied']}</span>). Whoever manages your
+          dealership account can grant it.
+        </p>
+      )}
+
       {page.rows.length === 0 ? (
         <Empty title={filtered ? 'Nothing matches that' : 'No stock yet'}>
           {filtered
             ? 'Try clearing a filter. The counts beside each option show what is actually there.'
             : 'Cars appear here from the moment they are sourced, not just once they are live — '
               + 'so the ones sitting in prep are as visible as the ones on the forecourt.'}
+          {!filtered && holds(principal, 'vehicle.create') && (
+            <Link
+              href="/stock/new"
+              className="mt-3 inline-flex min-h-11 items-center rounded-md border border-brand-600 bg-brand-600 px-4 font-medium text-white hover:bg-brand-700"
+            >
+              Book the first car in
+            </Link>
+          )}
         </Empty>
       ) : (
         <ul className="grid gap-2">

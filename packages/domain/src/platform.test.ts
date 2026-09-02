@@ -87,7 +87,7 @@ describe('support impersonation — the most dangerous feature in the product', 
 
   it('produces a banner naming the reason for the tenant’s own UI', () => {
     const decision = canImpersonate(request(), grant());
-    expect(decision.banner).toMatch(/Forecourt support is signed in to your account/);
+    expect(decision.banner).toMatch(/RixDrive support is signed in to your account/);
     expect(decision.banner).toMatch(/Auto Trader feed/);
     expect(decision.banner).toMatch(/recorded in your audit trail/);
   });

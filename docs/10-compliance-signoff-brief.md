@@ -1,7 +1,7 @@
 # Compliance sign-off brief
 
 **For:** the retained FCA compliance consultant and the VAT specialist
-**From:** Forecourt (Abdullah Umer)
+**From:** RixDrive (Abdullah Umer)
 **Date:** 3 August 2026
 **Status:** three modules are built, tested and **deliberately inert** pending the sign-offs below.
 

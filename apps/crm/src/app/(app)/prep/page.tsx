@@ -1,6 +1,6 @@
 import { requireSession } from '@/auth/session';
 import { loadBoard, type BoardCard } from '@/data/prep';
-import { StatusBadge, Empty, Amount, Reg } from '@/components/ui';
+import { StatusBadge, Empty, Amount, Reg, PageHeader } from '@/components/ui';
 import { MoveControl } from '@/components/move-control';
 import {
   stageDurations, stageSlaState, prepMetrics, costPosition, describeBlockReason,
@@ -60,21 +60,23 @@ export default async function PrepBoard() {
 
   return (
     <>
-      <div className="mb-4">
-        <h1 className="text-[28px] leading-[34px] font-semibold">Prep</h1>
-        <p className="text-ink-muted">
-          {board.cards.length} car{board.cards.length === 1 ? '' : 's'} in prep
-          {totalBlocked > 0 && (
-            <>
-              {' · '}
-              <strong className="text-warning-ink">
-                {Math.round(totalBlocked)} day{Math.round(totalBlocked) === 1 ? '' : 's'} waiting
-              </strong>
-              {' '}across the board
-            </>
-          )}
-        </p>
-      </div>
+      <PageHeader
+        title="Prep"
+        meta={(
+          <>
+            {board.cards.length} car{board.cards.length === 1 ? '' : 's'} in prep
+            {totalBlocked > 0 && (
+              <>
+                {' · '}
+                <strong className="text-warning-ink">
+                  {Math.round(totalBlocked)} day{Math.round(totalBlocked) === 1 ? '' : 's'} waiting
+                </strong>
+                {' '}across the board
+              </>
+            )}
+          </>
+        )}
+      />
 
       {board.cards.length === 0 ? (
         <Empty title="Nothing in prep">

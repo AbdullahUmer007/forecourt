@@ -3,7 +3,7 @@
 **Prepared for:** Kennington Car Sales Limited, 32–36 Aylesbury Street, Bletchley, Milton Keynes MK2 2BA
 **Site audited:** www.kenningtoncarsales.co.uk
 **Date of audit:** August 2026
-**Prepared by:** Forecourt
+**Prepared by:** RixDrive
 
 ---
 
@@ -216,7 +216,7 @@ Two things we publish, because we think they matter in this trade:
 
 ---
 
-**Forecourt**
+**RixDrive**
 [contact details]
 
 ---

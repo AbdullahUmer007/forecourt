@@ -1,4 +1,4 @@
-# Forecourt — Module Build Plan & Build Protocol
+# RixDrive — Module Build Plan & Build Protocol
 
 **Version:** 1.0 — August 2026
 **Purpose:** the ordered backlog an autonomous session works through, and the protocol it follows to ship a module without supervision.

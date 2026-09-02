@@ -111,6 +111,7 @@ const TENANT_TABLES = [
   'vehicle_status_history',
   'vehicle_prices',
   'vehicle_costs',
+  'vehicle_stock_sequences',
   // M4 — vehicle data
   'vehicle_lookups',
   'mot_records',
@@ -176,7 +177,7 @@ const TENANT_TABLES = [
   'channel_listings',
   'channel_overrides',
   'channel_sync_events',
-  // M20: the log of Forecourt staff reading a customer's data. A log we could
+  // M20: the log of RixDrive staff reading a customer's data. A log we could
   // edit would be worth nothing.
   'impersonation_sessions',
   'channel_rules',
@@ -253,7 +254,17 @@ const APPEND_ONLY = new Set<string>([
  */
 const B_MEMBERSHIP = 'aaaaaaa2-aaaa-4aaa-8aaa-aaaaaaaaaaa2';
 const B_ROLE = '66666666-6666-4666-8666-666666666666';
+const A_SITE = '77777777-7777-4777-8777-777777777777';
 const B_SITE = '88888888-8888-4888-8888-888888888888';
+/**
+ * A second site for tenant B, used only by the `vehicle_stock_sequences`
+ * smuggle payload. That table is unique on (tenant_id, site_id) and the seed
+ * below already claims B's first site, so a payload naming it would fail on
+ * 23505 — a duplicate key — before RLS was ever consulted. The test would then
+ * pass with row-level security switched off, which is the exact failure this
+ * file exists to prevent.
+ */
+const B_SITE_2 = '88888888-8888-4888-8888-888888888889';
 const B_BRAND = '99999999-9999-4999-8999-999999999992';
 const B_USER = '44444444-4444-4444-8444-444444444444';
 const A_VEHICLE = 'bbbbbbb1-bbbb-4bbb-8bbb-bbbbbbbbbbb1';
@@ -341,6 +352,10 @@ const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   vehicle_costs: {
     columns: 'tenant_id, vehicle_id, category, description',
     values: `'${TENANT_B}', '${B_VEHICLE}', 'valet', 'Smuggled cost'`,
+  },
+  vehicle_stock_sequences: {
+    columns: 'tenant_id, site_id, prefix, last_number',
+    values: `'${TENANT_B}', '${B_SITE_2}', 'SMG-', 0`,
   },
   vehicle_lookups: {
     columns: 'tenant_id, registration, provider, lookup_type',
@@ -682,7 +697,8 @@ async function seedRivalData(): Promise<void> {
 
     INSERT INTO sites (id, tenant_id, name) VALUES
       ('77777777-7777-4777-8777-777777777777','${A}','Site A'),
-      ('88888888-8888-4888-8888-888888888888','${B}','Site B')
+      ('88888888-8888-4888-8888-888888888888','${B}','Site B'),
+      ('88888888-8888-4888-8888-888888888889','${B}','Site B Annexe')
     ON CONFLICT (id) DO NOTHING;
 
     INSERT INTO brands (id, tenant_id, name, is_default) VALUES
@@ -743,6 +759,17 @@ async function seedRivalData(): Promise<void> {
         SELECT * FROM (VALUES ('${A}'::uuid,'${A_VEHICLE}'::uuid,'valet'::cost_category,'Valet A'),
                               ('${B}'::uuid,'${B_VEHICLE}'::uuid,'valet'::cost_category,'Valet B')) v
         WHERE NOT EXISTS (SELECT 1 FROM vehicle_costs WHERE vehicle_id = '${A_VEHICLE}');
+    `);
+  }
+
+  // Stock-number counters (migration 0023). Both tenants need a row, or the
+  // cross-tenant UPDATE gate has nothing on the other side to fail against.
+  if (await tableExists('vehicle_stock_sequences')) {
+    await sql.unsafe(`
+      INSERT INTO vehicle_stock_sequences (tenant_id, site_id, prefix, last_number)
+        SELECT * FROM (VALUES ('${A}'::uuid,'${A_SITE}'::uuid,'A-',9001::bigint),
+                              ('${B}'::uuid,'${B_SITE}'::uuid,'B-',9001::bigint)) v
+        WHERE NOT EXISTS (SELECT 1 FROM vehicle_stock_sequences WHERE tenant_id = '${A}');
     `);
   }
 

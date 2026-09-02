@@ -5,7 +5,9 @@ import {
   loadComplianceCentre, COMPLIANCE_DISCLAIMER, DISP_FINAL_RESPONSE_DAYS, ICO_NOTIFY_HOURS,
   type ComplaintRow, type BreachRow, type RegisterRow, type EvidenceGapRow,
 } from '@/data/compliance';
-import { Card, Figure, StatusBadge, Empty, Amount, Problem } from '@/components/ui';
+import {
+  Card, Figure, StatusBadge, Empty, Amount, Problem, PageHeader, QueryTime,
+} from '@/components/ui';
 import { holds, type ComplianceStatement } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
@@ -92,16 +94,15 @@ export default async function CompliancePage() {
 
   return (
     <>
-      <div className="mb-4">
-        <h1 className="text-[28px] leading-[34px] font-semibold">Compliance</h1>
-        <p className="text-ink-muted">
-          The clocks that run whether or not anybody is watching them
-          {' · '}
-          <span className={view.queryMs > 500 ? 'text-warning-ink' : 'text-ink-subtle'}>
-            {view.queryMs}ms
-          </span>
-        </p>
-      </div>
+      <PageHeader
+        title="Compliance"
+        meta={(
+          <>
+            The clocks that run whether or not anybody is watching them
+            <QueryTime ms={view.queryMs} budget={500} />
+          </>
+        )}
+      />
 
       {/*
         The 72-hour clock first. It is the one measured in hours.

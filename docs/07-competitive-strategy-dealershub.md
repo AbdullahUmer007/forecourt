@@ -1,4 +1,4 @@
-# Forecourt — Competitive Strategy vs DealersHub
+# RixDrive — Competitive Strategy vs DealersHub
 
 **Version:** 1.0 — August 2026
 **Status:** supersedes the pricing section (§6) and parts of the competitive section (§4) of `01-product-strategy.md`
@@ -104,7 +104,7 @@ Item 8 is the one that pays for us. See §5.
 
 ### 4.1 What changed in our thinking
 
-The original strategy positioned Forecourt against *incumbent legacy DMS vendors* and Auto Trader. That's still true for the wider market, but the immediate fight is different and narrower.
+The original strategy positioned RixDrive against *incumbent legacy DMS vendors* and Auto Trader. That's still true for the wider market, but the immediate fight is different and narrower.
 
 | Original assumption | Revised |
 |---|---|
@@ -115,7 +115,7 @@ The original strategy positioned Forecourt against *incumbent legacy DMS vendors
 
 ### 4.2 Positioning statement (revised)
 
-> **For independent used-car dealers who are paying for a dealer website that Google can't find and customers can't finance, Forecourt is the dealership platform that makes every car on your forecourt a page that ranks, a payment a customer can afford, and a deal you can prove you did properly — with your data yours to take, always.**
+> **For independent used-car dealers who are paying for a dealer website that Google can't find and customers can't finance, RixDrive is the dealership platform that makes every car on your forecourt a page that ranks, a payment a customer can afford, and a deal you can prove you did properly — with your data yours to take, always.**
 
 ### 4.3 The four things we sell, in order of what wins the meeting
 
@@ -167,7 +167,7 @@ Supersedes `01-product-strategy.md` §6.
 
 Published on the website. No setup fee. No contract. No notice period.
 
-| | **Forecourt Site** | **Forecourt Pro** | **Forecourt Group** |
+| | **RixDrive Site** | **RixDrive Pro** | **RixDrive Group** |
 |---|---|---|---|
 | For | Under 30 cars | The core product | 2–8 sites |
 | **Price** | **£89/mo** | **£189/mo** ≤60 live vehicles<br>**£249/mo** 61–120<br>**£319/mo** 121–250<br>250+ POA | **£159/site + £249 platform** |
@@ -226,7 +226,7 @@ DealersHub runs **one templated platform** across every customer. So does every 
 
 This turns cold outbound into warm, evidenced outbound at near-zero marginal cost.
 
-### 7.2 Build this first: the Forecourt Dealer Site Audit
+### 7.2 Build this first: the RixDrive Dealer Site Audit
 
 **Before the CRM. Before the stock list. This is the first thing we ship**, as a free public tool at `forecourt.co.uk/audit` where any dealer enters their domain and gets a scored report in 60 seconds.
 
@@ -286,7 +286,7 @@ Not a pitch. An audit, sent free, with no ask.
 >
 > Hi [name],
 >
-> I run [Forecourt]. We build software for independent dealers, and we've been auditing dealer websites across the UK.
+> I run [RixDrive]. We build software for independent dealers, and we've been auditing dealer websites across the UK.
 >
 > I ran yours. Three things you'll want to know, regardless of whether you ever speak to us:
 >
@@ -338,7 +338,7 @@ Because these are exactly what the competition structurally lacks, and they cost
 | **Keep prep, pricing intelligence and channel P&L in Release 2** | These are retention features, not acquisition features. Right where they are. |
 | **Ship the public status page and portability export in MVP** | They are marketing assets, not engineering luxuries |
 
-Revised MVP definition, in one sentence: *a dealer can be migrated onto Forecourt in a day, their stock is fully indexable with structured data and real slugs, every vehicle shows a compliant finance payment and its MOT history, and their VAT stock book and deal evidence are complete from day one.*
+Revised MVP definition, in one sentence: *a dealer can be migrated onto RixDrive in a day, their stock is fully indexable with structured data and real slugs, every vehicle shows a compliant finance payment and its MOT history, and their VAT stock book and deal evidence are complete from day one.*
 
 ---
 
@@ -360,7 +360,7 @@ Revised MVP definition, in one sentence: *a dealer can be migrated onto Forecour
 1. **Build the audit tool first.** Six checks would be enough to start: sitemap vehicle coverage, structured data, sold-page handling, vehicle URL structure, finance-display compliance, and Core Web Vitals. Ship it in three weeks, not three months.
 2. **Confirm the Kennington numbers** before pitching: units per month, current finance penetration, average commission, and what they actually pay DealersHub. Every figure in §5 marked "assumed" is a question for that meeting, not a claim to make in it.
 3. **Register the two guarantees as published pages** and get the terms drafted properly. They are the differentiator and they need to be real.
-4. **Decide the name and buy the domain.** "Forecourt" is still a working name — check trade marks in classes 9 and 42.
+4. **Buy the domain and clear the name.** The name is settled — RixDrive — so what is left is checking trade marks in classes 9 and 42.
 5. **Do not undercut on price.** The moment we compete on being cheaper than a one-person operation, we lose.
 
 ---

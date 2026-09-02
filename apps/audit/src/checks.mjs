@@ -1,5 +1,5 @@
 /**
- * Forecourt Dealer Site Audit — check definitions.
+ * RixDrive Dealer Site Audit — check definitions.
  *
  * Each check receives the crawled `site` object and returns:
  *   { id, title, status: 'pass'|'warn'|'fail'|'skip', weight, finding, impact, fix }

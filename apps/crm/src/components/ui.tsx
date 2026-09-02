@@ -11,16 +11,27 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { format, formatRegistration, type Money } from '@forecourt/domain';
+import { BUTTON_CLASS, BUTTON_VARIANTS, type ButtonVariant } from './styles';
 
 export type Tone = 'neutral' | 'good' | 'warning' | 'serious' | 'critical' | 'info';
 
+/*
+ * A tinted ground rather than a white one.
+ *
+ * Every tone used to sit on `surface-1` and be told apart by a 1px border in
+ * the status hue, which at 12px is a few dozen coloured pixels — on the stock
+ * list, eight badges in a row read as one grey texture and the eye had to stop
+ * and decode each. A 10% wash of the tone's own hue is legible at a glance and
+ * still light enough that the AA-rated ink on top keeps its ratio, in both
+ * modes.
+ */
 const TONE_CLASSES: Record<Tone, string> = {
   neutral: 'bg-surface-3 text-ink-muted border-edge',
-  good: 'bg-surface-1 text-good border-good/40',
-  warning: 'bg-surface-1 text-warning-ink border-warning/50',
-  serious: 'bg-surface-1 text-warning-ink border-serious/60',
-  critical: 'bg-surface-1 text-critical border-critical/40',
-  info: 'bg-brand-50 text-link border-brand-600/30',
+  good: 'bg-good/10 text-good border-good/25',
+  warning: 'bg-warning/15 text-warning-ink border-warning/35',
+  serious: 'bg-serious/15 text-warning-ink border-serious/35',
+  critical: 'bg-critical/10 text-critical border-critical/25',
+  info: 'bg-brand-50 text-link border-brand-600/20',
 };
 
 /**
@@ -51,10 +62,10 @@ export function Card(
   return (
     // Borders before shadows — rule 3. There are four elevation levels and a
     // card is not one of the raised ones.
-    <section className={`rounded-md border border-edge bg-surface-1 ${className}`}>
+    <section className={`rounded-lg border border-edge bg-surface-1 ${className}`}>
       {title && (
         <header className="flex items-center justify-between gap-3 border-b border-edge px-4 py-3">
-          <h2 className="text-[16px] leading-6 font-semibold">{title}</h2>
+          <h2 className="text-[15px] leading-6 font-semibold tracking-[-0.01em]">{title}</h2>
           {action}
         </header>
       )}
@@ -62,6 +73,76 @@ export function Card(
     </section>
   );
 }
+
+/**
+ * The top of a screen: what it is, what it is showing, and the one thing you
+ * are most likely to do next.
+ *
+ * Every page hand-rolled this, so the gap under the title, whether the meta
+ * line existed and where the action sat all drifted apart — the kind of
+ * inconsistency nobody can name but everybody reads as "unfinished" when they
+ * move between two screens. One primary action per view is rule 4, which is
+ * why `action` is singular.
+ */
+export function PageHeader(
+  { title, meta, action }: { title: ReactNode; meta?: ReactNode; action?: ReactNode },
+) {
+  return (
+    // `edge-strong`, not `edge`.
+    //
+    // The hairline sits on surface-2 rather than inside a card, and `edge` is
+    // 1.06:1 against that plane — it rendered, at two-thirds of a pixel, and
+    // could not be seen at any zoom. A divider nobody can see is not a subtle
+    // divider, it is markup.
+    <div className="mb-6 flex flex-wrap items-start justify-between gap-x-4 gap-y-3 border-b border-edge-strong pb-4">
+      <div className="min-w-0">
+        <h1 className="text-[26px] leading-8 font-semibold">{title}</h1>
+        {meta && <p className="mt-1 text-ink-muted">{meta}</p>}
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
+    </div>
+  );
+}
+
+/**
+ * The measured query time — on our build, not on theirs.
+ *
+ * CLAUDE.md budgets the stock list at 1,000 rows filtering in under 400ms and
+ * the heavier screens at 500ms, and a budget nobody can see is a budget nobody
+ * keeps, so the measurement stays exactly where it was. What changed is the
+ * audience. A dealer reading "1142ms" beside their stock count learns nothing
+ * they can act on, and when it goes over budget they are told in warning
+ * orange that something is wrong with software they cannot fix — so the
+ * number that exists to hold US to a promise was quietly making THEM anxious.
+ *
+ * It carries its own separator so that removing it in production does not
+ * leave a dangling "· " at the end of every page's meta line.
+ */
+export function QueryTime({ ms, budget }: { ms: number; budget: number }) {
+  if (process.env.NODE_ENV !== 'development') return null;
+
+  return (
+    <>
+      {' · '}
+      <span className={ms > budget ? 'text-warning-ink' : 'text-ink-subtle'}>{ms}ms</span>
+    </>
+  );
+}
+
+/**
+ * The shared field styling, re-exported.
+ *
+ * It is defined in `./styles` — a module with no imports — so that a client
+ * component can reach for a label class without this file's `@forecourt/domain`
+ * import following it into the browser bundle. Server components already
+ * importing from here get it without needing to know that.
+ *
+ * Constants rather than an `<Input>` component because the forms in this
+ * product need the raw element: a server action reads `formData` by `name`,
+ * several inputs carry `defaultValue` that React must apply on mount, and
+ * wrapping all that adds a layer without removing one.
+ */
+export { LABEL_CLASS, INPUT_CLASS, BUTTON_CLASS } from './styles';
 
 /** A labelled figure. `mono` for anything that must align in a column. */
 export function Figure(
@@ -148,27 +229,27 @@ export function Problem(
   );
 }
 
-/**
- * 44px minimum touch target on mobile — rule 7. Enforced by the component
- * rather than left to whoever writes the next button.
- */
 export function Button(
   { children, variant = 'secondary', ...rest }:
-  { children: ReactNode; variant?: 'primary' | 'secondary' | 'quiet' } &
+  { children: ReactNode; variant?: ButtonVariant } &
     React.ButtonHTMLAttributes<HTMLButtonElement>,
 ) {
-  const variants = {
-    primary: 'bg-brand-600 text-white hover:bg-brand-700 border-brand-600',
-    secondary: 'bg-surface-1 text-ink hover:bg-surface-3 border-edge-strong',
-    quiet: 'bg-transparent text-link hover:bg-brand-50 border-transparent',
-  };
   return (
-    <button
-      {...rest}
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-md border px-4 text-[14px] font-medium transition-colors duration-100 disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]}`}
-    >
+    <button {...rest} className={`${BUTTON_CLASS} ${BUTTON_VARIANTS[variant]}`}>
       {children}
     </button>
+  );
+}
+
+/** The same control, when the thing it does is go somewhere. */
+export function ButtonLink(
+  { href, children, variant = 'secondary' }:
+  { href: string; children: ReactNode; variant?: ButtonVariant },
+) {
+  return (
+    <Link href={href} className={`${BUTTON_CLASS} ${BUTTON_VARIANTS[variant]}`}>
+      {children}
+    </Link>
   );
 }
 
@@ -219,7 +300,11 @@ export function ListRow(
     <li className="min-w-0">
       <Link
         href={href}
-        className={`flex flex-col gap-2 rounded-md border bg-surface-1 p-3 hover:bg-surface-3 sm:min-h-11 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2 ${
+        // Hover lifts rather than fills. A grey wash over the row also washes
+        // over the reg plate and the badges sitting on it, which are the two
+        // things being scanned; a border and a 1px shadow say "this one"
+        // without touching anything's contrast.
+        className={`flex flex-col gap-2 rounded-lg border bg-surface-1 p-3 transition-shadow duration-100 hover:shadow-(--shadow-raised) sm:min-h-11 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2 ${
           tone === 'alert' ? 'border-critical' : 'border-edge hover:border-edge-strong'
         }`}
       >

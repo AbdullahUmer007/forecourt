@@ -9,7 +9,7 @@
  * SUPPORT IMPERSONATION IS THE MOST DANGEROUS FEATURE IN THE PRODUCT
  * ─────────────────────────────────────────────────────────────────────────
  *
- * It is a deliberate, documented way for somebody at Forecourt to read a
+ * It is a deliberate, documented way for somebody at RixDrive to read a
  * dealer's customer data — their contacts, their deals, their commissions.
  * Rule 1 of CLAUDE.md, four layers of tenant isolation, the whole leak suite:
  * all of it is downstream of this feature not being casual.
@@ -245,7 +245,7 @@ export interface ImpersonationDecision {
 }
 
 /**
- * Whether somebody at Forecourt may enter a dealer's account.
+ * Whether somebody at RixDrive may enter a dealer's account.
  *
  * Every one of the spec's conditions is a REFUSAL, not a warning, and the
  * blockers are returned together so an operator fixes them in one go rather
@@ -317,9 +317,9 @@ export function canImpersonate(
       ? new Date(request.asAt.getTime() + request.requestedHours * 3_600_000)
       : null,
     // §28: visibly banner-flagged in the tenant's own UI. Names the person,
-    // because "Forecourt support" is not who is reading their customer list.
+    // because "RixDrive support" is not who is reading their customer list.
     banner: allowed
-      ? `Forecourt support is signed in to your account. Reason: “${reason}”. ` +
+      ? `RixDrive support is signed in to your account. Reason: “${reason}”. ` +
         'This ends automatically, and everything done is recorded in your audit trail.'
       : null,
   };

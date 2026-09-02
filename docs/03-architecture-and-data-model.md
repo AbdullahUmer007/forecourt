@@ -1,4 +1,4 @@
-# Forecourt — Technical Architecture & Data Model
+# RixDrive — Technical Architecture & Data Model
 
 **Version:** 1.0 — August 2026
 **Companion docs:** `01-product-strategy.md`, `02-functional-spec.md`, `04-design-system.md`, `05-integrations-and-compliance.md`

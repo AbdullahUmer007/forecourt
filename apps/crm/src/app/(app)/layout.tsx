@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getSession, signOut } from '@/auth/session';
-import { Nav } from '@/components/nav';
-import { holds } from '@forecourt/domain';
+import { AppShell, type NavItem } from '@/components/app-shell';
+import { SignOutIcon } from '@/components/icons';
+import { holds, roleByKey } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,21 +17,21 @@ export const dynamic = 'force-dynamic';
  * `notFound()` for a principal without the permission, so both were doing
  * exactly that.
  */
-const NAV: { href: string; label: string; needs?: string }[] = [
-  { href: '/', label: 'Dashboard' },
-  { href: '/appraisals', label: 'Part-exchange' },
-  { href: '/prep', label: 'Prep' },
-  { href: '/stock', label: 'Stock' },
-  { href: '/leads', label: 'Leads' },
-  { href: '/deals', label: 'Deals' },
-  { href: '/invoices', label: 'Invoices' },
+const NAV: (NavItem & { needs?: string })[] = [
+  { href: '/', label: 'Dashboard', icon: 'dashboard' },
+  { href: '/appraisals', label: 'Part-exchange', icon: 'appraisal' },
+  { href: '/prep', label: 'Prep', icon: 'prep' },
+  { href: '/stock', label: 'Stock', icon: 'stock' },
+  { href: '/leads', label: 'Leads', icon: 'leads' },
+  { href: '/deals', label: 'Deals', icon: 'deals' },
+  { href: '/invoices', label: 'Invoices', icon: 'invoices' },
   // Named "VAT book" rather than "Stock book": to a dealer, "the stock book"
   // and "stock" are different things and the nav already has Stock above.
-  { href: '/vat/stock-book', label: 'VAT book', needs: 'stockbook.read' },
-  { href: '/reports/channels', label: 'Channel P&L', needs: 'report.read' },
-  { href: '/channels', label: 'Channels', needs: 'channel.read' },
-  { href: '/compliance', label: 'Compliance', needs: 'compliance.read' },
-  { href: '/accounting', label: 'Accounting', needs: 'report.financial.read' },
+  { href: '/vat/stock-book', label: 'VAT book', icon: 'vat', needs: 'stockbook.read' },
+  { href: '/reports/channels', label: 'Channel P&L', icon: 'reports', needs: 'report.read' },
+  { href: '/channels', label: 'Channels', icon: 'channels', needs: 'channel.read' },
+  { href: '/compliance', label: 'Compliance', icon: 'compliance', needs: 'compliance.read' },
+  { href: '/accounting', label: 'Accounting', icon: 'accounting', needs: 'report.financial.read' },
 ];
 
 /**
@@ -41,6 +41,11 @@ const NAV: { href: string; label: string; needs?: string }[] = [
  * Every authenticated route lives under this layout, so a new page cannot
  * forget the check — it is not a call each page makes, it is the group they
  * are in. /sign-in sits outside the group and is the only route without it.
+ *
+ * The chrome itself is in `<AppShell>`, which is a client component because it
+ * needs the current path. The decisions stay here, on the server: this file
+ * still resolves the session, still enforces MFA and still filters the nav by
+ * permission before a single destination reaches the browser.
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const session = await getSession();
@@ -65,47 +70,28 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <>
-      {/*
-        Two rows, not one.
-        ─────────────────────────────────────────────────────────────────────
-        Twelve sections, the brand, the dealership name and a sign-out control
-        do not fit on one line at 1440px — they wrapped, and a masthead that
-        wraps mid-word reads as a broken page before anybody has looked at the
-        data. Worse, on a phone the nav was clipped at four items with no way
-        to reach the rest: Stock, Leads and Deals were unreachable on the
-        device §7 of the domain skill says a sales executive is standing on the
-        forecourt holding.
-
-        Identity on row one, sections on row two, and the sections row scrolls.
-      */}
-      <header className="sticky top-0 z-10 border-b border-edge bg-surface-1">
-        <div className="mx-auto flex max-w-[1280px] items-center gap-3 px-4 py-2">
-          <Link href="/" className="shrink-0 font-semibold tracking-tight">Forecourt</Link>
-          <span className="truncate text-ink-subtle">{session.tenantName}</span>
-
-          <div className="ml-auto flex shrink-0 items-center gap-1">
-            {/* Who you are signed in as, on the page rather than in a tooltip.
-                A dealership where two people share a machine needs to be able
-                to see whose name is about to go on the audit row. */}
-            <span className="hidden max-w-[16ch] truncate text-ink-muted md:inline">
-              {session.displayName}
-            </span>
-            <form action={endSession}>
-              <button
-                type="submit"
-                className="inline-flex min-h-11 items-center rounded-md border border-edge-strong px-3 font-medium text-ink-muted hover:bg-surface-3 hover:text-ink"
-              >
-                Sign out
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <Nav items={nav.map((item) => ({ href: item.href, label: item.label }))} />
-      </header>
-
-      <main className="mx-auto max-w-[1280px] px-4 py-6">{children}</main>
-    </>
+    <AppShell
+      items={nav.map(({ href, label, icon }) => ({ href, label, icon }))}
+      tenantName={session.tenantName}
+      displayName={session.displayName}
+      // The role's own name, not its key: a dealer reads "Sales executive",
+      // never `sales_exec`. Falling back to the key is deliberate — a custom
+      // role a tenant added is better shown raw than shown as nothing.
+      roleLabel={roleByKey(session.roleKey)?.name ?? session.roleKey}
+      signOut={(
+        <form action={endSession}>
+          <button
+            type="submit"
+            title="Sign out"
+            aria-label="Sign out"
+            className="grid size-9 place-items-center rounded-md text-ink-subtle hover:bg-surface-3 hover:text-ink"
+          >
+            <SignOutIcon size={18} />
+          </button>
+        </form>
+      )}
+    >
+      {children}
+    </AppShell>
   );
 }

@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { requireSession } from '@/auth/session';
 import { loadInvoices, type InvoiceRow } from '@/data/invoices';
-import { Card, Figure, StatusBadge, Empty, Amount, Reg, Problem, type Tone } from '@/components/ui';
+import {
+  Card, Figure, StatusBadge, Empty, Amount, Reg, Problem, PageHeader, QueryTime, type Tone,
+} from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,21 +52,20 @@ export default async function InvoicesPage(
 
   return (
     <>
-      <div className="mb-4">
-        <h1 className="text-[28px] leading-[34px] font-semibold">Invoices</h1>
-        <p className="text-ink-muted">
-          {page.total.toLocaleString('en-GB')} invoice{page.total === 1 ? '' : 's'}
-          {filtered && ' matching'}
-          {' · '}
-          <span className={page.queryMs > 400 ? 'text-warning-ink' : 'text-ink-subtle'}>
-            {page.queryMs}ms
-          </span>
-          {' · '}
-          <Link href="/vat/stock-book" className="text-link hover:underline">
-            VAT stock book
-          </Link>
-        </p>
-      </div>
+      <PageHeader
+        title="Invoices"
+        meta={(
+          <>
+            {page.total.toLocaleString('en-GB')} invoice{page.total === 1 ? '' : 's'}
+            {filtered && ' matching'}
+            <QueryTime ms={page.queryMs} budget={400} />
+            {' · '}
+            <Link href="/vat/stock-book" className="text-link hover:underline">
+              VAT stock book
+            </Link>
+          </>
+        )}
+      />
 
       {/* Should always be empty. If it is not, that IS the finding. */}
       {page.summary.numberGaps.length > 0 && (

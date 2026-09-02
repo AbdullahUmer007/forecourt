@@ -14,7 +14,7 @@
  *    all day.
  *
  * The reason the separation is this hard: §28 exists because one member of
- * Forecourt staff being able to read a dealer's customer data quietly is the
+ * RixDrive staff being able to read a dealer's customer data quietly is the
  * failure that ends the company faster than a tenant leak, because it is
  * deliberate rather than accidental.
  */
@@ -124,7 +124,7 @@ export interface SignInResult {
  * Sign in as an operator.
  *
  * The failure message is identical whether the email is unknown, the password
- * is wrong, or the person is simply not Forecourt staff. Distinguishing them
+ * is wrong, or the person is simply not RixDrive staff. Distinguishing them
  * tells an attacker which of our own colleagues' addresses are worth trying.
  */
 export async function signInOperator(
@@ -134,7 +134,7 @@ export async function signInOperator(
 ): Promise<SignInResult & { token?: string }> {
   const generic = {
     ok: false,
-    error: 'That email address and password do not match a Forecourt operator account.',
+    error: 'That email address and password do not match a RixDrive operator account.',
   };
 
   const [row] = await sql`

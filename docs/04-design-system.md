@@ -1,4 +1,4 @@
-# Forecourt — Design System & UI/UX Specification
+# RixDrive — Design System & UI/UX Specification
 
 **Version:** 1.0 — August 2026
 **Applies to:** the CRM application, the public dealer websites, and the platform admin app

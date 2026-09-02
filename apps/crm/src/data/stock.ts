@@ -181,7 +181,37 @@ export async function loadStock(
   });
 }
 
+export interface SiteOption {
+  id: string;
+  name: string;
+  stockNumberPrefix: string | null;
+}
+
+/**
+ * The sites this user may book a car in at.
+ *
+ * RLS narrows `sites` to the tenant, and the RESTRICTIVE `site_scope` policy
+ * narrows it again to the branches the user is attached to — so a single-site
+ * dealer gets one option and a prep coordinator at one branch of two cannot
+ * see, let alone choose, the other. The picker is hidden when there is only
+ * one: asking a single-site dealer which site every single time is a question
+ * with one answer.
+ */
+export async function loadSites(session: Session): Promise<readonly SiteOption[]> {
+  return withSession(session, async (tx) => {
+    const rows = await tx<{ id: string; name: string; stock_number_prefix: string | null }[]>`
+      SELECT id, name, stock_number_prefix FROM sites ORDER BY name`;
+    return rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      stockNumberPrefix: r.stock_number_prefix,
+    }));
+  });
+}
+
 export interface VehicleDetail extends StockRow {
+  /** The list only ever shows the site's name; the edit form has to post its id. */
+  siteId: string;
   vin: string | null;
   bodyStyle: string | null;
   doors: number | null;
@@ -249,6 +279,7 @@ export async function loadVehicle(
       provenanceAdverse: Boolean(r['provenance_adverse']),
       vatScheme: r['vat_scheme'] as string | null,
       siteName: r['site_name'] as string | null,
+      siteId: String(r['site_id']),
       bookedInAt: toDate(r['booked_in_at'] as Date | null),
       vin: r['vin'] as string | null,
       bodyStyle: r['body_style'] as string | null,

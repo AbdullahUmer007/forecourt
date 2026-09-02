@@ -1,5 +1,5 @@
 /**
- * Forecourt Dealer Site Audit — polite crawler.
+ * RixDrive Dealer Site Audit — polite crawler.
  *
  * Rules we hold ourselves to (see docs/07 §7.3):
  *  - identify honestly, with a contact URL
@@ -13,7 +13,7 @@
 
 import { looksLikeVehicleUrl } from './checks.mjs';
 
-const UA = 'ForecourtSiteAudit/1.0 (+https://forecourt.example/audit; free dealer website audit; contact audit@forecourt.example)';
+const UA = 'RixDriveSiteAudit/1.0 (+https://rixdrive.example/audit; free dealer website audit; contact audit@rixdrive.example)';
 const DELAY_MS = 700;
 const TIMEOUT_MS = 15000;
 const MAX_VEHICLE_SAMPLES = 5;

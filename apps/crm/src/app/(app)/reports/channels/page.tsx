@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireSession } from '@/auth/session';
 import { loadChannelPnl, loadChannelLabels } from '@/data/dashboard';
-import { Card, Figure, StatusBadge, Empty, Amount, Problem } from '@/components/ui';
+import {
+  Card, Figure, StatusBadge, Empty, Amount, Problem, PageHeader, QueryTime,
+} from '@/components/ui';
 import { SpendForm } from '@/components/spend-form';
 import {
   holds, format, channelDisplayName, UNATTRIBUTED, MIN_SALES_FOR_ROI,
@@ -78,18 +80,17 @@ export default async function ChannelPnlPage(
 
   return (
     <>
-      <div className="mb-4">
-        <h1 className="text-[28px] leading-[34px] font-semibold">Channel P&amp;L</h1>
-        <p className="text-ink-muted">
-          {day(pnl.from)} to {day(pnl.to)}
-          {' · '}
-          <span className={view.queryMs > 500 ? 'text-warning-ink' : 'text-ink-subtle'}>
-            {view.queryMs}ms
-          </span>
-          {' · '}
-          <Link href="/" className="text-link hover:underline">Dashboard</Link>
-        </p>
-      </div>
+      <PageHeader
+        title={<>Channel P&amp;L</>}
+        meta={(
+          <>
+            {day(pnl.from)} to {day(pnl.to)}
+            <QueryTime ms={view.queryMs} budget={500} />
+            {' · '}
+            <Link href="/" className="text-link hover:underline">Dashboard</Link>
+          </>
+        )}
+      />
 
       <form method="GET" className="mb-4 grid gap-2 rounded-md border border-edge bg-surface-1 p-3 sm:grid-cols-[auto_auto_auto_1fr]">
         <label className="grid gap-1">

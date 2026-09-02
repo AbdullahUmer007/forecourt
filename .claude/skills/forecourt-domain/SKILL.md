@@ -1,9 +1,9 @@
 ---
 name: forecourt-domain
-description: UK used-car dealership domain knowledge and regulatory rules for building the Forecourt dealer SaaS. Use whenever working on vehicles, stock, VAT margin scheme, part-exchange, motor finance, FCA/Consumer Duty, Consumer Rights Act, DVLA/MOT data, dealer terminology, or any feature of a car dealer CRM/DMS. Trigger words - vehicle, stock, forecourt, dealer, part-exchange, VAT margin, HPI, MOT, V5C, finance commission, Consumer Duty, CONC, APR, reg/registration, DVLA.
+description: UK used-car dealership domain knowledge and regulatory rules for building the RixDrive dealer SaaS. Use whenever working on vehicles, stock, VAT margin scheme, part-exchange, motor finance, FCA/Consumer Duty, Consumer Rights Act, DVLA/MOT data, dealer terminology, or any feature of a car dealer CRM/DMS. Trigger words - vehicle, stock, forecourt, dealer, part-exchange, VAT margin, HPI, MOT, V5C, finance commission, Consumer Duty, CONC, APR, reg/registration, DVLA.
 ---
 
-# Forecourt — UK used-car dealer domain
+# RixDrive — UK used-car dealer domain
 
 Load this before writing any code, spec, copy or test that touches the dealer domain. Getting the vocabulary and the rules right is what makes this product credible to a 55-year-old dealer principal who has been doing this for thirty years.
 

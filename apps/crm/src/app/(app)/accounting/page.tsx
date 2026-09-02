@@ -1,7 +1,9 @@
 import { notFound } from 'next/navigation';
 import { requireSession } from '@/auth/session';
 import { loadAccounting, type MappingRow } from '@/data/accounting';
-import { Card, Figure, StatusBadge, Empty, Amount, Problem } from '@/components/ui';
+import {
+  Card, Figure, StatusBadge, Empty, Amount, Problem, PageHeader, QueryTime,
+} from '@/components/ui';
 import { holds, format, ACCOUNT_LABELS } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
@@ -49,9 +51,9 @@ export default async function AccountingPage() {
   if (!view.connection) {
     return (
       <>
-        <h1 className="mb-4 text-[28px] leading-[34px] font-semibold">Accounting</h1>
+        <PageHeader title="Accounting" />
         <Empty title="No accounting package connected">
-          Forecourt posts sales invoices, credit notes, payments and the VAT owed on margin-scheme
+          RixDrive posts sales invoices, credit notes, payments and the VAT owed on margin-scheme
           sales into Xero, QuickBooks or Sage — or exports them as a file for one it does not
           integrate with. Connecting one needs credentials from them, and nothing posts anywhere
           until your accountant has read a dry run and agreed with it.
@@ -64,17 +66,16 @@ export default async function AccountingPage() {
 
   return (
     <>
-      <div className="mb-4">
-        <h1 className="text-[28px] leading-[34px] font-semibold">Accounting</h1>
-        <p className="text-ink-muted">
-          {label(c.provider)}
-          {c.organisationName && ` · ${c.organisationName}`}
-          {' · '}
-          <span className={view.queryMs > 500 ? 'text-warning-ink' : 'text-ink-subtle'}>
-            {view.queryMs}ms
-          </span>
-        </p>
-      </div>
+      <PageHeader
+        title="Accounting"
+        meta={(
+          <>
+            {label(c.provider)}
+            {c.organisationName && ` · ${c.organisationName}`}
+            <QueryTime ms={view.queryMs} budget={500} />
+          </>
+        )}
+      />
 
       {/* The state of the connection, stated plainly. "Dry run only" is not a
           failure — it is the correct state until somebody qualified says so. */}
@@ -259,7 +260,7 @@ export default async function AccountingPage() {
           <table className="w-full text-[13px] leading-[18px]">
             <thead>
               <tr className="border-b border-edge text-left">
-                <th scope="col" className="py-2 pr-3 font-medium">Forecourt account</th>
+                <th scope="col" className="py-2 pr-3 font-medium">RixDrive account</th>
                 <th scope="col" className="py-2 pr-3 font-medium">Their code</th>
                 <th scope="col" className="py-2 pr-3 font-medium">Tax rate</th>
                 <th scope="col" className="py-2 font-medium">Agreed</th>

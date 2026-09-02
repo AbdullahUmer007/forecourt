@@ -14,6 +14,19 @@
  * downstream references var(--color-…) and never a literal.
  */
 @theme {
+  /*
+   * Teal, and NOT the CRM's indigo. Do not sync this ramp.
+   *
+   * The colour is the one thing this application deliberately does not share
+   * with the CRM: an operator with both open should never be in doubt about
+   * which application they are typing into, and this one reads across every
+   * dealership on the platform. The ramp is also already contrast-validated
+   * against these surfaces, so re-pointing it at the CRM's values would
+   * silently drop text below AA as well as removing the distinction.
+   *
+   * Everything else — typography, neutrals, elevation, the theme mechanism —
+   * is aligned with the CRM on purpose. One platform, two applications.
+   */
   --color-brand-50: #E6F4F1;
   --color-brand-100: #C7E5E1;
   --color-brand-300: #5EC7DC;
@@ -32,16 +45,25 @@
   --color-accent-500: #F59E0B;
   --color-accent-700: #B45309;
 
+  /*
+   * The CRM's refreshed neutrals, adopted wholesale.
+   *
+   * These carry a trace of hue rather than being pure grey, which is most of
+   * what makes a screen look designed rather than assembled. They are shared
+   * with the CRM because a platform that renders the same tables and the same
+   * money columns should render them on the same paper; the brand ramp above
+   * is where the two applications are told apart, not here.
+   */
   --color-surface-1: #FFFFFF;
-  --color-surface-2: #F8FAFC;
-  --color-surface-3: #F1F5F9;
+  --color-surface-2: #F6F7FB;
+  --color-surface-3: #EFF1F7;
 
-  --color-edge: #E2E8F0;
-  --color-edge-strong: #CBD5E1;
+  --color-edge: #E3E6EF;
+  --color-edge-strong: #C9CFDE;
 
-  --color-ink: #0F172A;
-  --color-ink-muted: #475569;
-  --color-ink-subtle: #64748B;
+  --color-ink: #0F1729;
+  --color-ink-muted: #4A5468;
+  --color-ink-subtle: #6B7488;
 
   --color-good: #0CA30C;
   --color-warning: #FAB219;
@@ -49,57 +71,83 @@
   --color-serious: #EC835A;
   --color-critical: #D03B3B;
 
+  /*
+   * The 4px scale, in px, because `html` is 14px. Tailwind's spacing unit
+   * defaults to 0.25rem and rem is the ROOT font size, so the scale silently
+   * resolved to 3.5px and `min-h-11` measured 38.5px rather than the 44px
+   * touch target it was written to mean. Same fix as the CRM; keep them equal.
+   */
+  --spacing: 4px;
+
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 10px;
 
-  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /*
+   * Four levels, and nothing else — rule 3 of the design system. Flat is the
+   * default and a border is the first move; these exist for the three cases
+   * where something genuinely floats above the page.
+   */
+  --shadow-raised: 0 1px 2px rgb(15 23 42 / 0.06);
+  --shadow-overlay: 0 8px 24px rgb(15 23 42 / 0.12);
+  --shadow-modal: 0 24px 48px rgb(15 23 42 / 0.18);
+
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 /*
  * Dark mode is SELECTED, not flipped: every value below was chosen against the
  * dark surface, not derived by inverting the light one. Rule 10 of the design
  * system.
+ *
+ * It is also CHOSEN BY THE OPERATOR, not by their laptop. Following
+ * `prefers-color-scheme` meant a machine set to dark got a dark application
+ * with no way to say otherwise, which is the opposite of a preference. The
+ * attribute is the only switch; light is what you get without one.
  */
 @layer base {
   :root {
     color-scheme: light;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      color-scheme: dark;
+  :root[data-theme="dark"] {
+    color-scheme: dark;
 
-      --color-brand-50: #0A2E38;
-      --color-brand-100: #0B3A47;
-      --color-brand-600: #177A8F;
-      --color-brand-700: #0E5A6B;
-      /* brand-300 — the value the design system names for dark accent text. */
-      --color-link: #5EC7DC;
+    --color-brand-50: #0A2E38;
+    --color-brand-100: #0B3A47;
+    --color-brand-600: #177A8F;
+    --color-brand-700: #0E5A6B;
+    /* brand-300 — the value the design system names for dark accent text. */
+    --color-link: #5EC7DC;
 
-      --color-surface-1: #16181D;
-      --color-surface-2: #0E1013;
-      --color-surface-3: #1D2027;
+    --color-surface-1: #16181D;
+    --color-surface-2: #0E1013;
+    --color-surface-3: #1D2027;
 
-      --color-edge: #2A2E36;
-      --color-edge-strong: #3A404A;
+    --color-edge: #2A2E36;
+    --color-edge-strong: #3A404A;
 
-      --color-ink: #FFFFFF;
-      --color-ink-muted: #94A3B8;
-      --color-ink-subtle: #7A8598;
+    --color-ink: #FFFFFF;
+    --color-ink-muted: #A0A9BA;
+    --color-ink-subtle: #7A8598;
 
-      --color-warning-ink: #FAB219;
-      /*
-       * `critical` had no dark value, so it inherited the light one and
-       * measured 3.70:1 against surface-1 dark — a fail, on the most urgent
-       * text in the product. Unlike `warning` and `serious`, which the design
-       * system states are sub-3:1 by design with icon+label as the mitigation,
-       * `critical` was chosen to PASS (4.80:1 on white). This is the nearest
-       * red to it that clears 4.5:1 on the dark surface: 4.83:1, measured.
-       */
-      --color-critical: #DE5A5A;
-    }
+    --color-warning-ink: #FAB219;
+    /*
+     * `critical` had no dark value, so it inherited the light one and
+     * measured 3.70:1 against surface-1 dark — a fail, on the most urgent
+     * text in the product. Unlike `warning` and `serious`, which the design
+     * system states are sub-3:1 by design with icon+label as the mitigation,
+     * `critical` was chosen to PASS (4.80:1 on white). This is the nearest
+     * red to it that clears 4.5:1 on the dark surface: 4.83:1, measured.
+     */
+    --color-critical: #DE5A5A;
+
+    /* A shadow tuned for white light is invisible on a dark plane; depth there
+       comes from a deeper black, not a darker grey. */
+    --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.5);
+    --shadow-modal: 0 24px 48px rgb(0 0 0 / 0.6);
   }
 
   html {
@@ -107,6 +155,10 @@
     /* body 14/20 — the CRM is a dense tool, not a marketing page. */
     font-size: 14px;
     line-height: 20px;
+    /* Inter ships optical sizing; at 14px the difference is the small
+       adjustment that stops dense tables reading as slightly wrong. */
+    font-optical-sizing: auto;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
@@ -115,6 +167,16 @@
     margin: 0;
     -webkit-font-smoothing: antialiased;
   }
+
+  /*
+   * Headings tighten as they grow.
+   *
+   * Inter at default tracking looks loose above about 20px, which is most of
+   * why a screen can be correctly built and still read as unconsidered.
+   */
+  h1 { letter-spacing: -0.02em; }
+  h2 { letter-spacing: -0.015em; }
+  h3 { letter-spacing: -0.01em; }
 
   /*
    * Rule 8: a visible focus ring on everything interactive, 2px brand-600 at

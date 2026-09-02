@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { requireSession } from '@/auth/session';
 import { loadOwnerDashboard, loadChannelPnl } from '@/data/dashboard';
-import { Card, Figure, StatusBadge, Empty } from '@/components/ui';
+import { Card, Figure, StatusBadge, Empty, PageHeader, QueryTime } from '@/components/ui';
 import {
   holds, format, channelDisplayName, OVERAGE_DAYS, MIN_SALES_FOR_AVERAGE, type Money,
 } from '@forecourt/domain';
@@ -61,18 +61,15 @@ export default async function Dashboard() {
 
   return (
     <>
-      <div className="mb-4">
-        <h1 className="text-[28px] leading-[34px] font-semibold">
-          {session.displayName.split(' ')[0]}
-        </h1>
-        <p className="text-ink-muted">
-          {view.monthLabel}
-          {' · '}
-          <span className={view.queryMs > 500 ? 'text-warning-ink' : 'text-ink-subtle'}>
-            {view.queryMs}ms
-          </span>
-        </p>
-      </div>
+      <PageHeader
+        title={session.displayName.split(' ')[0]}
+        meta={(
+          <>
+            {view.monthLabel}
+            <QueryTime ms={view.queryMs} budget={500} />
+          </>
+        )}
+      />
 
       <div className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {/* 1. What the money is doing. */}

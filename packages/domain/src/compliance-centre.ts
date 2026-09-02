@@ -17,7 +17,7 @@
  *      score: it tells a dealer they are fine. Anything we cannot assess is
  *      counted as unknown and named, never dropped.
  *
- * And the disclaimer is not decoration. Forecourt provides tooling and
+ * And the disclaimer is not decoration. RixDrive provides tooling and
  * record-keeping, not legal or regulatory advice, and the dealer remains
  * responsible for their own compliance. It travels with every surface built
  * from this module.
@@ -31,7 +31,7 @@
  * surface cannot render the findings without it.
  */
 export const COMPLIANCE_DISCLAIMER =
-  'Forecourt provides compliance tooling and record-keeping, not legal or regulatory advice. ' +
+  'RixDrive provides compliance tooling and record-keeping, not legal or regulatory advice. ' +
   'You remain responsible for your own compliance. Every rule below links to its source so ' +
   'your adviser can check our interpretation.';
 

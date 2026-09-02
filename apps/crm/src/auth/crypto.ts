@@ -180,7 +180,15 @@ export const newResetToken = (): string =>
 export const hashResetToken = (token: string): string =>
   createHash('sha256').update(token).digest('hex');
 
-/** The `otpauth://` URI an authenticator app scans. */
-export const totpUri = (secret: string, email: string, issuer = 'Forecourt'): string =>
+/**
+ * The `otpauth://` URI an authenticator app scans.
+ *
+ * The issuer is the name that appears in the dealer's authenticator, so it is
+ * the product's. Changing it does not invalidate anybody: the issuer is a
+ * label baked into the QR at enrolment and the shared secret is what actually
+ * generates the code, so accounts enrolled under the old name keep working
+ * and simply keep showing it until they re-enrol.
+ */
+export const totpUri = (secret: string, email: string, issuer = 'RixDrive'): string =>
   `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(email)}` +
   `?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=${TOTP_DIGITS}&period=30`;

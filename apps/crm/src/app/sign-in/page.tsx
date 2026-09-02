@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getSession, signIn } from '@/auth/session';
+import { BrandMark } from '@/components/icons';
+import { INPUT_CLASS, LABEL_CLASS } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,67 +40,74 @@ export default async function SignInPage(
   }
 
   return (
-    <main className="mx-auto grid min-h-screen max-w-[420px] content-center gap-4 px-4">
-      <div>
-        <h1 className="text-[28px] leading-[34px] font-semibold">Forecourt</h1>
-        <p className="text-ink-muted">Sign in to your dealership.</p>
+    <main className="mx-auto grid min-h-dvh max-w-[400px] content-center gap-5 px-4 py-10">
+      {/*
+        The brand, at the only size it ever gets to be this big.
+        ───────────────────────────────────────────────────────────────────
+        This is the one screen with nothing else on it, and the first thing a
+        new dealer sees on the morning they are handed the login. Everywhere
+        else the mark is 28px in the corner of a rail.
+      */}
+      <div className="text-center">
+        <BrandMark size={44} className="mx-auto text-brand-600" />
+        <h1 className="mt-3 text-[26px] leading-8 font-semibold">RixDrive</h1>
+        <p className="mt-1 text-ink-muted">Sign in to your dealership.</p>
       </div>
 
       {params.error && (
         <div
           role="alert"
-          className="rounded-md border border-critical/40 bg-surface-1 p-3 text-critical"
+          className="rounded-md border border-critical/40 bg-critical/10 p-3 text-critical"
         >
           <span aria-hidden="true">✕</span> {params.error}
         </div>
       )}
 
-      <form action={attempt} className="grid gap-3 rounded-md border border-edge bg-surface-1 p-4">
+      <form
+        action={attempt}
+        className="grid gap-4 rounded-lg border border-edge bg-surface-1 p-5 shadow-(--shadow-raised)"
+      >
         <input type="hidden" name="next" value={params.next ?? '/'} />
 
-        <label className="grid gap-1">
-          <span className="text-[12px] leading-4 font-medium tracking-[0.02em] text-ink-subtle">
-            Email
-          </span>
+        <label className="grid gap-1.5">
+          <span className={LABEL_CLASS}>Email</span>
           <input
             name="email"
             type="email"
             required
             autoComplete="username"
             autoFocus
-            className="min-h-11 rounded-md border border-edge-strong bg-surface-1 px-3"
+            className={INPUT_CLASS}
           />
         </label>
 
-        <label className="grid gap-1">
-          <span className="text-[12px] leading-4 font-medium tracking-[0.02em] text-ink-subtle">
-            Password
-          </span>
+        <label className="grid gap-1.5">
+          <span className={LABEL_CLASS}>Password</span>
           <input
             name="password"
             type="password"
             required
             autoComplete="current-password"
-            className="min-h-11 rounded-md border border-edge-strong bg-surface-1 px-3"
+            className={INPUT_CLASS}
           />
         </label>
 
-        <label className="flex items-center gap-2 py-1">
-          <input name="trust" type="checkbox" className="h-5 w-5" />
-          <span className="text-ink-muted">
+        <label className="flex items-start gap-2.5 py-0.5">
+          <input name="trust" type="checkbox" className="mt-0.5 size-4 accent-brand-600" />
+          <span className="text-[13px] leading-[18px] text-ink-muted">
             Trust this device — stay signed in for longer on this machine only
           </span>
         </label>
 
         <button
           type="submit"
-          className="min-h-11 rounded-md border border-brand-600 bg-brand-600 px-4 font-medium text-white hover:bg-brand-700"
+          className="h-11 rounded-md border border-brand-600 bg-brand-600 px-4 font-medium text-white transition-colors duration-100 hover:bg-brand-700"
         >
           Sign in
         </button>
       </form>
 
-      <p className="text-[13px] leading-[18px] text-ink-subtle">
+      <p className="text-center text-[13px] leading-[18px] text-ink-subtle">
         Forgotten your password? Ask whoever manages your dealership account to reset it — we
         cannot email you a reset link yet.
       </p>

@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
  * unconditionally rather than per-permission.
  *
  * The failure message never distinguishes an unknown email from a wrong
- * password from somebody who simply is not Forecourt staff. Telling them apart
+ * password from somebody who simply is not RixDrive staff. Telling them apart
  * would tell an attacker which of our own colleagues' addresses are worth
  * trying, and this is the login to the application that can see every
  * dealership on the platform.
@@ -40,12 +40,12 @@ export default async function SignIn(
   return (
     <main className="mx-auto max-w-[420px] px-4 py-16">
       <h1 className="mb-1 text-[28px] leading-[34px] font-semibold">Platform admin</h1>
-      <p className="mb-4 text-ink-muted">Forecourt staff only.</p>
+      <p className="mb-4 text-ink-muted">RixDrive staff only.</p>
 
       {params['failed'] && (
         <div className="mb-4">
           <Problem title="That did not work">
-            That email address and password do not match a Forecourt operator account.
+            That email address and password do not match a RixDrive operator account.
           </Problem>
         </div>
       )}

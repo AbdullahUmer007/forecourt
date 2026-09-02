@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireSession } from '@/auth/session';
 import { loadChannels, type ChannelRow, type ListingRow } from '@/data/channels';
-import { Card, Figure, StatusBadge, Empty, Amount, Problem, type Tone } from '@/components/ui';
+import {
+  Card, Figure, StatusBadge, Empty, Amount, Problem, PageHeader, QueryTime, type Tone,
+} from '@/components/ui';
 import { holds, formatRegistration, type ListingStatus } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
@@ -65,16 +67,15 @@ export default async function ChannelsPage() {
 
   return (
     <>
-      <div className="mb-4">
-        <h1 className="text-[28px] leading-[34px] font-semibold">Channels</h1>
-        <p className="text-ink-muted">
-          Where your stock actually is
-          {' · '}
-          <span className={view.queryMs > 500 ? 'text-warning-ink' : 'text-ink-subtle'}>
-            {view.queryMs}ms
-          </span>
-        </p>
-      </div>
+      <PageHeader
+        title="Channels"
+        meta={(
+          <>
+            Where your stock actually is
+            <QueryTime ms={view.queryMs} budget={500} />
+          </>
+        )}
+      />
 
       {/* First, because it is the one that costs more than an enquiry. */}
       {view.overdueDelists.length > 0 && (

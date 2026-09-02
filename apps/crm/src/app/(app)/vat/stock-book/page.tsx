@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireSession } from '@/auth/session';
 import { loadStockBook, type StockBookRow } from '@/data/invoices';
-import { Card, Figure, StatusBadge, Empty, Amount, Problem } from '@/components/ui';
+import {
+  Card, Figure, StatusBadge, Empty, Amount, Problem, PageHeader, QueryTime,
+} from '@/components/ui';
 import { holds, STOCK_BOOK_REQUIRED_FIELDS } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
@@ -64,19 +66,18 @@ export default async function StockBookPage(
 
   return (
     <>
-      <div className="mb-4">
-        <h1 className="text-[28px] leading-[34px] font-semibold">VAT stock book</h1>
-        <p className="text-ink-muted">
-          The margin-scheme record HMRC asks to see. {page.period.entries.toLocaleString('en-GB')}
-          {' '}entr{page.period.entries === 1 ? 'y' : 'ies'}
-          {' · '}
-          <span className={page.queryMs > 400 ? 'text-warning-ink' : 'text-ink-subtle'}>
-            {page.queryMs}ms
-          </span>
-          {' · '}
-          <Link href="/invoices" className="text-link hover:underline">Invoices</Link>
-        </p>
-      </div>
+      <PageHeader
+        title="VAT stock book"
+        meta={(
+          <>
+            The margin-scheme record HMRC asks to see. {page.period.entries.toLocaleString('en-GB')}
+            {' '}entr{page.period.entries === 1 ? 'y' : 'ies'}
+            <QueryTime ms={page.queryMs} budget={400} />
+            {' · '}
+            <Link href="/invoices" className="text-link hover:underline">Invoices</Link>
+          </>
+        )}
+      />
 
       {page.period.incomplete > 0 && (
         <Problem title={`${page.period.incomplete} sold ${page.period.incomplete === 1 ? 'car is' : 'cars are'} missing a mandatory field`}>

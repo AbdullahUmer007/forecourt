@@ -1,4 +1,4 @@
-# Forecourt — Functional Specification
+# RixDrive — Functional Specification
 
 **Version:** 1.0 — August 2026
 **Scope:** UK independent used-car dealer SaaS — Office CRM + Public Website
@@ -797,7 +797,7 @@ Every customer-facing template (invoice, order T&Cs, initial disclosure, cancell
 Trade plates and licences register (numbers, expiry, MID status, insurance), motor trade insurance record, FCA permissions and AR agreement record, staff competence register, AML policy and risk assessment, complaints register with DISP outcomes, data breach register, DPIA store, sub-processor list.
 
 ### 27.4 Disclaimer (mandatory and prominent)
-Every compliance feature carries a clear statement that Forecourt provides tooling and record-keeping, not legal or regulatory advice, and that the dealer remains responsible for its own compliance. Each compliance rule in the system links to its source (FCA Handbook reference, HMRC notice, legislation) so a dealer's adviser can verify our interpretation.
+Every compliance feature carries a clear statement that RixDrive provides tooling and record-keeping, not legal or regulatory advice, and that the dealer remains responsible for its own compliance. Each compliance rule in the system links to its source (FCA Handbook reference, HMRC notice, legislation) so a dealer's adviser can verify our interpretation.
 
 ---
 

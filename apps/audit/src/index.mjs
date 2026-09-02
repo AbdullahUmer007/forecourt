@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Forecourt Dealer Site Audit
+ * RixDrive Dealer Site Audit
  *
  *   node apps/audit/src/index.mjs <domain> [--out report.md] [--json report.json]
  *
@@ -31,7 +31,7 @@ const log = (m) => process.stderr.write(`  … ${m}\n`);
 
 // --fixture replays a saved crawl. Used for CI regression tests, and for any
 // environment where outbound network access to the target is unavailable.
-console.error(`\nForecourt Dealer Site Audit — ${fixture ? `fixture: ${fixture}` : target}\n`);
+console.error(`\nRixDrive Dealer Site Audit — ${fixture ? `fixture: ${fixture}` : target}\n`);
 const site = fixture ? JSON.parse(readFileSync(fixture, 'utf8')) : await crawl(target, { log });
 
 const results = CHECKS.map((c) => {
@@ -150,7 +150,7 @@ ${passed.map((r) => `- **${r.title}.** ${r.finding}`).join('\n')}` : ''}
 
 ---
 
-*Prepared by Forecourt — software for independent used-car dealers.*
+*Prepared by RixDrive — software for independent used-car dealers.*
 `;
 
 const outPath = flag('out') || `audit-${site.host.replace(/[^a-z0-9]/gi, '-')}.md`;

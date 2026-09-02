@@ -5,9 +5,16 @@ import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { confirmEnrolment, completeChallenge } from '@/auth/mfa';
 import type { EnrolmentResult, ChallengeResult } from '@/auth/mfa';
+import { BUTTON_CLASS, BUTTON_VARIANTS, INPUT_CLASS, LABEL_CLASS } from '@/components/styles';
 
-const FIELD =
-  'min-h-11 rounded-md border border-edge-strong bg-surface-1 px-3 text-center text-[20px] tracking-[0.3em]';
+/*
+ * The shared input, widened out for a six-digit code.
+ *
+ * Taller than a normal field and letter-spaced, because this is the one input
+ * in the product that is read back character by character off a phone screen
+ * while the other hand holds it.
+ */
+const FIELD = `${INPUT_CLASS} h-12 text-center text-[20px] tracking-[0.3em]`;
 
 function Submit({ label }: { label: string }) {
   const { pending } = useFormStatus();
@@ -15,7 +22,7 @@ function Submit({ label }: { label: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="min-h-11 rounded-md border border-brand-600 bg-brand-600 px-4 font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+      className={`${BUTTON_CLASS} ${BUTTON_VARIANTS.primary}`}
     >
       {pending ? 'Checking…' : label}
     </button>
@@ -53,10 +60,7 @@ export function EnrolForm(
         <ul className="mono grid grid-cols-2 gap-1 rounded-md border border-edge bg-surface-3 p-3 text-[14px]">
           {state.recoveryCodes.map((code) => <li key={code}>{code}</li>)}
         </ul>
-        <Link
-          href="/"
-          className="inline-flex min-h-11 items-center justify-center rounded-md border border-brand-600 bg-brand-600 px-4 font-medium text-white hover:bg-brand-700"
-        >
+        <Link href="/" className={`${BUTTON_CLASS} ${BUTTON_VARIANTS.primary}`}>
           I have saved them — continue
         </Link>
       </div>
@@ -68,7 +72,7 @@ export function EnrolForm(
       <input type="hidden" name="secret" value={secret} />
 
       <div className="grid gap-1">
-        <span className="text-[12px] leading-4 font-medium tracking-[0.02em] text-ink-subtle">
+        <span className={LABEL_CLASS}>
           1 — add this key to your authenticator
         </span>
         <code className="mono block break-all rounded-md border border-edge bg-surface-3 p-3 text-[14px]">
@@ -81,7 +85,7 @@ export function EnrolForm(
       </div>
 
       <label className="grid gap-1">
-        <span className="text-[12px] leading-4 font-medium tracking-[0.02em] text-ink-subtle">
+        <span className={LABEL_CLASS}>
           2 — enter the six digits it shows
         </span>
         <input
@@ -114,7 +118,7 @@ export function ChallengeForm() {
   return (
     <form action={action} className="grid gap-3 rounded-md border border-edge bg-surface-1 p-4">
       <label className="grid gap-1">
-        <span className="text-[12px] leading-4 font-medium tracking-[0.02em] text-ink-subtle">
+        <span className={LABEL_CLASS}>
           Code
         </span>
         <input

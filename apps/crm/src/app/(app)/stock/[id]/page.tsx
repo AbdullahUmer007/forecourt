@@ -17,9 +17,15 @@ const date = (d: Date | null): string =>
   d === null ? '—' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
 export default async function VehiclePage(
-  { params }: { params: Promise<{ id: string }> },
+  {
+    params, searchParams,
+  }: {
+    params: Promise<{ id: string }>;
+    searchParams: Promise<Record<string, string | undefined>>;
+  },
 ) {
   const { id } = await params;
+  const query = await searchParams;
   const session = await requireSession();
 
   const principal = {
@@ -71,6 +77,33 @@ export default async function VehiclePage(
             ← Stock
           </Link>
 
+          {/*
+            The save happened on another page and this one looks the same as if
+            the dealer had simply navigated here, so nothing on screen would
+            otherwise confirm the work landed. Naming the stock number is the
+            point: it is the number they will write on the windscreen and the
+            one thing the form could not have told them in advance.
+          */}
+          {query['booked'] && (
+            <p role="status" className="mt-2 rounded-md border border-good/40 bg-surface-3 p-3 text-ink-muted">
+              <span aria-hidden="true">✓</span> Booked in as{' '}
+              <span className="mono font-medium text-ink">{query['booked']}</span>. Add
+              photographs and a provenance check when you have them.
+            </p>
+          )}
+          {query['saved'] === '1' && (
+            <p role="status" className="mt-2 rounded-md border border-good/40 bg-surface-3 p-3 text-ink-muted">
+              <span aria-hidden="true">✓</span> Your changes are saved.
+            </p>
+          )}
+          {query['denied'] && (
+            <p role="alert" className="mt-2 rounded-md border border-critical/40 bg-surface-3 p-3 text-ink-muted">
+              <span aria-hidden="true">✕</span> You do not have permission to do that
+              (<span className="mono">{query['denied']}</span>). Whoever manages your
+              dealership account can grant it.
+            </p>
+          )}
+
           <div className="mt-2 flex flex-wrap items-start gap-3">
             <Reg value={vehicle.registration} />
             <div className="min-w-0 flex-1">
@@ -83,6 +116,14 @@ export default async function VehiclePage(
                 {vehicle.daysInStock !== null && ` · ${vehicle.daysInStock} days in stock`}
               </p>
             </div>
+            {holds(principal, 'vehicle.update') && (
+              <Link
+                href={`/stock/${vehicle.id}/edit`}
+                className="inline-flex min-h-11 items-center rounded-md border border-edge-strong px-4 font-medium hover:bg-surface-3"
+              >
+                Edit
+              </Link>
+            )}
           </div>
 
           <div className="mt-3 flex flex-wrap gap-1.5">

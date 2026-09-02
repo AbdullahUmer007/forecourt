@@ -1,6 +1,6 @@
-# Forecourt — Product Strategy & Business Plan
+# RixDrive — Product Strategy & Business Plan
 
-**Working product name:** Forecourt
+**Product name:** RixDrive
 **Market:** United Kingdom (Europe later)
 **Primary customer:** Independent used-car dealers, 5–150 units in stock
 **Document owner:** CEO
@@ -184,7 +184,7 @@ Why this profile:
 
 ### 4.4 Positioning statement
 
-> **For independent used-car dealers who are tired of paying more for tools they don't control, Forecourt is the dealership operating system that runs your stock, your website, your customers and your compliance in one place — so you can prove where every pound of margin came from, and stop renting your business from a marketplace.**
+> **For independent used-car dealers who are tired of paying more for tools they don't control, RixDrive is the dealership operating system that runs your stock, your website, your customers and your compliance in one place — so you can prove where every pound of margin came from, and stop renting your business from a marketplace.**
 
 ---
 
@@ -284,7 +284,7 @@ This is where the business becomes genuinely valuable:
 
 ### 7.3 The sales narrative (30 seconds)
 
-> "You're paying Auto Trader thousands a month, you've got a website you can't edit, your stock's in a spreadsheet, and if the FCA or HMRC asked you to evidence a deal from four years ago you'd be sweating. Forecourt runs your whole forecourt off one record — stock, website, leads, finance, VAT book — and it proves every deal. It's £229 a month, published price, cancel any time, we migrate your data free, and if we don't take five days off your average stock turn in ninety days we'll tell you to leave."
+> "You're paying Auto Trader thousands a month, you've got a website you can't edit, your stock's in a spreadsheet, and if the FCA or HMRC asked you to evidence a deal from four years ago you'd be sweating. RixDrive runs your whole forecourt off one record — stock, website, leads, finance, VAT book — and it proves every deal. It's £229 a month, published price, cancel any time, we migrate your data free, and if we don't take five days off your average stock turn in ninety days we'll tell you to leave."
 
 ### 7.4 Objection handling
 
@@ -384,7 +384,7 @@ Full retail workshop DMS · parts inventory · OEM/franchise integrations · rep
 2. **Get the compliance advisers on retainer now.** A motor-trade FCA compliance consultant and a VAT specialist. Budget £1.5–3k/month. This is the cheapest insurance in the plan.
 3. **Start the data conversations immediately** — cap hpi/Solera, an aggregator for launch, Auto Trader technology partner status. These take months, not weeks, and they gate Release 1.
 4. **Validate the two unverified numbers** in the research: typical independent stock size, and stocking finance rates. Both feed pricing tiers.
-5. **Buy the domain and name properly.** "Forecourt" is a working name — check trade marks in class 9/42 and .co.uk availability before we print anything.
+5. **Buy the domain and clear the name.** The product is named RixDrive — check trade marks in class 9/42 and .co.uk availability before we print anything.
 
 ---
 

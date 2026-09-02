@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { requireSession } from '@/auth/session';
 import { loadDeals, type DealRow } from '@/data/deals';
-import { Card, Figure, StatusBadge, Empty, Amount, Reg, ListRow, type Tone } from '@/components/ui';
+import {
+  Card, Figure, StatusBadge, Empty, Amount, Reg, ListRow, PageHeader, QueryTime, type Tone,
+} from '@/components/ui';
 import { holds, type DealState } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
@@ -67,17 +69,16 @@ export default async function DealsPage(
 
   return (
     <>
-      <div className="mb-4">
-        <h1 className="text-[28px] leading-[34px] font-semibold">Deals</h1>
-        <p className="text-ink-muted">
-          {page.total.toLocaleString('en-GB')} deal{page.total === 1 ? '' : 's'}
-          {filtered && ' matching'}
-          {' · '}
-          <span className={page.queryMs > 400 ? 'text-warning-ink' : 'text-ink-subtle'}>
-            {page.queryMs}ms
-          </span>
-        </p>
-      </div>
+      <PageHeader
+        title="Deals"
+        meta={(
+          <>
+            {page.total.toLocaleString('en-GB')} deal{page.total === 1 ? '' : 's'}
+            {filtered && ' matching'}
+            <QueryTime ms={page.queryMs} budget={400} />
+          </>
+        )}
+      />
 
       <div className="mb-4 grid gap-2 sm:grid-cols-4">
         <Card>

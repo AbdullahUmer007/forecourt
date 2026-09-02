@@ -1,5 +1,5 @@
 /**
- * Forecourt's own lint rules.
+ * RixDrive's own lint rules.
  *
  * CLAUDE.md describes `pnpm lint` as including "the no-raw-hex and tenant-scope
  * rules". `pnpm lint` had never run — eslint was not installed and there was no

@@ -1,9 +1,9 @@
 ---
 name: forecourt-ui
-description: Forecourt design system - tokens, components, layout patterns, accessibility and performance budgets for the dealer CRM and the public dealer websites. Use whenever building or reviewing any UI, screen, component, page, dashboard, chart, form, table or email template in the Forecourt product. Trigger words - screen, page, component, UI, layout, dashboard, table, form, chart, theme, dark mode, styling, Tailwind, shadcn, accessibility.
+description: RixDrive design system - tokens, components, layout patterns, accessibility and performance budgets for the dealer CRM and the public dealer websites. Use whenever building or reviewing any UI, screen, component, page, dashboard, chart, form, table or email template in the RixDrive product. Trigger words - screen, page, component, UI, layout, dashboard, table, form, chart, theme, dark mode, styling, Tailwind, shadcn, accessibility.
 ---
 
-# Forecourt design system
+# RixDrive design system
 
 Read `references/tokens.md` for the full token values and `references/patterns.md` for screen recipes. This file is the contract every piece of UI must satisfy.
 

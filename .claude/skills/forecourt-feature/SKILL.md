@@ -1,9 +1,9 @@
 ---
 name: forecourt-feature
-description: The workflow and engineering rules for building a feature slice in the Forecourt multi-tenant dealer SaaS - spec, schema, tenant isolation, API, jobs, UI, tests and rollout. Use when adding, changing or reviewing any feature, module, endpoint, migration, background job or integration in the Forecourt codebase. Trigger words - new feature, add module, migration, schema change, endpoint, API, background job, integration, multi-tenant, RLS, code review, pull request.
+description: The workflow and engineering rules for building a feature slice in the RixDrive multi-tenant dealer SaaS - spec, schema, tenant isolation, API, jobs, UI, tests and rollout. Use when adding, changing or reviewing any feature, module, endpoint, migration, background job or integration in the RixDrive codebase. Trigger words - new feature, add module, migration, schema change, endpoint, API, background job, integration, multi-tenant, RLS, code review, pull request.
 ---
 
-# Building a feature in Forecourt
+# Building a feature in RixDrive
 
 A vertical slice, in this order. Do not start with the UI — the UI is the last thing that is cheap to change and the first thing that is wrong if the model underneath it is wrong.
 

@@ -1,4 +1,4 @@
-# Forecourt — Integration Register & Compliance Control Matrix
+# RixDrive — Integration Register & Compliance Control Matrix
 
 **Version:** 1.0 — August 2026
 **Status:** researched from primary sources where available; confidence flagged throughout
@@ -58,7 +58,7 @@
 | **Worldpay / Adyen** | Enterprise acquiring for dealers with existing merchant relationships | Public APIs | Commercial merchant account | Later |
 | **Floorplan/stock funding** (NextGear, Close Brothers, Blue Motor, Oodle) | Wholesale stock funding | **No public API found for any of them** — portal and manual reconciliation only | Credit facility agreement | R4, manual workflow until then |
 
-> **Money-transmission note:** using Stripe Connect (dealer as the connected account) keeps customer deposits out of our regulatory perimeter. Do not build a model where deposits land in a Forecourt account and are paid on to the dealer without specialist advice — that is a payments-regulation question, not an engineering one.
+> **Money-transmission note:** using Stripe Connect (dealer as the connected account) keeps customer deposits out of our regulatory perimeter. Do not build a model where deposits land in a RixDrive account and are paid on to the dealer without specialist advice — that is a payments-regulation question, not an engineering one.
 
 ## 4. Operations
 
@@ -228,7 +228,7 @@ For agreements dated **6 April 2007 – 1 November 2024**, flag against the sche
 1. **Rules are data, not code.** Every threshold, date, percentage and window lives in the platform `compliance_rules` table with a version, an effective date, a source URL and notes. Changing the law is a data deployment.
 2. **Compliance features are enforced by construction where possible.** A margin invoice cannot show VAT. A finance payment cannot render without a representative example. A marketing send cannot dispatch without a valid consent record. These are golden-file tests in CI, not guidelines.
 3. **Every compliance surface links to its source** (FCA Handbook reference, HMRC notice, legislation.gov.uk) so a dealer's adviser can check our interpretation.
-4. **Every compliance surface carries the disclaimer** that Forecourt provides tooling and record-keeping, not legal or regulatory advice, and the dealer remains responsible for their own compliance.
+4. **Every compliance surface carries the disclaimer** that RixDrive provides tooling and record-keeping, not legal or regulatory advice, and the dealer remains responsible for their own compliance.
 5. **Independent review before every compliance release.** The retained FCA compliance consultant and VAT specialist sign off on the behaviour, not just the copy.
 6. **A quarterly regulatory watch task** re-checks: the redress scheme's status and parameters, FCA Handbook changes to CONC/PRIN 2A/DISP, HMRC margin-scheme guidance, ICO direct-marketing guidance, and the CAP Code motoring section. Assign it an owner; put it in the calendar.
 
