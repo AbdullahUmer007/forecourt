@@ -2,9 +2,9 @@ import Link from 'next/link';
 import { requireSession } from '@/auth/session';
 import { loadInbox, loadLossAnalysis, type LeadRow } from '@/data/leads';
 import {
-  StatusBadge, Empty, Reg, Card, Figure, ListRow, PageHeader, QueryTime, type Tone,
+  StatusBadge, Empty, Reg, Card, ListRow, PageHeader, QueryTime, type Tone,
 } from '@/components/ui';
-import { LOSS_REASON_LABELS, type LeadStage, type LeadSource } from '@forecourt/domain';
+import { holds, LOSS_REASON_LABELS, type LeadStage, type LeadSource } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,6 +73,8 @@ export default async function LeadsPage(
 
   const closed = params['closed'] === '1';
   const page = await loadInbox(session, {
+    followUp: params['followup'],
+    unansweredOnly: params['unanswered'] === '1',
     q: params['q'],
     stage: params['stage'],
     source: params['source'],
@@ -87,15 +89,17 @@ export default async function LeadsPage(
     offset: Number(params['offset'] ?? 0) || 0,
   });
 
+  const activeView = params['followup'] ? `/leads?followup=${params['followup']}` : params['assigned'] ? `/leads?assigned=${params['assigned']}` : '/leads';
   const losses = closed ? await loadLossAnalysis(session, 90) : [];
   const filtered = Boolean(
     params['q'] || params['stage'] || params['source'] || params['assigned']
-    || params['overdue'] || params['from'] || params['to']);
+    || params['unanswered'] || params['followup'] || params['overdue'] || params['from'] || params['to']);
 
   return (
     <>
       <PageHeader
-        title="Leads"
+        title="Sales inbox"
+        action={holds(session, 'lead.create') ? <Link href="/leads/new" className="inline-flex min-h-11 items-center rounded-md bg-brand-600 px-4 font-medium text-white hover:bg-brand-700">+ New enquiry</Link> : undefined}
         meta={(
           <>
             {page.total.toLocaleString('en-GB')} {closed ? 'lead' : 'open lead'}
@@ -107,51 +111,26 @@ export default async function LeadsPage(
         )}
       />
 
-      {/* The strip counts the whole open book, never the filtered page. "You
-          have six overdue" must not change when somebody filters to one
-          salesperson — that is the number they came here for. */}
-      <div className="mb-4 grid gap-2 sm:grid-cols-4">
-        <Card>
-          <Figure label="Waiting for a reply" value={String(page.summary.unanswered)} />
-        </Card>
-        <Card>
-          <Figure
-            label="Past the response target"
-            value={String(page.summary.breachedSla)}
-            {...(page.summary.breachedSla > 0
-              ? { hint: 'A marketplace buyer is ringing the next dealer on their list.' }
-              : {})}
-          />
-          {page.summary.breachedSla > 0 && (
-            <div className="mt-2">
-              <Link
-                href="/leads?overdue=1"
-                className="text-[13px] leading-[18px] text-link hover:underline"
-              >
-                Show them →
-              </Link>
-            </div>
-          )}
-        </Card>
-        <Card>
-          <Figure label="Open" value={String(page.summary.open)} />
-        </Card>
-        <Card>
-          <Figure
-            label="Converted"
-            /* Null, not 0%, when nothing has closed: 0% reads as failure
-               where the truth is that there is no data yet. */
-            value={page.summary.conversionRate === null
-              ? '—'
-              : `${Math.round(page.summary.conversionRate * 100)}%`}
-            hint={page.summary.conversionRate === null
-              ? 'No leads closed yet'
-              : `${page.summary.byStage.won} won of ${page.summary.byStage.won + page.summary.byStage.lost} closed`}
-          />
-        </Card>
+      <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {[
+          { label: 'Open enquiries', value: page.summary.open, href: '/leads', hint: 'Every opportunity in progress' },
+          { label: 'Awaiting first reply', value: page.summary.unanswered, href: '/leads?unanswered=1', hint: 'Make the first connection' },
+          { label: 'Response overdue', value: page.summary.breachedSla, href: '/leads?overdue=1', hint: 'Prioritise these customers' },
+          { label: 'Follow-ups due', value: page.summary.followUpsDue, href: '/leads?followup=due', hint: 'Your next conversations' },
+        ].map(item => <Link key={item.label} href={item.href} className="rounded-lg border border-edge bg-surface-1 p-4 sm:p-5 hover:border-edge-strong hover:bg-surface-3">
+          <span className="text-sm font-medium text-ink-muted">{item.label}</span>
+          <span className="mt-3 block text-[32px] font-semibold leading-10 tracking-tight">{item.value}</span>
+          <span className="mt-2 flex justify-between gap-2 text-xs text-ink-subtle">{item.hint}<span aria-hidden="true">↗</span></span>
+        </Link>)}
       </div>
 
+      <nav aria-label="Lead views" className="mb-4 flex flex-wrap gap-2">
+        {[['/leads', 'All open leads'], ['/leads?assigned=me', 'Assigned to me'], ['/leads?assigned=unassigned', 'Unassigned'], ['/leads?followup=due', 'Follow-ups due'], ['/leads?followup=scheduled', 'All follow-ups']].map(([href, title]) => <Link key={href} href={href!} aria-current={activeView === href ? 'page' : undefined} className="inline-flex min-h-11 items-center rounded-md border border-edge bg-surface-1 px-4 font-medium hover:bg-surface-3 aria-[current=page]:border-brand-600 aria-[current=page]:text-link">{title}</Link>)}
+      </nav>
+
       <form method="GET" className="mb-4 grid gap-2 rounded-md border border-edge bg-surface-1 p-3 sm:grid-cols-[1fr_auto_auto_auto]">
+        {params['unanswered'] && <input type="hidden" name="unanswered" value={params['unanswered']} />}
+        {params['followup'] && <input type="hidden" name="followup" value={params['followup']} />}
         <label className="grid gap-1">
           <span className="text-[12px] leading-4 font-medium tracking-[0.02em] text-ink-subtle">
             Search
@@ -231,13 +210,10 @@ export default async function LeadsPage(
             />
             <span className="text-ink-muted">Past the response target</span>
           </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox" name="assigned" value="me"
-              defaultChecked={params['assigned'] === 'me'}
-              className="h-5 w-5"
-            />
-            <span className="text-ink-muted">Mine only</span>
+          <label className="flex items-center gap-2 text-ink-muted">Owner
+            <select name="assigned" defaultValue={params['assigned'] ?? ''} className="min-h-11 rounded-md border border-edge-strong bg-surface-1 px-3">
+              <option value="">Everyone</option><option value="me">Assigned to me</option><option value="unassigned">Unassigned</option>
+            </select>
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -317,6 +293,10 @@ function LeadRowView({ row }: { row: LeadRow }) {
             {row.vehicleDescription ?? 'General enquiry — no particular car'}
             {row.assignedToName ? ` · ${row.assignedToName}` : ' · Nobody assigned'}
           </div>
+          {open && row.followUpAt && <div className="mt-2 flex flex-wrap items-center gap-2 text-[13px]">
+            <span className="font-medium">Next: {row.followUpNote}</span>
+            <span className="text-ink-subtle">{row.followUpAt.toLocaleString('en-GB', { timeZone: 'Europe/London', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · UK time</span>
+          </div>}
           {row.message && (
             <div className="mt-1 line-clamp-2 text-[13px] leading-[18px] text-ink-subtle">
               “{row.message}”

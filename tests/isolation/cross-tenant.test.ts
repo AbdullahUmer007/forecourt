@@ -139,6 +139,7 @@ const TENANT_TABLES = [
   'data_subject_requests',
   // M10 — leads & communications
   'leads',
+  'appointments',
   'lead_events',
   'messages',
   'lead_sla_policies',
@@ -456,6 +457,10 @@ const INSERT_PAYLOAD: Record<string, { columns: string; values: string }> = {
   },
 
   // ---- M10: leads & communications.
+  appointments: {
+    columns: 'tenant_id, site_id, contact_id, assigned_to, starts_at, ends_at, purpose',
+    values: `'${TENANT_B}', '${B_SITE}', '${B_CONTACT}', '${USER_A}', '2040-01-01T10:00:00Z', '2040-01-01T11:00:00Z', 'viewing'`,
+  },
   leads: {
     columns: 'tenant_id, contact_id, vehicle_id, source',
     values: `'${TENANT_B}', '${B_CONTACT}', '${B_VEHICLE}', 'website_enquiry'`,
@@ -899,6 +904,12 @@ async function seedRivalData(): Promise<void> {
   // M10 tables — leads and communications.
   if (await tableExists('leads')) {
     await sql.unsafe(`
+      INSERT INTO appointments (tenant_id, site_id, contact_id, assigned_to, starts_at, ends_at, purpose)
+      SELECT v.* FROM (VALUES
+       ('${A}'::uuid,'${A_SITE}'::uuid,'${A_CONTACT}'::uuid,'${USER_A}'::uuid,'2040-01-02T10:00:00Z'::timestamptz,'2040-01-02T11:00:00Z'::timestamptz,'viewing'),
+       ('${B}'::uuid,'${B_SITE}'::uuid,'${B_CONTACT}'::uuid,'${USER_A}'::uuid,'2040-01-02T10:00:00Z'::timestamptz,'2040-01-02T11:00:00Z'::timestamptz,'viewing')
+      ) v(tenant_id,site_id,contact_id,assigned_to,starts_at,ends_at,purpose)
+      WHERE NOT EXISTS (SELECT 1 FROM appointments a WHERE a.tenant_id = v.tenant_id);
       INSERT INTO leads (id, tenant_id, contact_id, vehicle_id, source) VALUES
         ('${A_LEAD}','${A}','${A_CONTACT}','${A_VEHICLE}','website_enquiry'),
         ('${B_LEAD}','${B}','${B_CONTACT}','${B_VEHICLE}','website_enquiry')

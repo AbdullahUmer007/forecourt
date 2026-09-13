@@ -50,8 +50,8 @@ const step = async (label, fn) => {
  * margin, and it is checked server-side rather than with CSS.
  */
 const EXEC_PERMISSIONS = [
-  'vehicle.read', 'vehicle.update', 'contact.read', 'contact.update',
-  'lead.read', 'lead.update', 'deal.read', 'deal.update', 'appraisal.read',
+  'vehicle.read', 'vehicle.update', 'contact.read', 'contact.create', 'contact.update',
+  'lead.read', 'lead.create', 'lead.update', 'deal.read', 'deal.update', 'appraisal.read',
   'appraisal.update',
 ];
 

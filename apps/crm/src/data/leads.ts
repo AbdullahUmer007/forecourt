@@ -31,6 +31,9 @@ import {
 const MARKETING_CHANNELS: readonly ConsentChannel[] = ['phone', 'email', 'sms', 'whatsapp', 'post'];
 
 export interface LeadRow extends Lead {
+  followUpAt: Date | null;
+  followUpNote: string | null;
+  followUpVersion: number;
   contactName: string;
   contactEmail: string | null;
   contactPhone: string | null;
@@ -43,6 +46,8 @@ export interface LeadRow extends Lead {
 }
 
 export interface InboxFilters {
+  followUp?: string | undefined;
+  unansweredOnly?: boolean | undefined;
   // Optional AND undefined-able: these arrive from searchParams, where a
   // missing key IS undefined, and under exactOptionalPropertyTypes the two are
   // different types.
@@ -74,6 +79,7 @@ export interface InboxPage {
     byStage: Record<LeadStage, number>;
     open: number;
     breachedSla: number;
+    followUpsDue: number;
     unanswered: number;
     conversionRate: number | null;
   };
@@ -131,6 +137,9 @@ const rowToLead = (r: Record<string, unknown>): LeadRow => {
 
   return {
     ...lead,
+    followUpAt: toDate(r['follow_up_at'] as Date | null),
+    followUpNote: (r['follow_up_note'] as string | null) ?? null,
+    followUpVersion: Number(r['follow_up_version'] ?? 0),
     contactName,
     contactEmail: (r['email'] as string | null) ?? null,
     contactPhone: (r['phone'] as string | null) ?? null,
@@ -149,8 +158,8 @@ export async function loadInbox(
   filters: InboxFilters,
 ): Promise<InboxPage> {
   const started = Date.now();
-  const limit = Math.min(filters.limit ?? 50, 200);
-  const offset = Math.max(filters.offset ?? 0, 0);
+  const limit = Number.isFinite(filters.limit) ? Math.max(1, Math.min(Math.floor(filters.limit!), 200)) : 50;
+  const offset = Number.isFinite(filters.offset) ? Math.max(Math.floor(filters.offset!), 0) : 0;
 
   const page = await withSession(session, async (tx) => {
     const due = dueAtSql(tx);
@@ -160,16 +169,18 @@ export async function loadInbox(
     // an array because indexing one gives `T | undefined`, which the query
     // builder rejects — and rightly: a hole in a WHERE clause is not a filter
     // that does nothing, it is a syntax error.
+    const wUnanswered = filters.unansweredOnly ? tx`AND l.first_response_at IS NULL AND l.closed_at IS NULL` : tx``;
+    const wFollowUp = filters.followUp === 'due' ? tx`AND l.follow_up_at <= now() AND l.closed_at IS NULL` : filters.followUp === 'scheduled' ? tx`AND l.follow_up_at IS NOT NULL AND l.closed_at IS NULL` : tx``;
     const wOpen = filters.includeClosed ? tx`TRUE` : OPEN(tx);
-    const wStage = filters.stage ? tx`AND l.stage = ${filters.stage}::lead_stage` : tx``;
-    const wSource = filters.source ? tx`AND l.source = ${filters.source}::lead_source` : tx``;
+    const wStage = filters.stage ? tx`AND l.stage::text = ${filters.stage}` : tx``;
+    const wSource = filters.source ? tx`AND l.source::text = ${filters.source}` : tx``;
     const wAssigned = filters.assigned === 'unassigned' ? tx`AND l.assigned_to IS NULL`
       : filters.assigned === 'me' ? tx`AND l.assigned_to = ${session.userId}::uuid`
-        : filters.assigned ? tx`AND l.assigned_to = ${filters.assigned}::uuid`
+        : filters.assigned ? tx`AND l.assigned_to::text = ${filters.assigned}`
           : tx``;
-    const wFrom = filters.receivedFrom
+    const wFrom = filters.receivedFrom && Number.isFinite(Date.parse(filters.receivedFrom))
       ? tx`AND l.received_at >= ${new Date(filters.receivedFrom)}` : tx``;
-    const wTo = filters.receivedTo
+    const wTo = filters.receivedTo && Number.isFinite(Date.parse(filters.receivedTo))
       // Inclusive of the whole end day: a range typed as "to 31 Aug" means the
       // 31st, not midnight at its start.
       ? tx`AND l.received_at < (${new Date(filters.receivedTo)}::date + 1)` : tx``;
@@ -201,14 +212,15 @@ export async function loadInbox(
       LEFT JOIN vehicles v ON v.id = l.vehicle_id
       LEFT JOIN users u ON u.id = l.assigned_to
       LEFT JOIN sites s ON s.id = l.site_id
-      WHERE ${wOpen} ${wStage} ${wSource} ${wAssigned} ${wOverdue} ${wSearch} ${wFrom} ${wTo}
+      WHERE ${wOpen} ${wUnanswered} ${wFollowUp} ${wStage} ${wSource} ${wAssigned} ${wOverdue} ${wSearch} ${wFrom} ${wTo}
       ORDER BY
         -- Needs-attention order. An unanswered lead outranks an answered one
         -- whatever the timestamps say, and within that the soonest deadline
         -- (or the largest overrun) is first.
+        ${filters.followUp ? tx`l.follow_up_at ASC NULLS LAST,` : tx``}
         (l.first_response_at IS NOT NULL) ASC,
         CASE WHEN l.first_response_at IS NULL THEN ${due} END ASC NULLS LAST,
-        l.received_at DESC
+        l.received_at DESC, l.id
       LIMIT ${limit} OFFSET ${offset}`;
 
     const [counted] = await tx<{ n: number }[]>`
@@ -216,7 +228,7 @@ export async function loadInbox(
       FROM leads l
       JOIN contacts c ON c.id = l.contact_id
       LEFT JOIN vehicles v ON v.id = l.vehicle_id
-      WHERE ${wOpen} ${wStage} ${wSource} ${wAssigned} ${wOverdue} ${wSearch} ${wFrom} ${wTo}`;
+      WHERE ${wOpen} ${wUnanswered} ${wFollowUp} ${wStage} ${wSource} ${wAssigned} ${wOverdue} ${wSearch} ${wFrom} ${wTo}`;
 
     // The strip at the top: the whole book, unfiltered, because "you have six
     // overdue" must not change when somebody filters to one salesperson.
@@ -230,6 +242,7 @@ export async function loadInbox(
       FROM leads l
       WHERE l.first_response_at IS NULL AND l.closed_at IS NULL`;
 
+    const [tasks] = await tx`SELECT count(*)::int AS n FROM leads WHERE closed_at IS NULL AND follow_up_at <= now()`;
     const sources = await tx<{ source: LeadSource; n: number }[]>`
       SELECT source, count(*)::int AS n
       FROM leads l WHERE ${filters.includeClosed ? tx`TRUE` : OPEN(tx)}
@@ -249,6 +262,7 @@ export async function loadInbox(
         byStage,
         open: Object.values(byStage).reduce((a, b) => a + b, 0) - closed,
         breachedSla: sla?.breached ?? 0,
+        followUpsDue: Number(tasks?.['n'] ?? 0),
         unanswered: sla?.unanswered ?? 0,
         // Null rather than 0% when nothing has closed. 0% reads as failure
         // where the truth is "no data yet", and a dealer principal who sees
@@ -310,6 +324,7 @@ export async function loadLead(
   session: Session,
   id: string,
 ): Promise<LeadDetail | null> {
+  if (!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)) return null;
   return withSession(session, async (tx) => {
     const due = dueAtSql(tx);
 

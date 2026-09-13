@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
+import { defaultSiteTheme, type SiteThemeId } from '@forecourt/domain/site-theme';
 import { updateWebsite } from '@/data/website-actions';
 import type { WebsiteSettings } from '@/data/website';
 import { LABEL_CLASS, INPUT_CLASS, BUTTON_CLASS } from '@/components/styles';
@@ -25,32 +26,46 @@ export function WebsiteForm({ settings }: { settings: WebsiteSettings }) {
   const [saved, setSaved] = useState(false);
   const [pending, setPending] = useState(false);
 
-  async function onSubmit(formData: FormData) {
-    setPending(true);
-    setError(null);
-    setSaved(false);
-    const result = await updateWebsite(formData);
-    if (!result.ok) setError(result.error);
-    else setSaved(true);
-    setPending(false);
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (pending) return;
+    const data = new FormData(event.currentTarget);
+    setPending(true); setError(null); setSaved(false);
+    try {
+      const result = await updateWebsite(data);
+      if (!result.ok) setError(result.error);
+      else setSaved(true);
+    } catch {
+      setError('The website could not be saved. Your changes are still here; please try again.');
+    } finally { setPending(false); }
   }
 
   return (
-    <form action={onSubmit} className="grid gap-4">
-      {error && <p className="rounded-md border border-critical/40 p-3 text-critical">{error}</p>}
+    <form onSubmit={onSubmit} onChange={() => setSaved(false)} className="grid gap-6">
+      <nav aria-label="Website sections" className="flex flex-wrap gap-2">
+        {[['appearance', 'Appearance'], ['contact', 'Contact & hours'], ['content', 'Page content']].map(([id, label]) => <a key={id} href={`#${id}`} className="inline-flex min-h-11 items-center rounded-md border border-edge px-4 hover:bg-surface-3">{label}</a>)}
+      </nav>
+      {error && <p role="alert" className="rounded-md border border-critical/40 p-3 text-critical">{error}</p>}
       {saved && (
         <p role="status" className="rounded-md border border-good/40 bg-surface-3 p-3 text-ink-muted">
-          Saved. Preview to see it as a buyer would.
+          Website saved. Open the preview to check your changes. Public pages may take up to five minutes to refresh.
         </p>
       )}
 
-      <fieldset className="grid gap-3 sm:grid-cols-2">
-        <legend className="mb-1 font-medium">Look</legend>
+      <fieldset disabled={pending} id="appearance" className="grid scroll-mt-6 gap-4 rounded-lg border border-edge p-5 sm:grid-cols-2">
+        <legend className="mb-1 font-medium">Appearance</legend>
         <label className="grid gap-1 sm:col-span-2">
           <span className={LABEL_CLASS}>Theme</span>
-          <select className={INPUT_CLASS} name="themeId" defaultValue={settings.themeId}>
+          <select className={INPUT_CLASS} name="themeId" defaultValue={settings.themeId} onChange={event => {
+            const preset = defaultSiteTheme(event.currentTarget.value as SiteThemeId);
+            for (const key of ['brandPrimary', 'fontPairing', 'radius', 'cardStyle'] as const) {
+              const field = event.currentTarget.form?.elements.namedItem(key);
+              if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) field.value = preset[key];
+            }
+          }}>
             {THEMES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
+          <span className="text-xs text-ink-subtle">Choosing a theme applies its colours, typography, corners and cards. You can customise them below.</span>
         </label>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Brand colour</span>
@@ -87,81 +102,84 @@ export function WebsiteForm({ settings }: { settings: WebsiteSettings }) {
         </label>
       </fieldset>
 
-      <fieldset className="grid gap-3 sm:grid-cols-2">
+      <fieldset disabled={pending} id="contact" className="grid scroll-mt-6 gap-4 rounded-lg border border-edge p-5 sm:grid-cols-2">
         <legend className="mb-1 font-medium">Contact</legend>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Phone</span>
-          <input className={INPUT_CLASS} name="phone" defaultValue={settings.phone} />
+          <input className={INPUT_CLASS} name="phone" maxLength={40} defaultValue={settings.phone} />
         </label>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Email</span>
-          <input className={INPUT_CLASS} name="email" type="email" defaultValue={settings.email} />
+          <input className={INPUT_CLASS} name="email" maxLength={254} type="email" defaultValue={settings.email} />
         </label>
         <label className="grid gap-1 sm:col-span-2">
           <span className={LABEL_CLASS}>Address</span>
-          <input className={INPUT_CLASS} name="line1" defaultValue={settings.line1} />
+          <input className={INPUT_CLASS} name="line1" maxLength={200} defaultValue={settings.line1} />
         </label>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Town</span>
-          <input className={INPUT_CLASS} name="city" defaultValue={settings.city} />
+          <input className={INPUT_CLASS} name="city" maxLength={100} defaultValue={settings.city} />
         </label>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>County</span>
-          <input className={INPUT_CLASS} name="county" defaultValue={settings.county} />
+          <input className={INPUT_CLASS} name="county" maxLength={100} defaultValue={settings.county} />
         </label>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Postcode</span>
-          <input className={INPUT_CLASS} name="postcode" defaultValue={settings.postcode} />
+          <input className={INPUT_CLASS} name="postcode" maxLength={12} defaultValue={settings.postcode} />
         </label>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Weekdays open</span>
-          <input className={INPUT_CLASS} name="weekdayOpen" defaultValue={settings.weekdayOpen} />
+          <input className={INPUT_CLASS} name="weekdayOpen" type="time" required defaultValue={settings.weekdayOpen} />
         </label>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Weekdays close</span>
-          <input className={INPUT_CLASS} name="weekdayClose" defaultValue={settings.weekdayClose} />
+          <input className={INPUT_CLASS} name="weekdayClose" type="time" required defaultValue={settings.weekdayClose} />
         </label>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Saturday open</span>
-          <input className={INPUT_CLASS} name="saturdayOpen" defaultValue={settings.saturdayOpen} />
+          <input className={INPUT_CLASS} name="saturdayOpen" type="time" required defaultValue={settings.saturdayOpen} />
         </label>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Saturday close</span>
-          <input className={INPUT_CLASS} name="saturdayClose" defaultValue={settings.saturdayClose} />
+          <input className={INPUT_CLASS} name="saturdayClose" type="time" required defaultValue={settings.saturdayClose} />
         </label>
       </fieldset>
 
-      <fieldset className="grid gap-3">
-        <legend className="mb-1 font-medium">Copy</legend>
+      <fieldset disabled={pending} id="content" className="grid scroll-mt-6 gap-4 rounded-lg border border-edge p-5">
+        <legend className="mb-1 font-medium">Page content</legend>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Home headline</span>
-          <input className={INPUT_CLASS} name="homeHeadline" defaultValue={settings.homeHeadline} />
+          <input className={INPUT_CLASS} name="homeHeadline" maxLength={160} defaultValue={settings.homeHeadline} />
         </label>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Home supporting line</span>
-          <textarea className={INPUT_CLASS} name="homeLead" rows={3} defaultValue={settings.homeLead} />
+          <textarea className={INPUT_CLASS} name="homeLead" maxLength={600} rows={3} defaultValue={settings.homeLead} />
         </label>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>About</span>
-          <textarea className={INPUT_CLASS} name="about" rows={5} defaultValue={settings.about} />
+          <textarea className={INPUT_CLASS} name="about" maxLength={10000} rows={5} defaultValue={settings.about} />
         </label>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Contact blurb</span>
-          <textarea className={INPUT_CLASS} name="contactBlurb" rows={3} defaultValue={settings.contactBlurb} />
+          <textarea className={INPUT_CLASS} name="contactBlurb" maxLength={2000} rows={3} defaultValue={settings.contactBlurb} />
         </label>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Footer legal extras</span>
-          <textarea className={INPUT_CLASS} name="footerLegal" rows={2} defaultValue={settings.footerLegal} />
+          <textarea className={INPUT_CLASS} name="footerLegal" maxLength={4000} rows={2} defaultValue={settings.footerLegal} />
         </label>
       </fieldset>
 
-      <button
+      <div className="sticky bottom-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-edge-strong bg-surface-1 p-4 shadow-sm">
+        <p className="text-sm text-ink-muted">Changes apply to your public website when saved.</p>
+        <button
         type="submit"
         disabled={pending}
         className={`${BUTTON_CLASS} border-brand-600 bg-brand-600 text-white`}
       >
         {pending ? 'Saving…' : 'Save website'}
       </button>
+      </div>
     </form>
   );
 }

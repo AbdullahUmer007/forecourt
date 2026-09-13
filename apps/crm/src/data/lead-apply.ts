@@ -17,7 +17,7 @@ import type { Session } from '@/auth/session';
 import { writeAudit } from './audit';
 import { toDate } from './db';
 import {
-  changeStage, reopen, TERMINAL_STAGES, LOSS_REASON_LABELS,
+  authorize, changeStage, reopen, TERMINAL_STAGES, LOSS_REASON_LABELS,
   type Lead, type LeadStage, type LeadSource, type LossReason,
 } from '@forecourt/domain';
 
@@ -26,6 +26,7 @@ export interface LeadOutcome {
   error?: string;
   /** What actually changed, so the screen can say so rather than just refresh. */
   message?: string;
+  leadId?: string;
 }
 
 export interface StageInput {
@@ -40,7 +41,8 @@ const isLossReason = (v: string): v is LossReason =>
   Object.prototype.hasOwnProperty.call(LOSS_REASON_LABELS, v);
 
 async function readLead(tx: Tx, id: string): Promise<Lead | null> {
-  const [row] = await tx`SELECT * FROM leads WHERE id = ${id}::uuid`;
+  if (!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)) return null;
+  const [row] = await tx`SELECT * FROM leads WHERE id = ${id}::uuid FOR UPDATE`;
   if (!row) return null;
   return {
     id: String(row['id']),
@@ -77,6 +79,8 @@ export async function applyStageChange(
   const before = await readLead(tx, input.leadId);
   if (!before) return { ok: false, error: 'That lead no longer exists. It may have been merged.' };
 
+  if (!['new', 'contacted', 'qualified', 'appointment', 'test_drive', 'negotiating', 'won', 'lost'].includes(input.stage)) return { ok: false, error: 'Choose a valid lead stage.' };
+  if (input.lossDetail.length > 2000 || input.lostTo.length > 200) return { ok: false, error: 'Shorten the loss details before saving.' };
   const stage = input.stage as LeadStage;
   const reasonText = input.lossReason.trim();
 
@@ -178,6 +182,7 @@ export async function applyAssign(
   if (to === before.assignedTo) return { ok: true, message: 'No change.' };
 
   if (to !== null) {
+    if (!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(to)) return { ok: false, error: 'Choose someone from the staff list.' };
     // Not a foreign-key check — the FK already stops a nonexistent user. This
     // stops a user from ANOTHER tenant, which the FK cannot see. RLS on
     // tenant_memberships is what makes the read safe.
@@ -213,6 +218,7 @@ export async function applyNote(
   note: string,
 ): Promise<LeadOutcome> {
   const text = note.trim();
+  if (text.length > 2000) return { ok: false, error: 'Keep the note to 2,000 characters.' };
   if (text.length === 0) return { ok: false, error: 'Write something before saving the note.' };
 
   const before = await readLead(tx, leadId);
@@ -228,4 +234,82 @@ export async function applyNote(
   });
 
   return { ok: true, message: 'Note saved.' };
+}
+
+/** Optimistic task version plus a row lock prevents a stale form completing a replacement task. */
+export async function applyFollowUp(tx: Tx, session: Session, input: {
+  leadId: string; version: string; operation: string; at: string; note: string;
+}): Promise<LeadOutcome> {
+  const decision = authorize({ ...session }, 'lead.update');
+  if (!decision.allowed) return { ok: false, error: decision.reason };
+  if (!['schedule', 'complete', 'cancel'].includes(input.operation)) return { ok: false, error: 'Choose a follow-up action.' };
+  if (!/^\d{1,9}$/.test(input.version)) return { ok: false, error: 'Refresh this lead before saving.' };
+  const note = input.note.trim();
+  if (!note || note.length > 2000) return { ok: false, error: 'Add a description or outcome of up to 2,000 characters.' };
+  const at = new Date(input.at);
+  if (input.operation === 'schedule' && (!/Z$|[+-]\d{2}:\d{2}$/.test(input.at) || !Number.isFinite(at.getTime()) || at.getTime() <= Date.now())) {
+    return { ok: false, error: 'Choose a valid future date and time.' };
+  }
+  const lead = await readLead(tx, input.leadId);
+  if (!lead) return { ok: false, error: 'That lead is unavailable.' };
+  if (lead.closedAt) return { ok: false, error: 'Reopen this lead before changing its follow-up.' };
+  const [current] = await tx`SELECT follow_up_at, follow_up_note, follow_up_version FROM leads WHERE id = ${input.leadId}::uuid`;
+  if (Number(current?.['follow_up_version']) !== Number(input.version)) return { ok: false, error: 'Another colleague changed this follow-up. Refresh the page and review it before saving.' };
+  if (input.operation !== 'schedule' && !current?.['follow_up_at']) return { ok: false, error: 'There is no scheduled follow-up to complete or cancel.' };
+  const nextAt = input.operation === 'schedule' ? at : null;
+  await tx`UPDATE leads SET follow_up_at = ${nextAt}, follow_up_note = ${nextAt ? note : null},
+    follow_up_version = follow_up_version + 1, updated_at = now(), updated_by = ${session.userId}::uuid
+    WHERE id = ${input.leadId}::uuid`;
+  const detail = input.operation === 'schedule'
+    ? `Follow-up scheduled for ${at.toLocaleString('en-GB', { timeZone: 'Europe/London' })} (UK time): ${note}`
+    : `Follow-up ${input.operation === 'complete' ? 'completed' : 'cancelled'}: ${current?.['follow_up_note']}. Outcome: ${note}`;
+  await tx`INSERT INTO lead_events (tenant_id, lead_id, kind, detail, actor_id)
+    VALUES (${session.tenantId}::uuid, ${input.leadId}::uuid, 'note', ${detail}, ${session.userId}::uuid)`;
+  await writeAudit({ tx, session, resourceType: 'lead', resourceId: input.leadId,
+    action: `follow_up_${input.operation}`, before: { at: current?.['follow_up_at'], note: current?.['follow_up_note'] },
+    after: { at: nextAt, note: nextAt ? note : null, outcome: nextAt ? null : note } });
+  return { ok: true, message: input.operation === 'schedule' ? 'Follow-up scheduled.' : input.operation === 'complete' ? 'Follow-up completed and outcome recorded.' : 'Follow-up cancelled and reason recorded.' };
+}
+
+export async function applyCreateLead(tx: Tx, session: Session, input: {
+  siteId: string; contactId: string; firstName: string; lastName: string;
+  email: string; phone: string; source: string; message: string;
+}): Promise<LeadOutcome> {
+  const decision = authorize({ ...session }, 'lead.create');
+  if (!decision.allowed) return { ok: false, error: decision.reason };
+  const uuid = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+  if (!uuid.test(input.siteId) || (input.contactId && !uuid.test(input.contactId))) return { ok: false, error: 'Choose a valid site and customer.' };
+  if (!['phone', 'walk_in', 'autotrader', 'ebay', 'cargurus', 'facebook', 'other_marketplace'].includes(input.source)) return { ok: false, error: 'Choose where the enquiry came from.' };
+  if (input.message.length > 4000 || input.firstName.length > 100 || input.lastName.length > 100 || input.email.length > 254 || input.phone.length > 40) return { ok: false, error: 'Shorten the customer details or enquiry before saving.' };
+  if (session.scope !== 'all_sites' && !session.siteIds.includes(input.siteId)) return { ok: false, error: 'Choose a site you have access to.' };
+  const [site] = await tx`SELECT id FROM sites WHERE id = ${input.siteId}::uuid`;
+  if (!site) return { ok: false, error: 'That site is unavailable.' };
+  let contactId = input.contactId;
+  if (contactId) {
+    const [contact] = await tx`SELECT id FROM contacts WHERE id = ${contactId}::uuid AND erased_at IS NULL AND merged_into_id IS NULL`;
+    if (!contact) return { ok: false, error: 'That customer is unavailable. Search again.' };
+  } else {
+    const canCreateContact = authorize({ ...session }, 'contact.create');
+    if (!canCreateContact.allowed) return { ok: false, error: 'Choose an existing customer. Your role cannot create customer records.' };
+    const first = input.firstName.trim(), last = input.lastName.trim(), email = input.email.trim().toLowerCase(), phone = input.phone.trim();
+    if (!first && !last && !email && !phone) return { ok: false, error: 'Enter a customer name, email or phone number.' };
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: 'Enter a valid email address.' };
+    if (email || phone) {
+      const [duplicate] = await tx`SELECT id FROM contacts WHERE erased_at IS NULL AND merged_into_id IS NULL
+        AND ((${email} <> '' AND lower(email) = ${email}) OR (${phone} <> '' AND phone = ${phone})) LIMIT 1`;
+      if (duplicate) return { ok: false, error: 'A customer with these contact details already exists. Use the customer search to link their record.' };
+    }
+    const [contact] = await tx`INSERT INTO contacts (tenant_id, site_id, first_name, last_name, email, phone, created_by, updated_by)
+      VALUES (${session.tenantId}::uuid, ${input.siteId}::uuid, ${first || null}, ${last || null}, ${email || null}, ${phone || null}, ${session.userId}::uuid, ${session.userId}::uuid) RETURNING id`;
+    contactId = String(contact?.['id']);
+    await writeAudit({ tx, session, resourceType: 'contact', resourceId: contactId, action: 'created', after: { firstName: first, lastName: last, email, phone }, siteId: input.siteId });
+  }
+  const [lead] = await tx`INSERT INTO leads (tenant_id, site_id, contact_id, source, message, assigned_to, created_by, updated_by)
+    VALUES (${session.tenantId}::uuid, ${input.siteId}::uuid, ${contactId}::uuid, ${input.source}::lead_source,
+      ${input.message.trim() || null}, ${session.userId}::uuid, ${session.userId}::uuid, ${session.userId}::uuid) RETURNING id`;
+  const leadId = String(lead?.['id']);
+  await tx`INSERT INTO lead_events (tenant_id, lead_id, kind, detail, actor_id)
+    VALUES (${session.tenantId}::uuid, ${leadId}::uuid, 'created', 'Enquiry entered by staff and assigned to its creator.', ${session.userId}::uuid)`;
+  await writeAudit({ tx, session, resourceType: 'lead', resourceId: leadId, action: 'created', after: { contactId, source: input.source, assignedTo: session.userId }, siteId: input.siteId });
+  return { ok: true, leadId, message: 'Enquiry created.' };
 }

@@ -1,0 +1,13 @@
+# Sales follow-ups — 13 September 2026
+
+Desk and mobile sales staff need a clear next action on each open enquiry. This slice adds a scheduled follow-up with an outcome and an inbox filter. Existing leads hold the current task; append-only lead events and audits retain changes. Customer data remains within existing tenant and site RLS. There are no provider calls or consent changes. A failed transaction must leave the task and history unchanged.
+
+Acceptance: authorised staff can schedule, replace and complete a follow-up; concurrent stale submissions cannot replace another staff member's task; closed leads reject task changes; due work is filterable; outcomes do not change the first-response SLA; malformed and cross-tenant requests fail safely. Migration 0029 is additive. Rollback the app first; retain new columns and history during rollback.
+
+Manual enquiry entry also creates a customer or links an existing, searched customer. New contacts require contact.create; sources are constrained to staff-entered channels; the lead is assigned to its creator. No marketing consent is inferred. The local demo salesperson seed was missing lead.create/contact.create from the canonical role; its seed definition and isolated local fixture were corrected. Existing deployed roles are not changed.
+
+UI: linked workload metrics, owner filters, scheduled/due queues, a next-action panel, explicit input timezone and UK display times, pending/error states, and accurate outbound message status labels. Cancel/complete preserve outcomes as append-only notes. Closed leads retain historical tasks but exclude them from active queues.
+
+Verification: 1,779 tests across 59 files passed, including isolation; 33 focused lead tests passed after input hardening. Typecheck and lint passed. The CRM production image builds in Linux Docker. Real browser flow: create local walk-in enquiry, schedule callback (Asia/Karachi input converted to 11:30 UK), complete with outcome, inspect append-only history. Mobile inbox/detail/new form checked at 375px in light and dark; document widths 360px/scroll widths 360px. Next action moved above history on mobile after inspection. Automated axe and production communications/provider delivery were not exercised.
+
+Known remaining scope: this is one next action per lead, not a team appointment calendar; manual enquiries are general enquiries with vehicle requirements in their description; outbound delivery still depends on the existing provider/job integration. Existing role grants on deployed databases remain untouched. Apply migration 0029 before deploying the CRM. Previous app can run against this additive schema; rollback keeps task/evidence data.

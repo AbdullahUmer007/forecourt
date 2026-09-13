@@ -1,5 +1,30 @@
 # Changelog
 
+## 14 September 2026 — customers and appointments (local preview)
+
+- Find, create and update customer profiles with linked enquiries and appointment history.
+- Book and reschedule viewings, test drives, collections and meetings from a customer or enquiry.
+- See your daily diary in UK time and record completed visits, cancellations and missed appointments.
+- Conflicting bookings and stale edits are refused; unsuccessful forms retain your entries.
+- Customer and calendar navigation and responsive screens are now available to permitted staff.
+
+## 14 September 2026 — website management (local preview)
+
+- Preview current public stock and saved settings in desktop or phone view.
+- Apply theme presets and edit appearance, contact/hours and page content in clear sections.
+- Invalid hours/email and oversized copy are refused; failed submissions retain edits.
+- Preserve unedited Sunday hours and address fields, with a complete before/after audit.
+
+
+## 13 September 2026 — sales follow-ups (local preview)
+
+- Create a phone, walk-in or marketplace enquiry and link an existing customer or create one.
+- Schedule, reschedule, complete or cancel the next action; outcomes remain in the lead history.
+- Find due callbacks and assigned enquiries through the sales inbox workload cards and filters.
+- Concurrent stale edits are refused; follow-up completion leaves first-response measurement unchanged.
+- Message history shows the actual queued, sent, delivered or failed status.
+
+
 ## Sellable dealer spine
 
 Admin can provision a second dealership. The owner runs staff, photographs, the shopfront and part-exchange from the CRM. Public pages are templates, not a CMS. A car still cannot go live without a published photograph, a retail price and a VAT scheme.

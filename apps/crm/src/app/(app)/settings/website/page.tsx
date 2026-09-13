@@ -29,14 +29,14 @@ export default async function WebsiteSettingsPage() {
   return (
     <>
       <PageHeader
-        title="Website"
-        meta="Classic, Studio or Compact — then logo, colour and copy. Not a blank canvas."
+        title="Your website"
+        meta="Make your shopfront feel like your dealership. Manage its appearance, contact details and page content here."
         action={
           <Link
             href="/settings/website/preview"
             className="inline-flex min-h-11 items-center rounded-md border border-edge-strong px-4 font-medium hover:bg-surface-3"
           >
-            Preview
+            Preview saved website ↗
           </Link>
         }
       />

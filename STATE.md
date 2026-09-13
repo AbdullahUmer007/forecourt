@@ -1,3 +1,15 @@
+## 2026-09-14 — customers and appointments (local)
+
+Added a searchable customer directory, create/edit profiles, enquiry/history links and a responsive appointment diary. Staff can book, reschedule and close customer visits with retained outcomes. UK time conversion handles DST; stale edits and tenant/site/permission violations are rejected. Migrations 0030/0031 add appointments and database-enforced overlap protection across sites. Verified 1,798 tests, policy gate, lint/typecheck, CRM Docker build and local browser workflows; new page types passed automated axe checks. No Railway changes. See `reports/module-customers-appointments-2026-09-14.md` for limits and rollback. Reminders/calendar sync, customer merging/import, verified contact-destination changes and other backlog modules remain.
+
+## 2026-09-14 — website management (local)
+
+The saved shopfront preview now reuses the public homepage loader and renderer, including live/reserved stock, real counts/prices, arrivals and facets. Desktop/phone preview is sandboxed and read-only. The website editor has section navigation, a sticky save bar, real preset application, contact/time/copy validation, preserved failed submissions and full before/after auditing. Unedited Sunday hours and address metadata survive saves. Verified 1,783 tests, lint/typecheck, CRM/site Docker builds and browser save → preview → separate local public homepage. No Railway deployment or schema migration. See `reports/module-website-management-2026-09-14.md`.
+
+## 2026-09-13 — sales enquiry and follow-up workflow (local)
+
+Added manual enquiry entry with existing-customer search/new customer creation, salesperson ownership, scheduled/rescheduled/completed/cancelled follow-ups, outcome history and stale-edit protection. The sales inbox now has linked workload cards, owner filters and due/scheduled queues; lead detail has a next-action panel and accurate message statuses. Migration 0029 is additive. See `reports/module-lead-followups-2026-09-13.md`. Local tests and browser verification only; Railway unchanged. Website management, saved-car journeys, appointments, actual communications delivery and other backlog modules still require completion.
+
 ## 2026-09-13 — stock workspace and shared UI refresh (local)
 
 The CRM now has a navy grouped rail and a visual stock workspace with grid/list views, real inventory counts, partial-reg search and price sorting. Detail/book-in/photo controls were improved, and photo mutations now audit, serialize cover selection, protect buyer evidence and preserve a live car's last photograph. Public-site stock cards/filters and admin layout received a shared visual pass. See `reports/module-stock-redesign-2026-09-13.md` for scope, verification and unfinished integrations. Nothing deployed to Railway.
@@ -19,7 +31,7 @@ Verified: 1,762 tests across 57 files, including isolation; typecheck; lint; fre
 
 Next core slices, in order:
 1. Stock management: exercise book-in → details → photos → prep/readiness → publish → public listing, including real photo storage across Railway services and validation/error states.
-2. Website management: preview currently hardcodes zero stock and empty vehicle/facet arrays (`apps/crm/src/data/website-preview.ts`); connect live stock, improve settings UX, validate contact/hours and verify public cache freshness after edits.
+2. Website management: saved preview, shared public data, validation and core editor completed locally (14 September). Remaining: full weekly/holiday hours editing, unsaved draft previews and verified shared logo/photo storage across deployed services.
 3. Buyer journeys: implement the missing saved-car and saved-search routes; replace the dead reservation anchor with a real supported flow; review public page copy and photography.
 4. CRM daily workflows: contacts, follow-up actions, appointments, lead/deal creation and communications delivery; distinguish working storage from missing provider delivery.
 5. Platform administration/onboarding: verify tenant creation, staff access, domains, billing/support flows through the UI.

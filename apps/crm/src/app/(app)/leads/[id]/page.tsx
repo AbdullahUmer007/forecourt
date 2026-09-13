@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { requireSession } from '@/auth/session';
 import { loadLead, loadAssignees } from '@/data/leads';
 import { Card, StatusBadge, Row, Reg, Empty, type Tone } from '@/components/ui';
-import { StageControl, ReopenControl, AssignControl, NoteControl } from '@/components/lead-controls';
+import { FollowUpControl, StageControl, ReopenControl, AssignControl, NoteControl } from '@/components/lead-controls';
 import { holds, LOSS_REASON_LABELS, TERMINAL_STAGES, type LeadStage } from '@forecourt/domain';
 
 export const dynamic = 'force-dynamic';
@@ -44,7 +44,7 @@ const label = (s: string): string =>
 
 const stamp = (d: Date): string =>
   d.toLocaleString('en-GB', {
-    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    timeZone: 'Europe/London', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });
 
 export default async function LeadPage(
@@ -81,15 +81,26 @@ export default async function LeadPage(
     })),
   ].sort((a, b) => a.at.getTime() - b.at.getTime());
 
+  const nextAction = (
+        <Card title="Next action">
+          {lead.followUpAt ? <div className="mb-4 rounded-md border border-edge bg-surface-2 p-3">
+            <StatusBadge icon={closed ? '✓' : lead.followUpAt.getTime() <= Date.now() ? '!' : '⌚'} tone={closed ? 'neutral' : lead.followUpAt.getTime() <= Date.now() ? 'warning' : 'info'} label={closed ? 'Lead closed · follow-up inactive' : lead.followUpAt.getTime() <= Date.now() ? 'Follow-up due' : 'Scheduled'} />
+            <p className="mt-2 font-medium">{stamp(lead.followUpAt)} · UK time</p>
+            <p className="mt-1 whitespace-pre-line break-words text-ink-muted">{lead.followUpNote}</p>
+          </div> : <p className="mb-4 text-ink-muted">{closed ? 'This lead is closed.' : 'Set the next step so this enquiry keeps moving.'}</p>}
+          {canUpdate && !closed && <FollowUpControl leadId={lead.id} version={lead.followUpVersion} scheduled={lead.followUpAt !== null} />}
+        </Card>
+  );
+
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
       <div className="grid gap-4">
         <Card>
           <Link href="/leads" className="text-[13px] leading-[18px] text-link hover:underline">
-            ← Leads
+            ← Sales inbox
           </Link>
 
-          <h1 className="mt-2 text-[20px] leading-7 font-semibold">{lead.contactName}</h1>
+          <h1 className="mt-3 text-[32px] leading-10 tracking-tight font-semibold">{lead.contactName}</h1>
           <p className="text-ink-subtle">
             {label(lead.source)} · received {stamp(lead.receivedAt)}
             {lead.siteName && ` · ${lead.siteName}`}
@@ -132,6 +143,8 @@ export default async function LeadPage(
             </p>
           )}
         </Card>
+
+        <div className="xl:hidden">{nextAction}</div>
 
         {/* Four enquiries from one buyer is one buyer. Ringing them four times
             is how you lose them. */}
@@ -194,7 +207,7 @@ export default async function LeadPage(
                         <StatusBadge
                           tone={entry.message.direction === 'inbound' ? 'neutral' : 'info'}
                           icon={entry.message.direction === 'inbound' ? '←' : '→'}
-                          label={`${entry.message.direction === 'inbound' ? 'Received' : 'Sent'} · ${CHANNEL_LABELS[entry.message.channel] ?? entry.message.channel}`}
+                          label={`${entry.message.direction === 'inbound' ? 'Received' : label(entry.message.status)} · ${CHANNEL_LABELS[entry.message.channel] ?? entry.message.channel}`}
                         />
                         {entry.message.isMarketing && (
                           <StatusBadge tone="warning" icon="◎" label="Marketing" />
@@ -230,7 +243,9 @@ export default async function LeadPage(
       </div>
 
       <div className="grid content-start gap-4">
-        <Card title="Contact">
+        <div className="hidden xl:block">{nextAction}</div>
+
+        <Card title="Contact" action={holds(session, 'contact.read') && <Link href={`/customers/${lead.contactId}`} className="text-sm text-link">View profile →</Link>}>
           <dl>
             <Row label="Name">{lead.contactName}</Row>
             <Row label="Phone">
@@ -252,6 +267,8 @@ export default async function LeadPage(
             </Row>
           </dl>
         </Card>
+
+        {canUpdate && !lead.closedAt && holds(session, 'contact.read') && <Link href={`/appointments/new?contact=${lead.contactId}&lead=${lead.id}`} className="inline-flex min-h-11 items-center justify-center rounded-md border border-edge-strong px-4 text-link">Book a customer visit</Link>}
 
         <Card title="What we may send">
           <p className="mb-3 text-[13px] leading-[18px] text-ink-muted">
@@ -304,13 +321,13 @@ export default async function LeadPage(
           <Card title={closed ? 'Closed' : 'Move this lead on'}>
             {closed
               ? <ReopenControl leadId={lead.id} />
-              : <StageControl leadId={lead.id} stage={lead.stage} />}
+              : <StageControl key={lead.stage} leadId={lead.id} stage={lead.stage} />}
           </Card>
         )}
 
         {canUpdate && (
           <Card title="Owner">
-            <AssignControl leadId={lead.id} assignedTo={lead.assignedTo} people={people} />
+            <AssignControl key={lead.assignedTo} leadId={lead.id} assignedTo={lead.assignedTo} people={people} />
           </Card>
         )}
       </div>

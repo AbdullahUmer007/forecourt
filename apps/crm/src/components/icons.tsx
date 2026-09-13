@@ -41,7 +41,11 @@ function Svg({ size = 20, className = '', children }: IconProps & { children: Re
 export type IconName =
   | 'dashboard' | 'appraisal' | 'prep' | 'stock' | 'leads' | 'deals'
   | 'invoices' | 'vat' | 'channels' | 'reports' | 'compliance' | 'accounting'
-  | 'people' | 'website';
+  | 'people' | 'website' | 'calendar';
+
+export function CalendarIcon(p: IconProps) {
+  return <Svg {...p}><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4M7 14h2M12 14h2M7 17h2" /></Svg>;
+}
 
 export function DashboardIcon(p: IconProps) {
   return (
@@ -196,6 +200,7 @@ export function WebsiteIcon(p: IconProps) {
 }
 
 export const NAV_ICONS: Record<IconName, (p: IconProps) => React.ReactElement> = {
+  calendar: CalendarIcon,
   dashboard: DashboardIcon,
   appraisal: AppraisalIcon,
   prep: PrepIcon,

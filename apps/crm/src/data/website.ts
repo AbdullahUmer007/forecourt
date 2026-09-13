@@ -1,6 +1,7 @@
 import { authorize, parseSiteTheme, defaultSiteTheme, brandColourOk, darkenHex, mediaUrlPath,
   type SiteThemeId, type FontPairing, type ThemeRadius, type CardStyle } from '@forecourt/domain';
 import { storeBrandLogo } from '@/media/store';
+import { writeAudit } from './audit';
 import { withSession } from './db';
 import type { Session } from '@/auth/session';
 
@@ -91,6 +92,19 @@ export async function saveWebsiteSettings(
   }, 'website.update');
   if (!decision.allowed) return { ok: false, error: decision.reason };
 
+  const limits: Record<string, number> = { phone: 40, email: 254, line1: 200, city: 100, county: 100, postcode: 12,
+    homeHeadline: 160, homeLead: 600, about: 10000, contactBlurb: 2000, footerLegal: 4000 };
+  for (const [field, max] of Object.entries(limits)) {
+    if (String(form.get(field) ?? '').length > max) return { ok: false, error: `The ${field} field must be ${max} characters or fewer.` };
+  }
+  const email = String(form.get('email') ?? '').trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: 'Enter a valid contact email address.' };
+  for (const [label, open, close] of [['Weekday', 'weekdayOpen', 'weekdayClose'], ['Saturday', 'saturdayOpen', 'saturdayClose']] as const) {
+    const from = String(form.get(open) ?? ''), to = String(form.get(close) ?? '');
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(from) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(to) || from >= to) {
+      return { ok: false, error: `${label} closing time must be after opening time. Use 24-hour times such as 09:00.` };
+    }
+  }
   const themeId = String(form.get('themeId') ?? 'classic');
   if (themeId !== 'classic' && themeId !== 'studio' && themeId !== 'compact') {
     return { ok: false, error: 'Pick Classic, Studio or Compact.' };
@@ -142,6 +156,10 @@ export async function saveWebsiteSettings(
     postcode: String(form.get('postcode') ?? ''),
   };
 
+  const current = await loadWebsiteSettings(session);
+  if (!current?.siteId) return { ok: false, error: 'This dealership needs a brand and main site before its website can be edited.' };
+  if (session.scope !== 'all_sites' && !session.siteIds.includes(current.siteId)) return { ok: false, error: 'You need access to the main dealership site to edit its website.' };
+
   const logo = form.get('logo');
   let logoKey: string | null = null;
   if (logo instanceof File && logo.size > 0) {
@@ -152,37 +170,39 @@ export async function saveWebsiteSettings(
 
   try {
     await withSession(session, async (tx) => {
-      const [brand] = await tx<{ id: string }[]>`
-        SELECT id FROM brands ORDER BY is_default DESC, created_at LIMIT 1`;
+      const [brand] = await tx`
+        SELECT id, theme, logo_light_key FROM brands ORDER BY is_default DESC, created_at LIMIT 1 FOR UPDATE`;
       if (!brand) throw new Error('This dealership has no brand record yet.');
+      const [site] = await tx`SELECT id, address, opening_hours, phone, email FROM sites ORDER BY created_at LIMIT 1 FOR UPDATE`;
+      if (!site) throw new Error('This dealership has no site record yet.');
+      if (session.scope !== 'all_sites' && !session.siteIds.includes(String(site['id']))) throw new Error('You need access to the main dealership site to edit its website.');
+      const originalAddress = (site['address'] as Record<string, unknown> | null) ?? {};
+      const originalHours = (site['opening_hours'] as { days: string[]; opens: string; closes: string }[] | null) ?? [];
+      const editedDays = new Set(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
+      const preservedHours = originalHours.map(h => ({ ...h, days: h.days.filter(day => !editedDays.has(day)) })).filter(h => h.days.length > 0);
+      const nextAddress = { ...originalAddress, ...address };
+      const nextHours = [...hours, ...preservedHours];
       await tx`
         UPDATE brands SET
           theme = ${tx.json(theme)},
           logo_light_key = coalesce(${logoKey}, logo_light_key),
-          updated_at = now()
-         WHERE id = ${brand.id}::uuid`;
+          updated_at = now(), updated_by = ${session.userId}::uuid
+         WHERE id = ${String(brand['id'])}::uuid`;
 
-      const [site] = await tx<{ id: string }[]>`
-        SELECT id FROM sites ORDER BY created_at LIMIT 1`;
       if (site) {
         await tx`
           UPDATE sites SET
             phone = ${String(form.get('phone') ?? '') || null},
-            email = ${String(form.get('email') ?? '') || null},
-            address = ${tx.json(address)},
-            opening_hours = ${tx.json(hours)},
-            updated_at = now()
-           WHERE id = ${site.id}::uuid`;
+            email = ${email || null},
+            address = ${tx.json(nextAddress)},
+            opening_hours = ${tx.json(nextHours)},
+            updated_at = now(), updated_by = ${session.userId}::uuid
+           WHERE id = ${String(site['id'])}::uuid`;
       }
 
-      await tx`
-        INSERT INTO audit_events (
-          tenant_id, actor_type, actor_id, resource_type, resource_id, action, diff
-        ) VALUES (
-          ${session.tenantId}::uuid, 'user', ${session.userId}::uuid,
-          'brand', ${brand.id}::uuid, 'update',
-          ${tx.json({ after: { theme: themeId, brandPrimary } })}
-        )`;
+      await writeAudit({ tx, session, resourceType: 'brand', resourceId: String(brand['id']), action: 'website_updated',
+        before: { theme: brand['theme'], logoKey: brand['logo_light_key'], address: originalAddress, hours: originalHours, phone: site['phone'], email: site['email'] },
+        after: { theme, logoKey: logoKey ?? brand['logo_light_key'], address: nextAddress, hours: nextHours, phone: String(form.get('phone') ?? '') || null, email: email || null }, siteId: String(site['id']) });
     });
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : 'The website could not be saved.' };

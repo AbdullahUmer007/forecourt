@@ -1,3 +1,6 @@
+import Link from 'next/link';
+import { PageHeader } from '@/components/ui';
+import { PreviewFrame } from './preview-frame';
 import { notFound } from 'next/navigation';
 import { requireSession } from '@/auth/session';
 import { holds } from '@forecourt/domain';
@@ -15,16 +18,9 @@ export default async function WebsitePreviewPage() {
   if (!holds(principal, 'website.update')) notFound();
 
   const html = await renderWebsitePreview(session.tenantId);
-  return (
-    <div className="grid gap-3">
-      <p className="text-[13px] text-ink-muted">
-        This is your shopfront as a buyer would see it, rendered for this dealership — not looked up by hostname.
-      </p>
-      <iframe
-        title="Website preview"
-        srcDoc={html}
-        className="min-h-[80vh] w-full rounded-md border border-edge bg-white"
-      />
-    </div>
-  );
+  return <div>
+    <PageHeader title="Your shopfront" meta="Saved settings and current public stock. This preview is read-only; links and forms are disabled."
+      action={<Link href="/settings/website" className="inline-flex min-h-11 items-center rounded-md border border-edge-strong px-4 font-medium">Back to website settings</Link>} />
+    <PreviewFrame html={html} />
+  </div>;
 }

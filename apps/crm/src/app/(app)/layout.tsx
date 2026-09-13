@@ -23,6 +23,8 @@ const NAV: (NavItem & { needs?: string })[] = [
   { href: '/appraisals', label: 'Part-exchange', icon: 'appraisal' },
   { href: '/prep', label: 'Prep', icon: 'prep' },
   { href: '/leads', label: 'Leads', icon: 'leads' },
+  { href: '/customers', label: 'Customers', icon: 'people', needs: 'contact.read' },
+  { href: '/appointments', label: 'Appointments', icon: 'calendar', needs: 'lead.read' },
   { href: '/deals', label: 'Deals', icon: 'deals' },
   { href: '/invoices', label: 'Invoices', icon: 'invoices' },
   // Named "VAT book" rather than "Stock book": to a dealer, "the stock book"
