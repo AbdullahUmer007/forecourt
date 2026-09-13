@@ -16,8 +16,9 @@ export async function submitPartExchange(
   if (!REG.test(registration)) {
     return { ok: false, error: 'Enter the registration as it appears on the plate.' };
   }
-  const mileage = Number(input.mileage.replace(/,/g, ''));
-  if (!Number.isInteger(mileage) || mileage < 0 || mileage > 500_000) {
+  const mileageText = input.mileage.replace(/,/g, '').trim();
+  const mileage = Number(mileageText);
+  if (!/^\d+$/.test(mileageText) || !Number.isInteger(mileage) || mileage < 0 || mileage > 500_000) {
     return { ok: false, error: 'Enter the mileage as a whole number of miles.' };
   }
   const email = input.email.trim().toLowerCase();
@@ -40,30 +41,31 @@ export async function submitPartExchange(
       const siteId = site?.id ?? null;
       const givenName = firstName ?? name;
 
-      const [contact] = await tx<{ id: string }[]>`
-        INSERT INTO contacts (tenant_id, site_id, first_name, last_name, email, phone)
+      const [ids] = await tx<{ contact_id: string; lead_id: string }[]>`
+        SELECT uuid_generate_v7() AS contact_id, uuid_generate_v7() AS lead_id`;
+      if (!ids) throw new Error('Could not allocate part-exchange references');
+      const contactId = ids.contact_id;
+      const leadId = ids.lead_id;
+      await tx`
+        INSERT INTO contacts (id, tenant_id, site_id, first_name, last_name, email, phone)
         VALUES (
-          ${tenantId}::uuid, ${siteId}::uuid,
+          ${contactId}::uuid, ${tenantId}::uuid, ${siteId}::uuid,
           ${givenName}, ${lastName}, ${email}, ${phone}
-        )
-        RETURNING id`;
-      if (!contact) throw new Error('contact');
+        )`;
 
-      const [lead] = await tx<{ id: string }[]>`
-        INSERT INTO leads (tenant_id, site_id, contact_id, source, message, due_at)
+      await tx`
+        INSERT INTO leads (id, tenant_id, site_id, contact_id, source, message, due_at)
         VALUES (
-          ${tenantId}::uuid, ${siteId}::uuid, ${contact.id}::uuid,
+          ${leadId}::uuid, ${tenantId}::uuid, ${siteId}::uuid, ${contactId}::uuid,
           'website_part_ex',
           ${`Part-exchange enquiry: ${registration}, ${mileage.toLocaleString('en-GB')} miles.`},
           now() + interval '1 hour'
-        )
-        RETURNING id`;
-      if (!lead) throw new Error('lead');
+        )`;
 
       await tx`
         INSERT INTO lead_events (tenant_id, lead_id, kind, to_stage, detail)
         VALUES (
-          ${tenantId}::uuid, ${lead.id}::uuid, 'created', 'new',
+          ${tenantId}::uuid, ${leadId}::uuid, 'created', 'new',
           'Public part-exchange form'
         )`;
 
@@ -72,9 +74,13 @@ export async function submitPartExchange(
           tenant_id, site_id, contact_id, lead_id, state,
           seller_type, registration, mileage
         ) VALUES (
-          ${tenantId}::uuid, ${siteId}::uuid, ${contact.id}::uuid,
-          ${lead.id}::uuid, 'draft', 'private_individual', ${registration}, ${mileage}
+          ${tenantId}::uuid, ${siteId}::uuid, ${contactId}::uuid,
+          ${leadId}::uuid, 'draft', 'private_individual', ${registration}, ${mileage}
         )`;
+      await tx`
+        INSERT INTO audit_events (tenant_id, site_id, actor_type, resource_type, resource_id, action, diff)
+        VALUES (${tenantId}::uuid, ${siteId}::uuid, 'public', 'lead', ${leadId}::uuid, 'create',
+          ${tx.json({ source: 'website_part_ex', contactId })})`;
     });
   } catch {
     return { ok: false, error: 'We could not take that just now. Ring us and we will take it down.' };

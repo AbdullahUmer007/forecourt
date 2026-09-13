@@ -29,7 +29,7 @@ export const DEFAULT_THEME: BrandTheme = {
 
 const RADIUS: Record<BrandTheme['radius'], { sm: string; md: string; lg: string }> = {
   sharp: { sm: '2px', md: '2px', lg: '4px' },
-  soft: { sm: '4px', md: '6px', lg: '10px' },
+  soft: { sm: '6px', md: '10px', lg: '16px' },
   rounded: { sm: '8px', md: '12px', lg: '18px' },
 };
 
@@ -540,6 +540,28 @@ color:var(--ink-subtle);margin:0 0 10px}
 .footer-grid a:hover{color:var(--brand-text)}
 .footer-legal{margin:clamp(20px,2.5vw,32px) 0 0;padding-top:20px;border-top:1px solid var(--border);
 font-size:var(--t-2xs);line-height:16px;color:var(--ink-subtle);max-width:90ch}
+/* Shared public-site refresh: give photography and buying decisions more space. */
+.masthead-in{padding-top:16px;padding-bottom:16px;gap:24px}
+.results-title{font-size:clamp(28px,3.5vw,46px);line-height:1.12;letter-spacing:-.035em;margin:28px 0 24px;max-width:26ch}
+.filters{padding:20px;border-radius:var(--radius-lg)}
+.filters summary{cursor:pointer;font-size:17px;font-weight:600;min-height:44px;list-style-position:inside}
+.facet{padding-top:14px;border-top:1px solid var(--border)}
+.facet-head{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--ink)}
+.facet-opt a,.facet-opt span{min-height:40px;padding:5px 8px}
+.facet-opt.is-selected a{background:var(--brand-50)}
+.sortbar{margin-bottom:20px;padding:12px 16px;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md)}
+.sort{min-height:44px}
+.sort.is-current{background:var(--brand-50);border-radius:var(--radius-sm);padding-inline:10px;text-decoration:none;color:var(--brand-text)}
+.grid{gap:24px}
+.v-card{transition:box-shadow 150ms,border-color 150ms}
+.v-card:hover{border-color:var(--brand-text);box-shadow:0 8px 24px rgb(15 23 42 / .08)}
+.v-card-body{padding:20px 20px 0}
+.v-name{font-size:19px;line-height:25px;letter-spacing:-.02em}
+.v-thumb,.v-thumb-empty{aspect-ratio:16/11}
+.keyword{padding:16px;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:24px}
+.keyword input{min-width:0}
+@media(min-width:1024px) and (max-width:1279px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:639px){.masthead-in{gap:10px;padding-top:10px;padding-bottom:10px}.keyword{padding:10px}.filters{padding:16px}.facet-opt a,.facet-opt span{min-height:44px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 `.replace(/\n\s*/g, '').trim();
 }

@@ -14,6 +14,7 @@ export async function uploadVehiclePhoto(formData: FormData): Promise<MediaOutco
   const shot = String(formData.get('shot') ?? 'other');
   const result = await addVehiclePhoto(session, vehicleId, file, shot);
   if (result.ok) {
+    revalidatePath('/stock');
     revalidatePath(`/stock/${vehicleId}`);
     revalidatePath(`/stock/${vehicleId}/edit`);
   }
@@ -30,7 +31,8 @@ export async function manageVehiclePhoto(formData: FormData): Promise<MediaOutco
   if (action === 'unpublish') patch.published = false;
   if (action === 'hero') patch.hero = true;
   if (action === 'withdraw') patch.withdraw = true;
+  if (!['publish', 'unpublish', 'hero', 'withdraw'].includes(action)) return { ok: false, error: 'Choose a photograph action.' };
   const result = await updateVehiclePhoto(session, mediaId, patch);
-  if (result.ok) revalidatePath(`/stock/${vehicleId}`);
+  if (result.ok) { revalidatePath('/stock'); revalidatePath(`/stock/${vehicleId}`); }
   return result;
 }

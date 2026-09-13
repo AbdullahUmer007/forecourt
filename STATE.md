@@ -1,9 +1,33 @@
+## 2026-09-13 — stock workspace and shared UI refresh (local)
+
+The CRM now has a navy grouped rail and a visual stock workspace with grid/list views, real inventory counts, partial-reg search and price sorting. Detail/book-in/photo controls were improved, and photo mutations now audit, serialize cover selection, protect buyer evidence and preserve a live car's last photograph. Public-site stock cards/filters and admin layout received a shared visual pass. See `reports/module-stock-redesign-2026-09-13.md` for scope, verification and unfinished integrations. Nothing deployed to Railway.
+
 # STATE — RixDrive
 
 > **Read this first, every session.** It is the single source of truth for what is done, in flight and blocked.
 > Update it at the end of every session. Keep it short; detail goes in `reports/`.
 
-**Last updated:** 2026-08-05 · by: Claude (UI depth — stock, leads, deals, invoices, dashboard)
+**Last updated:** 2026-09-13 · by: Codex (website enquiries and verification foundation)
+
+## Current completion work — 13 September 2026
+
+The earlier module percentages below describe substantial domain/schema work, not verified product completion. The user has requested a module-by-module completion and UI improvement pass. Work is in `D:\Projects\dealer\forecourt`. Railway has not been changed during this pass.
+
+First slice implemented: public vehicle/general enquiries now reach the existing CRM inbox with contact, vehicle/branch association, creation event and audit trail. Contact page redesigned with labelled responsive forms, preserved error values and redirect-to-confirmation. Public part-exchange writes fixed without granting private-record SELECT. See `reports/module-website-enquiries-2026-09-13.md`.
+
+Verified: 1,762 tests across 57 files, including isolation; typecheck; lint; fresh local database setup (28 migrations, 104 tables); public-site Linux Docker build; browser submission followed by the resulting CRM inbox record; phone-width light/dark form checks. Database tests use isolated local containers only. Integration test files now run serially because they share mutable fixtures.
+
+Next core slices, in order:
+1. Stock management: exercise book-in → details → photos → prep/readiness → publish → public listing, including real photo storage across Railway services and validation/error states.
+2. Website management: preview currently hardcodes zero stock and empty vehicle/facet arrays (`apps/crm/src/data/website-preview.ts`); connect live stock, improve settings UX, validate contact/hours and verify public cache freshness after edits.
+3. Buyer journeys: implement the missing saved-car and saved-search routes; replace the dead reservation anchor with a real supported flow; review public page copy and photography.
+4. CRM daily workflows: contacts, follow-up actions, appointments, lead/deal creation and communications delivery; distinguish working storage from missing provider delivery.
+5. Platform administration/onboarding: verify tenant creation, staff access, domains, billing/support flows through the UI.
+6. External integrations and operational readiness: provider credentials/contracts, jobs, monitoring, backups and remaining finance/accounting sign-offs. Do not represent unconfigured integrations as live.
+
+Live site inspected; live CRM/admin are behind sign-in. A question about whether Railway contains real customer data is pending. Local sample data was used for all writes. No production submissions, migrations or deployment were performed.
+
+---
 **Current phase:** The numbered backlog is complete bar M15. Building the screens. Three modules await external sign-off (see `docs/10-compliance-signoff-brief.md`).
 **Autonomy:** Broad (see `docs/09-manager-charter.md`)
 

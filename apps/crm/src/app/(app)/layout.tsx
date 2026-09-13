@@ -18,10 +18,10 @@ export const dynamic = 'force-dynamic';
  * exactly that.
  */
 const NAV: (NavItem & { needs?: string })[] = [
-  { href: '/', label: 'Dashboard', icon: 'dashboard' },
+  { href: '/', label: 'Overview', icon: 'dashboard' },
+  { href: '/stock', label: 'Stock', icon: 'stock' },
   { href: '/appraisals', label: 'Part-exchange', icon: 'appraisal' },
   { href: '/prep', label: 'Prep', icon: 'prep' },
-  { href: '/stock', label: 'Stock', icon: 'stock' },
   { href: '/leads', label: 'Leads', icon: 'leads' },
   { href: '/deals', label: 'Deals', icon: 'deals' },
   { href: '/invoices', label: 'Invoices', icon: 'invoices' },

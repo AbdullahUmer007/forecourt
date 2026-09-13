@@ -80,8 +80,8 @@
   --spacing: 4px;
 
   --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 10px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
 
   /*
    * Four levels, and nothing else — rule 3 of the design system. Flat is the

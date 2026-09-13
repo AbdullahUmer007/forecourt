@@ -52,8 +52,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       )}
 
       <header className="sticky top-0 z-10 border-b border-edge bg-surface-1">
-        <div className="mx-auto flex max-w-[1280px] items-center gap-4 px-4 py-2">
-          <Link href="/" className="font-semibold tracking-tight">Platform admin</Link>
+        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-4 px-5 py-4">
+          <Link href="/" className="text-[20px] font-semibold tracking-tight">RixDrive <span className="text-link">Admin</span></Link>
           <span className="hidden text-ink-subtle sm:inline">{session.email}</span>
           <span className="rounded-sm border border-edge-strong px-2 py-0.5 text-[12px] leading-4">
             {session.role.replace(/_/g, ' ')}
@@ -74,7 +74,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1280px] px-4 py-4">{children}</main>
+      <main className="mx-auto max-w-[1440px] px-5 py-8 lg:px-10">{children}</main>
     </>
   );
 }

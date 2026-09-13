@@ -1,0 +1,6 @@
+{
+  "classic": { "primary": "#0E5A6B", "hover": "#0B4553" },
+  "studio": { "primary": "#1E3A5F", "hover": "#152A46" },
+  "compact": { "primary": "#0F4C3A", "hover": "#0A3428" },
+  "onBrand": "#FFFFFF"
+}

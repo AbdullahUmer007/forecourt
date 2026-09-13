@@ -18,6 +18,7 @@
  */
 
 import { html, raw, when, esc } from './html.js';
+import { enquiryForm } from './enquiry-form.js';
 import { criticalCss, DEFAULT_THEME, type BrandTheme } from './theme.js';
 import { masthead, siteFooter, type OpeningHoursView } from './chrome.js';
 import { renderFinancePromotion, renderFinanceUnavailable, type FinancePromotionInput } from './finance.js';
@@ -749,18 +750,10 @@ ${masthead(dealer, input.now ? { now: input.now } : {})}
     <div class="enq">
       <div>
         <h2 class="h2-lg">Ask us anything about this ${esc(v.make ?? 'car')}</h2>
-        <p>A real person at the forecourt answers these — usually within the hour, always the same day. Ask for a video walkaround if you are coming a distance.</p>
+        <p>Ask about availability, arrange a viewing or request a video walkaround. Your message goes straight to the dealership.</p>
         ${dealer.telephone ? `<p>Or ring <a href="tel:${esc(dealer.telephone)}">${esc(dealer.telephone)}</a></p>` : ''}
       </div>
-      <form class="enq-form" method="post" action="/enquiries">
-        <input type="hidden" name="vehicle" value="${esc(v.registration)}">
-        <label><span>Your name</span><input name="name" required autocomplete="name" autocapitalize="words"></label>
-        <label><span>Email</span><input name="email" type="email" required autocomplete="email" inputmode="email"></label>
-        <label><span>Phone</span><input name="phone" type="tel" autocomplete="tel" inputmode="tel"></label>
-        <label class="full"><span>Your question</span><textarea name="message" rows="3" placeholder="Is it available to view on Saturday morning?"></textarea></label>
-        <button class="full" type="submit">Send my enquiry</button>
-        <p class="enq-note">We will only use this to answer you about this car. No marketing unless you tick to ask for it.</p>
-      </form>
+      ${enquiryForm({ vehicle: v.registration })}
     </div>
   </section>
 

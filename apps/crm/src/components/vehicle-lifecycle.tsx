@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { unstable_rethrow } from 'next/navigation';
 import { transitionVehicle } from '@/data/vehicle-actions';
 import { withdrawVehicle } from '@/data/withdraw-actions';
 import { BUTTON_CLASS } from './styles';
@@ -16,16 +17,20 @@ export function VehicleLifecycle(
     actions: { label: string; toState: string }[];
   },
 ) {
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState('');
+  useEffect(() => { setError(null); }, [state, blockers.length]);
 
   async function move(toState: string) {
     setError(null);
     const data = new FormData();
     data.set('vehicleId', vehicleId);
     data.set('toState', toState);
-    const result = await transitionVehicle(null, data);
-    if (!result.ok) setError(result.error);
+    setPending(true);
+    try { const result = await transitionVehicle(null, data); if (!result.ok) setError(result.error); }
+    catch { setError('The vehicle status could not be changed. Please try again.'); }
+    finally { setPending(false); }
   }
 
   async function archive() {
@@ -33,15 +38,17 @@ export function VehicleLifecycle(
     const data = new FormData();
     data.set('vehicleId', vehicleId);
     data.set('confirm', confirm);
-    const result = await withdrawVehicle(data);
-    if (!result.ok) setError(result.error);
+    setPending(true);
+    try { const result = await withdrawVehicle(data); if (!result.ok) setError(result.error); }
+    catch (error) { unstable_rethrow(error); setError('The vehicle could not be archived. Please try again.'); }
+    finally { setPending(false); }
   }
 
   const sold = state === 'sold' || state === 'delivered';
 
   return (
-    <div className="grid gap-3">
-      {error && <p className="text-critical">{error}</p>}
+    <fieldset disabled={pending} className="grid min-w-0 gap-3">
+      {error && <p role="alert" className="text-critical">{error}</p>}
 
       {state !== 'live' && blockers.length > 0 && (
         <ul className="list-disc pl-5 text-[13px] text-ink-muted">
@@ -76,6 +83,7 @@ export function VehicleLifecycle(
               onChange={(e) => setConfirm(e.target.value)}
               className="min-h-11 rounded-md border border-edge-strong px-3"
               placeholder="ARCHIVE"
+              aria-label="Type ARCHIVE to confirm"
             />
             <button type="button" onClick={archive} className={`${BUTTON_CLASS} border-critical text-critical`}>
               Archive
@@ -83,6 +91,6 @@ export function VehicleLifecycle(
           </div>
         </div>
       )}
-    </div>
+    </fieldset>
   );
 }

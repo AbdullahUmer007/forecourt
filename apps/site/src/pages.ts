@@ -1,11 +1,12 @@
 import { requireTenant } from './request.js';
 import { loadDealer } from './data/vehicles.js';
 import { renderStaticPage, type StaticPageId } from './render/static-page.js';
+import type { EnquiryInput } from './data/enquiries.js';
 
 export async function staticPageResponse(
   request: Request,
   id: StaticPageId,
-  extras: { formError?: string; formOk?: boolean } = {},
+  extras: { formError?: string; formOk?: boolean; formValues?: EnquiryInput; status?: number } = {},
 ): Promise<Response> {
   const resolved = await requireTenant(request);
   if (!resolved.ok) return resolved.response;
@@ -19,6 +20,7 @@ export async function staticPageResponse(
     now: new Date(),
     ...(extras.formError ? { formError: extras.formError } : {}),
     ...(extras.formOk ? { formOk: extras.formOk } : {}),
+    ...(extras.formValues ? { formValues: extras.formValues } : {}),
     dealer: {
       name: dealer.name,
       telephone: dealer.telephone,
@@ -37,6 +39,7 @@ export async function staticPageResponse(
   });
 
   return new Response(html, {
+    status: extras.status ?? 200,
     headers: {
       'content-type': 'text/html; charset=utf-8',
       'cache-control': extras.formOk || extras.formError

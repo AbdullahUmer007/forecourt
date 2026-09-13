@@ -215,7 +215,8 @@ describe.runIf(process.env['DATABASE_URL'])('the loaders the screens actually ca
  * carefully as the block above tests the first.
  */
 describe.runIf(process.env['DATABASE_URL'])('the public site’s door', () => {
-  const KENNINGTON = '11111111-1111-4111-8111-111111111111';
+  // Own the fixture: this suite must pass before any demo seed is run.
+  const KENNINGTON = session.tenantId;
 
   /**
    * The site's own door, copied rather than imported: `@/` is the CRM.
@@ -307,7 +308,7 @@ describe.runIf(process.env['DATABASE_URL'])('the public site’s door', () => {
     }
   });
 
-  it('cannot write anywhere except the demand signal', async () => {
+  it('can only append demand signals, enquiries, appraisals and their audit trail', async () => {
     // One exception, and it is INSERT only: `search_events` records what
     // buyers looked for and did not find. Append-only evidence of demand.
     const rows = await sql<{ table_name: string; privilege_type: string }[]>`
@@ -316,6 +317,6 @@ describe.runIf(process.env['DATABASE_URL'])('the public site’s door', () => {
       WHERE grantee = 'app_public' AND privilege_type <> 'SELECT'`;
 
     expect(rows.map((r) => `${r.table_name}:${r.privilege_type}`).sort())
-      .toEqual(['search_events:INSERT']);
+      .toEqual(['appraisals:INSERT', 'audit_events:INSERT', 'contacts:INSERT', 'lead_events:INSERT', 'leads:INSERT', 'search_events:INSERT']);
   });
 });

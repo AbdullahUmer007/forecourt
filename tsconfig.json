@@ -43,6 +43,7 @@
   "include": [
     "packages/*/src/**/*.ts",
     "apps/site/src/**/*.ts",
+    "apps/site/app/**/*.ts",
     "apps/crm/src/**/*.ts",
     "apps/crm/src/**/*.tsx",
     "tests/**/*.ts",

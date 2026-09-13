@@ -24,6 +24,7 @@ dist
 .env.*
 !.env.example
 .tokens.json
+.credentials.txt
 .token
 
 .git

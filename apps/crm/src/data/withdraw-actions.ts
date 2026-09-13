@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { requireSession } from '@/auth/session';
 import { authorize, allowedTransitions, type VehicleState } from '@forecourt/domain';
 import { withSession } from './db';
@@ -63,6 +64,7 @@ export async function withdrawVehicle(formData: FormData): Promise<{ ok: true } 
   if (result.ok) {
     revalidatePath('/stock');
     revalidatePath(`/stock/${vehicleId}`);
+    redirect('/stock?archived=1');
   }
   return result;
 }

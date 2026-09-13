@@ -94,9 +94,9 @@ export function PageHeader(
     // 1.06:1 against that plane — it rendered, at two-thirds of a pixel, and
     // could not be seen at any zoom. A divider nobody can see is not a subtle
     // divider, it is markup.
-    <div className="mb-6 flex flex-wrap items-start justify-between gap-x-4 gap-y-3 border-b border-edge-strong pb-4">
+    <div className="mb-6 flex flex-wrap items-start justify-between gap-x-4 gap-y-3 pb-2">
       <div className="min-w-0">
-        <h1 className="text-[26px] leading-8 font-semibold">{title}</h1>
+        <h1 className="text-[32px] leading-10 font-semibold tracking-[-0.035em]">{title}</h1>
         {meta && <p className="mt-1 text-ink-muted">{meta}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}

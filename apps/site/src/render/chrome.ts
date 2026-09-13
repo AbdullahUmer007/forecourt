@@ -159,7 +159,7 @@ export function siteFooter(dealer: ChromeDealer): string {
         <h2>Stock</h2>
         <ul>
           <li><a href="/used-cars">All used cars</a></li>
-          <li><a href="/used-cars?sort=just-arrived">Just arrived</a></li>
+            <li><a href="/used-cars?sort=newest">Just arrived</a></li>
           <li><a href="/saved">Saved cars</a></li>
         </ul>
       </div>

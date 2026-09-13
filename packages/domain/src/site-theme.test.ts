@@ -1,3 +1,4 @@
+/* eslint-disable forecourt/no-raw-hex -- Fixed independent colour inputs test contrast and parsing, not UI styling. */
 import { describe, it, expect } from 'vitest';
 import {
   brandColourOk, contrastRatio, darkenHex, defaultSiteTheme, parseSiteTheme,

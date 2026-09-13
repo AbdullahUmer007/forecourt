@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { StockPhoto } from '@/components/stock-photo';
 import { requireSession } from '@/auth/session';
 import { loadVehicle } from '@/data/stock';
 import { listVehiclePhotos } from '@/data/media-apply';
@@ -80,8 +81,11 @@ export default async function VehiclePage(
   }));
   const state = vehicle.state as VehicleState;
   const lifecycleActions: { label: string; toState: string }[] = [];
-  if (canPublish && canTransition(state, 'ready') && state !== 'live') {
+  if (canUpdate && canTransition(state, 'ready') && state !== 'live') {
     lifecycleActions.push({ label: 'Mark ready', toState: 'ready' });
+  }
+  if (canUpdate && ['booked_in', 'returned'].includes(state) && canTransition(state, 'in_prep')) {
+    lifecycleActions.push({ label: 'Send to preparation', toState: 'in_prep' });
   }
   if (canPublish && canTransition(state, 'live')) {
     lifecycleActions.push({ label: 'Mark live', toState: 'live' });
@@ -103,8 +107,9 @@ export default async function VehiclePage(
     ? subtract(vehicle.retailPrice, vehicle.totalCost!) : null;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
-      <div className="grid gap-4">
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid min-w-0 gap-5">
+        <div className="overflow-hidden rounded-lg border border-edge"><StockPhoto url={photos.find(p => p.isHero)?.url ?? photos[0]?.url ?? null} description={description || vehicle.registration} /></div>
         <Card>
           <Link href="/stock" className="text-[13px] leading-[18px] text-link hover:underline">
             ← Stock
@@ -140,7 +145,7 @@ export default async function VehiclePage(
           <div className="mt-2 flex flex-wrap items-start gap-3">
             <Reg value={vehicle.registration} />
             <div className="min-w-0 flex-1">
-              <h1 className="text-[20px] leading-7 font-semibold">
+              <h1 className="text-[28px] leading-9 font-semibold tracking-tight">
                 {description || 'Not identified'}
               </h1>
               <p className="text-ink-subtle">
@@ -235,9 +240,32 @@ export default async function VehiclePage(
             <p className="whitespace-pre-line text-ink-muted">{vehicle.notes}</p>
           </Card>
         )}
+        <Card title="Vehicle photographs">
+          <Figure
+            label="Published photographs"
+            value={String(vehicle.publishedPhotoCount)}
+            {...(vehicle.publishedPhotoCount === 0
+              ? { hint: 'Add a published photograph before advertising this vehicle.' }
+              : {})}
+          />
+          {canUpdate ? (
+            <div className="mt-4">
+              <VehicleMediaPanel vehicleId={vehicle.id} photos={photos} />
+            </div>
+          ) : photos.length > 0 ? (
+            <ul className="mt-4 grid gap-2">
+              {photos.map((p) => (
+                <li key={p.id}>
+                  <StockPhoto url={p.url} description={p.shot.replace(/_/g, ' ')} />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </Card>
+
       </div>
 
-      <div className="grid content-start gap-4">
+      <div className="grid min-w-0 content-start gap-5">
         <Card title="Price">
           <Figure
             label="Retail"
@@ -300,29 +328,6 @@ export default async function VehiclePage(
             blockers={blockers}
             actions={lifecycleActions}
           />
-        </Card>
-
-        <Card title="Media">
-          <Figure
-            label="Published photographs"
-            value={String(vehicle.publishedPhotoCount)}
-            {...(vehicle.publishedPhotoCount === 0
-              ? { hint: 'Every portal ranks a listing without pictures last.' }
-              : {})}
-          />
-          {canUpdate ? (
-            <div className="mt-4">
-              <VehicleMediaPanel vehicleId={vehicle.id} photos={photos} />
-            </div>
-          ) : photos.length > 0 ? (
-            <ul className="mt-4 grid gap-2">
-              {photos.map((p) => (
-                <li key={p.id}>
-                  <img src={p.url} alt="" className="aspect-[4/3] w-full rounded-sm object-cover" />
-                </li>
-              ))}
-            </ul>
-          ) : null}
         </Card>
 
         <Card title="Provenance">

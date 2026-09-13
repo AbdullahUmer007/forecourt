@@ -1,6 +1,6 @@
 import { withSession, toPence, toInt, toDate } from './db';
 import type { Session } from '@/auth/session';
-import { money, type Money, type VehicleState } from '@forecourt/domain';
+import { money, mediaUrlPath, type Money, type VehicleState } from '@forecourt/domain';
 
 /**
  * The stock list.
@@ -51,6 +51,7 @@ export interface StockRow {
   vatScheme: string | null;
   siteName: string | null;
   bookedInAt: Date | null;
+  photoUrl?: string | null;
 }
 
 export interface StockPage {
@@ -85,9 +86,9 @@ export async function loadStock(
   filters: StockFilters,
   canSeeCost: boolean,
 ): Promise<StockPage> {
-  const limit = Math.min(filters.limit ?? 50, 200);
-  const offset = Math.max(0, filters.offset ?? 0);
-  const sort = SORTS[filters.sort ?? 'newest'];
+  const limit = Number.isFinite(filters.limit) ? Math.max(1, Math.min(Math.floor(filters.limit!), 200)) : 50;
+  const offset = Number.isFinite(filters.offset) ? Math.max(0, Math.floor(filters.offset!)) : 0;
+  const sort = Object.hasOwn(SORTS, filters.sort ?? '') ? SORTS[filters.sort!] : SORTS.newest;
 
   const q = filters.q?.trim() || null;
   const state = filters.state?.trim() || null;
@@ -104,6 +105,11 @@ export async function loadStock(
     const rows = await tx<Record<string, never>[]>`
       SELECT v.id, v.stock_number, v.registration, v.make, v.model, v.derivative,
              v.colour, v.mileage, v.state, v.retail_price_pence,
+             (SELECT CASE WHEN m.variants->0->>'url' LIKE 'data:image/%'
+                          THEN m.variants->0->>'url' ELSE m.storage_key END FROM vehicle_media m
+               WHERE m.vehicle_id = v.id AND m.deleted_at IS NULL AND m.kind = 'photo'
+                 AND m.status = 'ready'
+               ORDER BY m.is_hero DESC, m.position, m.id LIMIT 1) AS photo_key,
              ${canSeeCost ? tx`v.total_cost_pence` : tx`NULL::bigint`} AS total_cost_pence,
              v.published_photo_count, v.provenance_checked_at, v.provenance_adverse,
              v.vat_scheme, v.booked_in_at, s.name AS site_name,
@@ -112,20 +118,20 @@ export async function loadStock(
       FROM vehicles v
       LEFT JOIN sites s ON s.id = v.site_id
       WHERE v.deleted_at IS NULL
-        AND (${q}::text IS NULL OR v.search_vector @@ plainto_tsquery('english', ${q}))
+        AND (${q}::text IS NULL OR (v.search_vector @@ plainto_tsquery('english', ${q}) OR (length(regexp_replace(lower(${q}::text), '[^a-z0-9]', '', 'g')) > 0 AND strpos(regexp_replace(lower(v.registration), '[^a-z0-9]', '', 'g'), regexp_replace(lower(${q}::text), '[^a-z0-9]', '', 'g')) > 0) OR strpos(lower(v.stock_number), lower(${q}::text)) > 0))
         AND (${state}::text IS NULL OR v.state::text = ${state})
         AND (${make}::text IS NULL OR lower(v.make) = lower(${make}))
         AND (${siteId}::text IS NULL OR v.site_id = ${siteId}::uuid)
         AND (NOT ${overage} OR (v.booked_in_at IS NOT NULL
              AND v.booked_in_at < now() - interval '90 days'))
-      ORDER BY ${tx.unsafe(sort)}
+      ORDER BY ${tx.unsafe(sort)}, v.id
       LIMIT ${limit} OFFSET ${offset}`;
 
     const [[count], makes, states] = await Promise.all([
       tx<{ n: number }[]>`
         SELECT count(*)::int AS n FROM vehicles v
         WHERE v.deleted_at IS NULL
-          AND (${q}::text IS NULL OR v.search_vector @@ plainto_tsquery('english', ${q}))
+          AND (${q}::text IS NULL OR (v.search_vector @@ plainto_tsquery('english', ${q}) OR (length(regexp_replace(lower(${q}::text), '[^a-z0-9]', '', 'g')) > 0 AND strpos(regexp_replace(lower(v.registration), '[^a-z0-9]', '', 'g'), regexp_replace(lower(${q}::text), '[^a-z0-9]', '', 'g')) > 0) OR strpos(lower(v.stock_number), lower(${q}::text)) > 0))
           AND (${state}::text IS NULL OR v.state::text = ${state})
           AND (${make}::text IS NULL OR lower(v.make) = lower(${make}))
           AND (${siteId}::text IS NULL OR v.site_id = ${siteId}::uuid)
@@ -134,14 +140,14 @@ export async function loadStock(
       tx<{ make: string; n: number }[]>`
         SELECT v.make, count(*)::int AS n FROM vehicles v
         WHERE v.deleted_at IS NULL AND v.make IS NOT NULL
-          AND (${q}::text IS NULL OR v.search_vector @@ plainto_tsquery('english', ${q}))
+          AND (${q}::text IS NULL OR (v.search_vector @@ plainto_tsquery('english', ${q}) OR (length(regexp_replace(lower(${q}::text), '[^a-z0-9]', '', 'g')) > 0 AND strpos(regexp_replace(lower(v.registration), '[^a-z0-9]', '', 'g'), regexp_replace(lower(${q}::text), '[^a-z0-9]', '', 'g')) > 0) OR strpos(lower(v.stock_number), lower(${q}::text)) > 0))
           AND (${state}::text IS NULL OR v.state::text = ${state})
           AND (${siteId}::text IS NULL OR v.site_id = ${siteId}::uuid)
         GROUP BY v.make ORDER BY count(*) DESC, v.make LIMIT 30`,
       tx<{ state: string; n: number }[]>`
         SELECT v.state::text AS state, count(*)::int AS n FROM vehicles v
         WHERE v.deleted_at IS NULL
-          AND (${q}::text IS NULL OR v.search_vector @@ plainto_tsquery('english', ${q}))
+          AND (${q}::text IS NULL OR (v.search_vector @@ plainto_tsquery('english', ${q}) OR (length(regexp_replace(lower(${q}::text), '[^a-z0-9]', '', 'g')) > 0 AND strpos(regexp_replace(lower(v.registration), '[^a-z0-9]', '', 'g'), regexp_replace(lower(${q}::text), '[^a-z0-9]', '', 'g')) > 0) OR strpos(lower(v.stock_number), lower(${q}::text)) > 0))
           AND (${make}::text IS NULL OR lower(v.make) = lower(${make}))
           AND (${siteId}::text IS NULL OR v.site_id = ${siteId}::uuid)
         GROUP BY v.state ORDER BY count(*) DESC`,
@@ -152,6 +158,8 @@ export async function loadStock(
         const row = r as unknown as Record<string, string | number | boolean | Date | null>;
         return {
           id: String(row['id']),
+          photoUrl: row['photo_key'] ? (String(row['photo_key']).startsWith('data:image/')
+            ? String(row['photo_key']) : mediaUrlPath(String(row['photo_key']))) : null,
           stockNumber: String(row['stock_number']),
           registration: String(row['registration']),
           make: row['make'] as string | null,
@@ -302,5 +310,18 @@ export async function loadVehicle(
       liveAt: toDate(r['live_at'] as Date | null),
       notes: r['notes'] as string | null,
     };
+  });
+}
+
+/** Dashboard totals deliberately ignore list filters; each card opens its own view. */
+export async function loadStockOverview(session: Session) {
+  return withSession(session, async tx => {
+    const [row] = await tx<{ total: number; live: number; prep: number; reserved: number }[]>`
+      SELECT count(*)::int AS total,
+        count(*) FILTER (WHERE state = 'live')::int AS live,
+        count(*) FILTER (WHERE state = 'in_prep')::int AS prep,
+        count(*) FILTER (WHERE state = 'reserved')::int AS reserved
+      FROM vehicles WHERE deleted_at IS NULL`;
+    return row ?? { total: 0, live: 0, prep: 0, reserved: 0 };
   });
 }

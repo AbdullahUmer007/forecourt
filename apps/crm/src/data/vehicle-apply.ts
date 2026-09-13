@@ -301,7 +301,13 @@ async function takeStockNumber(
     throw new Error('SITE_NOT_AVAILABLE');
   }
 
-  const sequence = Number(row.last_number) + 1;
+  // Imports/seeds can arrive after migration 0023. Reconcile under the same
+  // counter lock so existing stock never collides with the next intake.
+  // Include withdrawn stock: its number must not be recycled.
+  const [existing] = await tx<{ highest: string | null }[]>`
+    SELECT max(stock_sequence)::text AS highest FROM vehicles
+    WHERE tenant_id = ${session.tenantId}::uuid AND site_id = ${siteId}::uuid`;
+  const sequence = Math.max(Number(row.last_number), Number(existing?.highest ?? 0)) + 1;
 
   await tx`
     UPDATE vehicle_stock_sequences

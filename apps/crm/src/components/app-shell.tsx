@@ -65,9 +65,16 @@ export function AppShell(
 
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') setDrawer(false);
+      if (e.key === 'Tab') {
+        const targets = drawerRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, select, [tabindex="0"]');
+        const first = targets?.[0]; const last = targets?.[targets.length - 1];
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === drawerRef.current)) { e.preventDefault(); last?.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+      }
     }
     document.addEventListener('keydown', onKey);
     // Without this the page behind the drawer scrolls under your thumb.
+    const previousFocus = document.activeElement as HTMLElement | null;
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     drawerRef.current?.focus();
@@ -75,6 +82,7 @@ export function AppShell(
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = previous;
+      previousFocus?.focus();
     };
   }, [drawer]);
 
@@ -105,7 +113,7 @@ export function AppShell(
 
       {/* ---------------------------------------------------------- desktop */}
       <aside
-        className="fixed inset-y-0 left-0 z-30 hidden w-[var(--nav-w)] flex-col border-r border-edge bg-surface-1 lg:flex"
+        className="workspace-rail fixed inset-y-0 left-0 z-30 hidden w-[var(--nav-w)] flex-col border-r border-edge bg-surface-1 lg:flex"
         aria-label="Main"
       >
         <Rail
@@ -156,7 +164,7 @@ export function AppShell(
             role="dialog"
             aria-modal="true"
             aria-label="Main navigation"
-            className="absolute inset-y-0 left-0 flex w-[280px] flex-col border-r border-edge bg-surface-1 shadow-(--shadow-overlay)"
+            className="workspace-rail absolute inset-y-0 left-0 flex w-[280px] flex-col border-r border-edge bg-surface-1 shadow-(--shadow-overlay)"
           >
             <Rail
               items={items}
@@ -174,7 +182,11 @@ export function AppShell(
 
       {/* ------------------------------------------------------------- page */}
       <div className="lg:pl-[var(--nav-w)]">
-        <main id="main" className="mx-auto max-w-[1280px] px-4 py-6 lg:px-8">
+        <div className="workspace-topbar hidden items-center justify-between gap-4 border-b border-edge bg-surface-1 px-8 lg:flex">
+          <div className="flex min-w-0 items-center gap-3 text-ink-subtle"><span className="truncate">{tenantName}</span><span aria-hidden="true">/</span><span className="font-medium text-ink">{items.find(item => item.href === '/' ? pathname === '/' : pathname.startsWith(item.href))?.label ?? 'Workspace'}</span></div>
+          <span className="shrink-0 rounded-full border border-edge px-3 py-1 text-[12px] text-ink-muted">Dealer workspace</span>
+        </div>
+        <main id="main" className="mx-auto max-w-[1480px] px-4 py-8 lg:px-10">
           {children}
         </main>
       </div>
@@ -203,10 +215,10 @@ function Rail(
 ) {
   return (
     <>
-      <div className="flex h-14 shrink-0 items-center gap-2 px-3">
+      <div className="flex h-20 shrink-0 items-center gap-2 px-5">
         <Link href="/" className="flex min-w-0 items-center gap-2.5">
           <BrandMark size={28} className="text-brand-600" />
-          <span className="nav-label truncate text-[15px] font-semibold tracking-tight">
+          <span className="nav-label truncate text-[21px] font-semibold tracking-tight">
             RixDrive
           </span>
         </Link>
@@ -236,7 +248,7 @@ function Rail(
 
       <nav aria-label="Sections" className="min-h-0 flex-1 overflow-y-auto px-2 py-3">
         <ul className="flex flex-col gap-0.5">
-          {items.map((item) => {
+          {items.map((item, index) => {
             // Exact match for the dashboard, prefix for everything else — so
             // /stock/019f… still marks Stock, and /stock does not mark every
             // section whose path happens to start with a slash.
@@ -248,6 +260,7 @@ function Rail(
 
             return (
               <li key={item.href}>
+                {!collapsed && (index === 0 || item.href === '/invoices' || item.href === '/settings/website') && <p className="nav-label px-3 pb-2 pt-5 text-[10px] font-semibold tracking-[0.16em] text-ink-subtle">{index === 0 ? 'YOUR DEALERSHIP' : item.href === '/invoices' ? 'BUSINESS' : 'MANAGE'}</p>}
                 <Link
                   href={item.href}
                   aria-current={active ? 'page' : undefined}

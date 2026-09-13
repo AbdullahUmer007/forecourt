@@ -112,7 +112,7 @@ export function CatalogueFields({
         options={makes.map((m) => ({ id: m.id, name: m.name, label: m.name }))}
         placeholder={empty ? 'Catalogue not loaded yet' : 'Select a make'}
         hint={empty
-          ? 'The vehicle list has not been loaded. Run pnpm db:seed:catalogue, then refresh.'
+          ? 'The vehicle catalogue is currently unavailable. Save the registration now and complete the specification later.'
           : undefined}
         onChange={(id, option) => {
           setSelectedMakeId(id);

@@ -181,9 +181,12 @@ BEGIN
   -- Public part-exchange is a lead, not a valuation. The shopfront writes the
   -- contact, the lead and a draft appraisal, then the desk rings with a figure.
   -- INSERT only, tenant-scoped by RLS. No SELECT on those tables.
-  IF to_regclass('public.contacts') IS NOT NULL THEN
-    EXECUTE 'GRANT INSERT ON contacts, leads, lead_events, appraisals TO app_public';
-  END IF;
+  FOR t IN SELECT unnest(ARRAY['contacts', 'leads', 'lead_events', 'appraisals', 'audit_events']) AS relname
+  LOOP
+    IF to_regclass('public.' || t.relname) IS NOT NULL THEN
+      EXECUTE format('GRANT INSERT ON %I TO app_public', t.relname);
+    END IF;
+  END LOOP;
 
   -- ------------------------------------------------------------------
   -- Two tables carry no tenant_id and would otherwise be left wide open.

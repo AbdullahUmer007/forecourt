@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import { StockPhoto } from '@/components/stock-photo';
 import { requireSession } from '@/auth/session';
-import { loadStock, type StockRow } from '@/data/stock';
+import { loadStock, loadStockOverview, type StockRow } from '@/data/stock';
 import {
-  StatusBadge, Empty, Amount, Reg, ListRow, PageHeader, ButtonLink, QueryTime, type Tone,
+  StatusBadge, Empty, Amount, Reg, PageHeader, ButtonLink,  type Tone,
 } from '@/components/ui';
 import {
   holds, goLiveBlockers, OVERAGE_DAYS, format, subtract,
@@ -62,6 +63,8 @@ export default async function StockPage(
   };
   const canSeeCost = holds(principal, 'vehicle.cost.read');
 
+  const requestedOffset = Number(params['offset'] ?? 0);
+  const offset = Number.isFinite(requestedOffset) ? Math.max(0, Math.floor(requestedOffset)) : 0;
   const page = await loadStock(session, {
     q: params['q'],
     state: params['state'],
@@ -69,9 +72,12 @@ export default async function StockPage(
     overageOnly: params['overage'] === '1',
     sort: (params['sort'] as 'newest' | undefined) ?? 'newest',
     limit: 50,
-    offset: Number(params['offset'] ?? 0) || 0,
+    offset,
   }, canSeeCost);
 
+  const overview = await loadStockOverview(session);
+  const list = params['view'] === 'list';
+  const viewQuery = (view: string) => { const p = new URLSearchParams(); for (const [k,v] of Object.entries(params)) if (v) p.set(k,v); p.set('view',view); return `/stock?${p}`; };
   const filtered = Boolean(params['q'] || params['state'] || params['make'] || params['overage']);
 
   // Name the site only when the rows on screen are not all from the same one.
@@ -81,24 +87,36 @@ export default async function StockPage(
 
   return (
     <>
+      <p className="mb-2 text-[11px] font-semibold tracking-[0.16em] text-ink-subtle">INVENTORY MANAGEMENT</p>
+      {params['archived'] === '1' && <p role="status" className="mb-4 rounded-md border border-edge bg-surface-1 p-4">Vehicle archived. It has been removed from active stock and the public website.</p>}
       <PageHeader
-        title="Stock"
+        title="Your stock"
         meta={(
           <>
             {page.total.toLocaleString('en-GB')} car{page.total === 1 ? '' : 's'}
             {filtered && ' matching'}
-            <QueryTime ms={page.queryMs} budget={400} />
+             · Manage listings, pricing and presentation.
           </>
         )}
         // The one primary action on this screen.
         action={holds(principal, 'vehicle.create')
-          ? <ButtonLink href="/stock/new" variant="primary">Book a car in</ButtonLink>
+          ? <ButtonLink href="/stock/new" variant="primary">+ Add a vehicle</ButtonLink>
           : undefined}
       />
 
+      <div className="mb-8 grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {[
+          { title: 'Total stock', count: overview.total, hint: 'Across all stages', href: '/stock' },
+          { title: 'Live on website', count: overview.live, hint: 'Ready for your next buyer', href: '/stock?state=live' },
+          { title: 'In preparation', count: overview.prep, hint: 'Keep the workshop moving', href: '/stock?state=in_prep' },
+          { title: 'Reserved', count: overview.reserved, hint: 'On the way to a handover', href: '/stock?state=reserved' },
+        ].map(m => <Link key={m.title} href={m.href} className="stock-metric"><div className="flex items-center justify-between gap-2 text-[13px] font-medium">{m.title}<span aria-hidden="true">↗</span></div><div className="my-3 text-[34px] leading-10 font-semibold tracking-tight tabular-nums">{m.count}</div><p className="text-[12px] opacity-80">{m.hint}</p></Link>)}
+      </div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 className="text-[19px] font-semibold">Vehicle inventory</h2><nav aria-label="Inventory view" className="flex rounded-md border border-edge bg-surface-1 p-1">{['grid','list'].map(v => <Link key={v} href={viewQuery(v)} aria-current={(list ? v === 'list' : v === 'grid') ? 'page' : undefined} className={`inline-flex min-h-11 items-center rounded-sm px-4 text-[13px] font-medium ${(list ? v === 'list' : v === 'grid') ? 'bg-brand-50 text-link' : 'text-ink-muted'}`}>{label(v)} view</Link>)}</nav></div>
       {/* A GET form: no JavaScript, and the filter state lives in the URL. */}
-      <form method="GET" className="mb-4 grid gap-2 rounded-md border border-edge bg-surface-1 p-3 sm:grid-cols-[1fr_auto_auto_auto]">
-        <label className="grid gap-1">
+      <form method="GET" className="mb-5 grid gap-3 rounded-lg border border-edge bg-surface-1 p-4 sm:grid-cols-2 xl:grid-cols-[2fr_1fr_1fr_1fr_auto]">
+        <input type="hidden" name="view" value={list ? 'list' : 'grid'} />
+        <label className="grid min-w-0 gap-1">
           <span className="text-[12px] leading-4 font-medium tracking-[0.02em] text-ink-subtle">
             Search
           </span>
@@ -106,7 +124,7 @@ export default async function StockPage(
             name="q"
             defaultValue={params['q'] ?? ''}
             placeholder="Reg, make, model, stock number…"
-            className="min-h-11 rounded-md border border-edge-strong bg-surface-1 px-3"
+            className="min-h-11 min-w-0 rounded-md border border-edge-strong bg-surface-1 px-3"
           />
         </label>
 
@@ -117,9 +135,10 @@ export default async function StockPage(
           <select
             name="state"
             defaultValue={params['state'] ?? ''}
-            className="min-h-11 rounded-md border border-edge-strong bg-surface-1 px-3"
+            className="min-h-11 min-w-0 rounded-md border border-edge-strong bg-surface-1 px-3"
           >
             <option value="">All</option>
+            {params['state'] && !page.states.some(s => s.state === params['state']) && <option value={params['state']}>{label(params['state'])} (0)</option>}
             {/* Counts reflect the CURRENT filter, and a zero-count option is
                 shown and disabled rather than vanishing — M7 settled the same
                 question for the public site. A list that reshuffles as you
@@ -139,7 +158,7 @@ export default async function StockPage(
           <select
             name="make"
             defaultValue={params['make'] ?? ''}
-            className="min-h-11 rounded-md border border-edge-strong bg-surface-1 px-3"
+            className="min-h-11 min-w-0 rounded-md border border-edge-strong bg-surface-1 px-3"
           >
             <option value="">All</option>
             {page.makes.map((m) => (
@@ -148,10 +167,11 @@ export default async function StockPage(
           </select>
         </label>
 
+        <label className="grid min-w-0 gap-1"><span className="text-[12px] font-medium text-ink-subtle">Sort by</span><select name="sort" defaultValue={params['sort'] ?? 'newest'} className="min-h-11 min-w-0 rounded-md border border-edge-strong bg-surface-1 px-3"><option value="newest">Newest stock</option><option value="oldest">Oldest stock</option><option value="price_low">Price: low to high</option><option value="price_high">Price: high to low</option></select></label>
         <div className="flex items-end gap-2">
           <button
             type="submit"
-            className="min-h-11 rounded-md border border-brand-600 bg-brand-600 px-4 font-medium text-white hover:bg-brand-700"
+            className="min-h-11 min-w-0 rounded-md border border-brand-600 bg-brand-600 px-4 font-medium text-white hover:bg-brand-700"
           >
             Filter
           </button>
@@ -165,7 +185,7 @@ export default async function StockPage(
           )}
         </div>
 
-        <label className="flex items-center gap-2 sm:col-span-4">
+        <label className="flex items-center gap-2 sm:col-span-2 xl:col-span-5">
           <input
             type="checkbox"
             name="overage"
@@ -205,7 +225,7 @@ export default async function StockPage(
           )}
         </Empty>
       ) : (
-        <ul className="grid gap-2">
+        <ul className={list ? 'stock-list grid gap-4' : 'grid gap-5 md:grid-cols-2 2xl:grid-cols-3'}>
           {page.rows.map((row) => (
             <StockRowView key={row.id} row={row} canSeeCost={canSeeCost} multiSite={multiSite} />
           ))}
@@ -216,7 +236,7 @@ export default async function StockPage(
         <Pager
           total={page.total}
           shown={page.rows.length}
-          offset={Number(params['offset'] ?? 0) || 0}
+          offset={offset}
           params={params}
         />
       )}
@@ -263,58 +283,15 @@ function StockRowView(
   const costed = canSeeCost && row.totalCost !== null && row.totalCost.amount > 0n;
   const margin = costed && row.retailPrice ? subtract(row.retailPrice, row.totalCost!) : null;
 
-  return (
-    <ListRow
-      href={`/stock/${row.id}`}
-      reg={<Reg value={row.registration} />}
-      title={description || 'Not identified'}
-      meta={(
-        <div className="text-[13px] leading-[18px] text-ink-subtle">
-          <span className="mono">{row.stockNumber}</span>
-          {row.mileage !== null && ` · ${row.mileage.toLocaleString('en-GB')} miles`}
-          {row.colour && ` · ${row.colour}`}
-          {/* The site is named only where there is more than one to be in.
-              A single-site dealer was reading their own name on all fourteen
-              rows, which is fourteen repetitions of something they know. */}
-          {multiSite && row.siteName && ` · ${row.siteName}`}
-        </div>
-      )}
-      badges={(
-        <>
-          <StatusBadge tone={state.tone} icon={state.icon} label={label(row.state)} />
-          {overage && (
-            <StatusBadge tone="warning" icon="⏱" label={`${row.daysInStock} days`} />
-          )}
-          {blockers.length > 0 && row.state !== 'live' && (
-            <StatusBadge
-              tone={blockers.some((b) => !b.overridable) ? 'critical' : 'warning'}
-              icon="!"
-              label={`${blockers.length} to fix`}
-            />
-          )}
-        </>
-      )}
-      money={(
-        <>
-          <div className="font-semibold">
-            {row.retailPrice ? <Amount value={row.retailPrice} pence={false} /> : (
-              <span className="text-ink-subtle">No price</span>
-            )}
-          </div>
-          {/* Margin is cost data. A sales executive without vehicle.cost.read
-              never receives it — DERIVED_FROM in M2 exists precisely so a
-              figure computed FROM cost is withheld too. */}
-          {margin ? (
-            <div className={`text-[12px] leading-4 ${margin.amount < 0n ? 'text-critical' : 'text-ink-subtle'}`}>
-              {format(margin, { pence: false })} gross
-            </div>
-          ) : canSeeCost && row.retailPrice ? (
-            <div className="text-[12px] leading-4 text-ink-subtle">No cost recorded</div>
-          ) : null}
-        </>
-      )}
-    />
-  );
+  return <li className="stock-card"><Link href={`/stock/${row.id}`} className="h-full">
+    <div className="relative"><StockPhoto url={row.photoUrl ?? null} description={`${description}, ${row.registration}`} /><div className="absolute left-3 top-3 rounded-md bg-surface-1 p-1"><StatusBadge tone={state.tone} icon={state.icon} label={label(row.state)} /></div></div>
+    <div className="flex min-w-0 flex-col p-5"><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><Reg value={row.registration} /><span className="text-[11px] text-ink-subtle">{row.stockNumber}</span></div>
+      <h3 className="text-[19px] font-semibold tracking-tight">{[row.make,row.model].filter(Boolean).join(' ') || 'Vehicle details needed'}</h3><p className="mt-1 min-h-5 truncate text-[13px] text-ink-muted">{row.derivative || 'Complete the vehicle specification'}</p>
+      <p className="mt-3 text-[12px] text-ink-subtle">{[row.mileage === null ? 'Mileage needed' : `${row.mileage.toLocaleString('en-GB')} miles`, row.colour, `${row.publishedPhotoCount} published photos`, multiSite ? row.siteName : null].filter(Boolean).join(' · ')}</p>
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-edge pt-4"><div><p className="text-[11px] text-ink-subtle">Retail price</p><div className="mt-1 text-[23px] font-semibold tracking-tight">{row.retailPrice ? <Amount value={row.retailPrice} pence={false} /> : <span className="text-[16px] text-ink-muted">Set a price</span>}</div>{margin && <p className="mt-1 text-[12px] text-ink-subtle">{format(margin, { pence: false })} gross</p>}</div><span className={`text-[12px] ${overage ? 'text-warning-ink' : 'text-ink-subtle'}`}>{row.daysInStock === null ? 'Not booked in' : `${row.daysInStock} days in stock`}</span></div>
+      {blockers.length > 0 && !['live','reserved','sold','delivered','archived'].includes(row.state) && <p className="mt-3 text-[12px] text-warning-ink">{blockers.length} publishing checks need attention →</p>}
+    </div>
+  </Link></li>;
 }
 
 function Pager(

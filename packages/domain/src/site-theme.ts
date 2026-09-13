@@ -6,6 +6,8 @@
  * a shopfront becomes ugly and slow, and how we eat the support.
  */
 
+import colours from '../../tokens/site-themes.json';
+
 export type SiteThemeId = 'classic' | 'studio' | 'compact';
 export type FontPairing = 'inter' | 'source_sans' | 'ibm_plex' | 'noto_sans' | 'nunito_sans' | 'work_sans';
 export type ThemeRadius = 'sharp' | 'soft' | 'rounded';
@@ -53,8 +55,8 @@ export const THEME_PRESETS: Record<SiteThemeId, {
     radius: 'soft',
     cardStyle: 'bordered',
     fontPairing: 'inter',
-    brandPrimary: '#0E5A6B',
-    brandPrimaryHover: '#0B4553',
+    brandPrimary: colours.classic.primary,
+    brandPrimaryHover: colours.classic.hover,
   },
   studio: {
     label: 'Studio',
@@ -62,8 +64,8 @@ export const THEME_PRESETS: Record<SiteThemeId, {
     radius: 'sharp',
     cardStyle: 'flat',
     fontPairing: 'ibm_plex',
-    brandPrimary: '#1E3A5F',
-    brandPrimaryHover: '#152A46',
+    brandPrimary: colours.studio.primary,
+    brandPrimaryHover: colours.studio.hover,
   },
   compact: {
     label: 'Compact',
@@ -71,8 +73,8 @@ export const THEME_PRESETS: Record<SiteThemeId, {
     radius: 'rounded',
     cardStyle: 'elevated',
     fontPairing: 'source_sans',
-    brandPrimary: '#0F4C3A',
-    brandPrimaryHover: '#0A3428',
+    brandPrimary: colours.compact.primary,
+    brandPrimaryHover: colours.compact.hover,
   },
 };
 
@@ -119,10 +121,10 @@ export const contrastRatio = (fg: string, bg: string): number => {
 /** White text on the brand fill, and brand-as-text on white, both AA. */
 export function brandColourOk(hex: string): { ok: true } | { ok: false; reason: string } {
   if (!HEX.test(hex)) {
-    return { ok: false, reason: 'Use a six-digit hex colour, like #0E5A6B.' };
+    return { ok: false, reason: `Use a six-digit hex colour, like ${colours.classic.primary}.` };
   }
-  const onWhite = contrastRatio(hex, '#FFFFFF');
-  const whiteOn = contrastRatio('#FFFFFF', hex);
+  const onWhite = contrastRatio(hex, colours.onBrand);
+  const whiteOn = contrastRatio(colours.onBrand, hex);
   if (onWhite < 4.5 && whiteOn < 4.5) {
     return {
       ok: false,

@@ -140,7 +140,8 @@ describe('the rendered results page', () => {
   });
 
   it('gives every card image real alt text', () => {
-    const alts = [...HTML.matchAll(/<img[^>]+alt="([^"]*)"/g)].map((m) => m[1]!);
+    // The logo repeats the adjacent brand name and is intentionally decorative.
+    const alts = [...HTML.matchAll(/<img(?![^>]*class="brand-logo")[^>]+alt="([^"]*)"/g)].map((m) => m[1]!);
     expect(alts.length).toBeGreaterThan(0);
     for (const alt of alts) expect(alt.length).toBeGreaterThan(10);
   });

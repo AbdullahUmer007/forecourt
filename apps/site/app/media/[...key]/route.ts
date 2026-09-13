@@ -48,7 +48,7 @@ export async function GET(
   const body = await readPublicMedia(key);
   if (!body) return new NextResponse('Not found', { status: 404 });
 
-  return new NextResponse(body, {
+  return new NextResponse(new Uint8Array(body), {
     headers: {
       'content-type': 'image/jpeg',
       'cache-control': 'public, max-age=86400, immutable',

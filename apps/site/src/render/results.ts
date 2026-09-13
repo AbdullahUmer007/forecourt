@@ -148,7 +148,7 @@ function facetSidebar(input: ResultsInput): string {
   const label = input.labelFor ?? ((_: MultiDimension, v: string) => titleCase(v));
   const chips = appliedFilters(q, label);
 
-  return html`<aside class="filters" aria-label="Filter results">
+  return html`<aside class="filters" aria-label="Filter results"><details open><summary>Refine your search</summary>
     ${when(chips.length > 0, `<div class="chips"><h2 class="chips-head">Filtered by</h2>${
       chips.map((c) =>
         `<a class="chip" rel="nofollow" href="${esc(c.removeHref)}">${esc(c.label)}<span aria-hidden="true"> ×</span><span class="visually-hidden"> — remove this filter</span></a>`,
@@ -170,7 +170,7 @@ function facetSidebar(input: ResultsInput): string {
         ).join('')}
       </ul>
     </section>`).join(''))}
-  </aside>`;
+  </details></aside>`;
 }
 
 function sortBar(q: SearchQuery, total: number, from: number, to: number): string {

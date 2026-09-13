@@ -7,6 +7,8 @@ import { criticalCss, DEFAULT_THEME, type BrandTheme } from './theme.js';
 import { masthead, siteFooter, type ChromeDealer } from './chrome.js';
 import { renderFinanceUnavailable } from './finance.js';
 import { canonicalUrl } from '../../../../packages/domain/src/seo.js';
+import { enquiryForm, enquiryFormCss } from './enquiry-form.js';
+import type { EnquiryInput } from '../data/enquiries.js';
 
 export type StaticPageId =
   | 'about' | 'contact' | 'finance' | 'part-exchange'
@@ -29,6 +31,7 @@ export interface StaticPageInput {
   now?: Date;
   formError?: string;
   formOk?: boolean;
+  formValues?: EnquiryInput;
 }
 
 const TITLES: Record<StaticPageId, string> = {
@@ -60,13 +63,17 @@ function body(input: StaticPageInput): string {
         ${raw(addr ? `<p>You will find us at ${esc(addr)}.</p>` : '')}`;
 
     case 'contact':
-      return html`<h1>Contact ${name}</h1>
+      return html`<div class="contact-intro"><p class="eyebrow">LET’S TALK</p><h1>How can we help?</h1>
         ${raw(paragraphs(d.contactBlurb ?? '', 'Ring or email and we will come back to you. If you are asking about a car, quote the registration.'))}
-        <ul class="plain">
+        </div><div class="contact-layout"><aside class="contact-details"><h2>${name}</h2><p>Get in touch or visit the forecourt.</p><ul class="plain">
           ${raw(d.telephone ? `<li>Phone: <a href="tel:${esc(d.telephone)}">${esc(d.telephone)}</a></li>` : '')}
           ${raw(d.email ? `<li>Email: <a href="mailto:${esc(d.email)}">${esc(d.email)}</a></li>` : '')}
           ${raw(addr ? `<li>${esc(addr)}</li>` : '')}
-        </ul>`;
+        </ul><a href="/used-cars">Browse our current stock →</a></aside><section class="contact-form" aria-labelledby="enquiry-title">
+        ${raw(input.formOk
+          ? '<div role="status"><h2 id="enquiry-title">Thank you for your enquiry</h2><p>Your message has been sent to the dealership. The team will reply using the details you provided.</p><a href="/used-cars">Continue browsing cars →</a></div>'
+          : `<h2 id="enquiry-title">${input.formValues?.vehicle ? `Enquire about ${esc(input.formValues.vehicle)}` : 'Send us a message'}</h2><p>Ask a question, arrange a viewing or request a video walkaround.</p>${input.formError ? `<div class="form-error" role="alert"><strong>Please check your enquiry</strong><p>${esc(input.formError)}</p><a href="/contact">Start a general enquiry</a></div>` : ''}${enquiryForm(input.formValues)}`)}
+        </section></div>`;
 
     case 'finance':
       return html`<h1>Car finance</h1>
@@ -135,6 +142,7 @@ export function renderStaticPage(input: StaticPageInput): string {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <link rel="canonical" href="${esc(url)}">
+${input.formOk || input.formError ? '<meta name="robots" content="noindex">' : ''}
 <style>${criticalCss(theme)}
 main{max-width:42rem;margin:0 auto;padding:24px 16px 64px}
 main h1{font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0 0 16px}
@@ -144,6 +152,8 @@ main p,main li{color:var(--ink-muted);margin:0 0 12px}
 .px-form label{display:grid;gap:4px;font-size:13px}
 .px-form input{min-height:44px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-md);font:inherit}
 .px-form button{min-height:44px;border:0;border-radius:var(--radius-md);background:var(--brand);color:var(--on-brand);font:inherit;font-weight:600}
+${input.id === 'contact' ? `${enquiryFormCss}
+main{max-width:1120px;padding-top:56px}.contact-intro{max-width:640px;margin-bottom:32px}.eyebrow{font-size:12px;letter-spacing:.12em;font-weight:600}.contact-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.7fr);gap:32px;align-items:start}.contact-details,.contact-form{border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;background:var(--surface-1)}.contact-details{background:var(--surface-3)}.contact-layout h2{font-size:22px;margin:0 0 12px}.contact-layout li{overflow-wrap:anywhere}.contact-form>.enq-form{margin-top:24px}.form-error{padding:16px;border-left:3px solid var(--critical);background:var(--surface-2);margin:16px 0}.form-error p{margin:8px 0}.contact-details a{display:inline-block;min-height:44px;padding:10px 0}@media(max-width:700px){main{padding-top:28px}.contact-layout{grid-template-columns:1fr;gap:20px}.contact-details,.contact-form{padding:20px}}` : ''}
 </style>
 </head>
 <body>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { StockPhoto } from './stock-photo';
 import { uploadVehiclePhoto, manageVehiclePhoto } from '@/data/media-actions';
 import type { VehiclePhoto } from '@/data/media-apply';
 import { LABEL_CLASS, INPUT_CLASS, BUTTON_CLASS } from './styles';
@@ -25,20 +26,23 @@ export function VehicleMediaPanel(
   async function onUpload(formData: FormData) {
     setPending(true);
     setError(null);
-    const result = await uploadVehiclePhoto(formData);
-    if (!result.ok) setError(result.error);
-    setPending(false);
+    try { const result = await uploadVehiclePhoto(formData); if (!result.ok) setError(result.error); }
+    catch { setError('The upload could not finish. Please try again.'); }
+    finally { setPending(false); }
   }
 
   async function onManage(formData: FormData) {
     setError(null);
-    const result = await manageVehiclePhoto(formData);
-    if (!result.ok) setError(result.error);
+    setPending(true);
+    try { const result = await manageVehiclePhoto(formData); if (!result.ok) setError(result.error); }
+    catch { setError('The photograph could not be updated. Please try again.'); }
+    finally { setPending(false); }
   }
 
   return (
-    <div className="grid gap-4">
-      {error && <p className="text-critical">{error}</p>}
+    <fieldset disabled={pending} className="grid min-w-0 gap-4">
+      <div className="rounded-lg bg-surface-3 p-4"><p className="font-semibold">Build a better first impression</p><p className="mt-1 text-[13px] text-ink-muted">Choose a cover photo, then add exterior, interior and detail shots. Published photographs appear on your vehicle listing.</p></div>
+      {error && <p role="alert" className="text-critical">{error}</p>}
 
       {photos.length === 0 ? (
         <p className="text-ink-muted">
@@ -48,7 +52,7 @@ export function VehicleMediaPanel(
         <ul className="grid gap-3 sm:grid-cols-2">
           {photos.map((p) => (
             <li key={p.id} className="rounded-md border border-edge p-2">
-              <img src={p.url} alt="" className="aspect-[4/3] w-full rounded-sm object-cover bg-surface-3" />
+              <StockPhoto url={p.url} description={p.shot.replace(/_/g, ' ')} />
               <div className="mt-2 flex flex-wrap gap-2 text-[13px]">
                 {p.isHero && <span className="font-medium">Hero</span>}
                 <span className="text-ink-subtle">{p.published ? 'Published' : 'Unpublished'}</span>
@@ -63,6 +67,7 @@ export function VehicleMediaPanel(
                     </button>
                   )}
                   <button
+                    disabled={p.published && p.isDisclosure && p.shownToBuyer}
                     name="action"
                     value={p.published ? 'unpublish' : 'publish'}
                     className="min-h-11 px-2 text-ink-muted hover:text-ink"
@@ -81,7 +86,7 @@ export function VehicleMediaPanel(
         </ul>
       )}
 
-      <form action={onUpload} className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+      <form action={onUpload} className="grid gap-3 rounded-lg border border-dashed border-edge-strong bg-surface-2 p-4 xl:grid-cols-[minmax(0,1fr)_auto_auto]">
         <input type="hidden" name="vehicleId" value={vehicleId} />
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Photograph</span>
@@ -101,6 +106,6 @@ export function VehicleMediaPanel(
           {pending ? 'Saving…' : 'Upload'}
         </button>
       </form>
-    </div>
+    </fieldset>
   );
 }

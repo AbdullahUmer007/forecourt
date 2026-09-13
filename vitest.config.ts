@@ -15,6 +15,9 @@ export default defineConfig({
     },
   },
   test: {
+    // Integration files mutate shared tenant fixtures. Serial files prevent
+    // another suite changing dashboard totals between two comparison reads.
+    fileParallelism: false,
     include: ['packages/**/*.test.ts', 'apps/**/*.test.ts', 'tests/**/*.test.ts'],
     // Loads the root .env so the isolation suite finds DATABASE_URL. Without
     // it that suite silently skipped all 125 tests and still reported green —

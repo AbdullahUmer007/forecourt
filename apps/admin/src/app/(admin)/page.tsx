@@ -31,15 +31,12 @@ export default async function Directory() {
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[28px] leading-[34px] font-semibold">Dealerships</h1>
+          <h1 className="text-[34px] leading-[42px] font-semibold">Dealerships</h1>
           <p className="text-ink-muted">
             {view.summary.tenants} on the platform
-            {' · '}
-            <span className={view.queryMs > 500 ? 'text-warning-ink' : 'text-ink-subtle'}>
-              {view.queryMs}ms
-            </span>
+            · Manage customer accounts and platform access.
           </p>
         </div>
         <Link
@@ -50,7 +47,7 @@ export default async function Directory() {
         </Link>
       </div>
 
-      <div className="mb-4 grid gap-2 sm:grid-cols-4">
+      <div className="mb-6 grid gap-4 sm:grid-cols-4">
         <Card><Figure label="Live" value={String(view.summary.live)} /></Card>
         <Card><Figure label="On trial" value={String(view.summary.trialing)} /></Card>
         <Card>

@@ -5,6 +5,9 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { randomUUID } from 'node:crypto';
+import { submitPartExchange } from '../../apps/site/src/data/part-exchange';
+import { sql as publicSql } from '../../apps/site/src/data/db';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const describeDb = DATABASE_URL ? describe : describe.skip;
@@ -18,22 +21,12 @@ type Sql = ((strings: TemplateStringsArray, ...values: unknown[]) => Promise<Row
 
 let sql: Sql;
 
-const TENANT_A = 'ffffffff-0000-4000-8000-0000000000d1';
-const TENANT_B = 'ffffffff-0000-4000-8000-0000000000d2';
-const USER_A = 'ffffffff-0000-4000-8000-0000000000d3';
-const USER_B = 'ffffffff-0000-4000-8000-0000000000d4';
-const ROLE_A = 'ffffffff-0000-4000-8000-0000000000d5';
-const ROLE_B = 'ffffffff-0000-4000-8000-0000000000d6';
-
-async function asPublic<T>(tenantId: string, fn: (tx: Sql) => Promise<T>): Promise<T> {
-  return sql.begin(async (tx) => {
-    await tx.unsafe('SET LOCAL ROLE app_public');
-    await tx.unsafe('SELECT set_tenant_context($1::uuid, NULL, $2::uuid[], $3::boolean)', [
-      tenantId, [], true,
-    ]);
-    return fn(tx);
-  });
-}
+const TENANT_A = randomUUID();
+const TENANT_B = randomUUID();
+const USER_A = randomUUID();
+const USER_B = randomUUID();
+const ROLE_A = randomUUID();
+const ROLE_B = randomUUID();
 
 async function asUser<T>(tenantId: string, userId: string, fn: (tx: Sql) => Promise<T>): Promise<T> {
   return sql.begin(async (tx) => {
@@ -46,8 +39,6 @@ async function asUser<T>(tenantId: string, userId: string, fn: (tx: Sql) => Prom
 }
 
 describeDb('a public part-exchange write cannot leak between dealers', () => {
-  let contactId = '';
-  let leadId = '';
   let appraisalId = '';
 
   beforeAll(async () => {
@@ -67,8 +58,8 @@ describeDb('a public part-exchange write cannot leak between dealers', () => {
     await sql`
       INSERT INTO users (id, email, name, status)
       VALUES
-        (${USER_A}::uuid, 'px-a@example.com', 'Px A', 'active'),
-        (${USER_B}::uuid, 'px-b@example.com', 'Px B', 'active')
+        (${USER_A}::uuid, ${`${USER_A}@example.test`}, 'Px A', 'active'),
+        (${USER_B}::uuid, ${`${USER_B}@example.test`}, 'Px B', 'active')
       ON CONFLICT (id) DO NOTHING`;
 
     await sql.begin(async (tx) => {
@@ -88,48 +79,22 @@ describeDb('a public part-exchange write cannot leak between dealers', () => {
   });
 
   afterAll(async () => {
-    if (appraisalId) await sql`DELETE FROM appraisals WHERE id = ${appraisalId}::uuid`;
-    if (leadId) {
-      await sql`DELETE FROM lead_events WHERE lead_id = ${leadId}::uuid`;
-      await sql`DELETE FROM leads WHERE id = ${leadId}::uuid`;
-    }
-    if (contactId) await sql`DELETE FROM contacts WHERE id = ${contactId}::uuid`;
-    await sql`DELETE FROM tenant_memberships WHERE user_id IN (${USER_A}::uuid, ${USER_B}::uuid)`;
-    await sql`DELETE FROM roles WHERE id IN (${ROLE_A}::uuid, ${ROLE_B}::uuid)`;
-    await sql`DELETE FROM users WHERE id IN (${USER_A}::uuid, ${USER_B}::uuid)`;
-    await sql`DELETE FROM tenants WHERE id IN (${TENANT_A}::uuid, ${TENANT_B}::uuid)`;
+    // History is append-only. Fresh IDs let repeated scratch-DB runs retain it.
+    await publicSql.end();
     await sql.end();
   });
 
   it('app_public can insert a draft for the resolved tenant', async () => {
-    const created = await asPublic(TENANT_A, async (tx) => {
-      const [c] = await tx`
-        INSERT INTO contacts (tenant_id, first_name, last_name, email, phone)
-        VALUES (${TENANT_A}::uuid, 'Isolation', 'Buyer', 'px-iso@example.com', '07700900000')
-        RETURNING id`;
-      if (!c) throw new Error('contact');
-      const [l] = await tx`
-        INSERT INTO leads (tenant_id, contact_id, source, message)
-        VALUES (${TENANT_A}::uuid, ${String(c['id'])}::uuid, 'website_part_ex', 'Isolation PX')
-        RETURNING id`;
-      if (!l) throw new Error('lead');
-      await tx`
-        INSERT INTO lead_events (tenant_id, lead_id, kind, to_stage, detail)
-        VALUES (${TENANT_A}::uuid, ${String(l['id'])}::uuid, 'created', 'new', 'test')`;
-      const [a] = await tx`
-        INSERT INTO appraisals (tenant_id, contact_id, lead_id, state, seller_type, registration, mileage)
-        VALUES (
-          ${TENANT_A}::uuid, ${String(c['id'])}::uuid, ${String(l['id'])}::uuid,
-          'draft', 'private_individual', 'AB12CDE', 12000
-        )
-        RETURNING id`;
-      if (!a) throw new Error('appraisal');
-      return { contactId: String(c['id']), leadId: String(l['id']), appraisalId: String(a['id']) };
-    });
-    contactId = created.contactId;
-    leadId = created.leadId;
-    appraisalId = created.appraisalId;
+    expect(await submitPartExchange(TENANT_A, { registration: 'AB12CDE', mileage: '12000', name: 'Isolation Buyer', email: 'px-iso@example.test', phone: '07700900000' })).toEqual({ ok: true });
+    const [created] = await asUser(TENANT_A, USER_A, tx => tx`
+      SELECT a.id FROM appraisals a JOIN leads l ON l.id=a.lead_id
+      WHERE a.tenant_id=${TENANT_A}::uuid AND l.source='website_part_ex'`);
+    appraisalId = String(created?.['id'] ?? '');
     expect(appraisalId).toBeTruthy();
+  });
+
+  it('does not interpret blank mileage as zero', async () => {
+    expect((await submitPartExchange(TENANT_A, { registration: 'AB12CDE', mileage: '', name: 'Buyer', email: 'px@example.test', phone: '07700900000' })).ok).toBe(false);
   });
 
   it('tenant B cannot see that draft', async () => {

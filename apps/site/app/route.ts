@@ -59,8 +59,8 @@ export async function GET(request: Request): Promise<Response> {
   const html = renderHomePage({
     dealer,
     theme: dealer.theme,
-    headline: dealer.siteTheme.copy.homeHeadline || undefined,
-    lead: dealer.siteTheme.copy.homeLead || undefined,
+    headline: dealer.siteTheme.copy.homeHeadline,
+    lead: dealer.siteTheme.copy.homeLead,
     stockCount,
     fromPricePence,
     justArrived,

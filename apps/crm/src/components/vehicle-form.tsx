@@ -341,7 +341,7 @@ export function VehicleForm({
         </Section>
       )}
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="sticky bottom-3 z-10 flex flex-wrap items-center gap-3 rounded-lg border border-edge bg-surface-1 p-4 shadow-(--shadow-overlay)">
         <Submit label={mode === 'book-in' ? 'Book the car in' : 'Save changes'} />
         <span className="text-[13px] leading-[18px] text-ink-subtle">
           {mode === 'book-in'
@@ -359,12 +359,12 @@ function Section(
   { title, hint, children }: { title: string; hint?: string; children: React.ReactNode },
 ) {
   return (
-    <section className="rounded-md border border-edge bg-surface-1">
-      <header className="border-b border-edge px-4 py-3">
+    <section className="rounded-lg border border-edge bg-surface-1">
+      <header className="border-b border-edge bg-surface-2/50 px-5 py-4">
         <h2 className="text-[16px] leading-6 font-semibold">{title}</h2>
         {hint && <p className="mt-0.5 text-[13px] leading-[18px] text-ink-subtle">{hint}</p>}
       </header>
-      <div className="grid gap-4 p-4 sm:grid-cols-2">{children}</div>
+      <div className="grid gap-5 p-5 sm:grid-cols-2">{children}</div>
     </section>
   );
 }

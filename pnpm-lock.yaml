@@ -139,6 +139,9 @@ importers:
 
   apps/site:
     dependencies:
+      '@forecourt/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@forecourt/media':
         specifier: workspace:*
         version: link:../../packages/media
