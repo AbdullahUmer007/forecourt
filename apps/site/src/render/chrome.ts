@@ -75,8 +75,11 @@ export function openingStatus(
   const forDay = (d: number): OpeningHoursView | undefined =>
     hours.find((h) => h.days.some((name) => name.toLowerCase() === DAY_NAMES[d]!.toLowerCase()));
 
-  const day = now.getDay();
-  const minute = now.getHours() * 60 + now.getMinutes();
+  // Dealership schedules are UK wall-clock times, including BST. Server timezone is irrelevant.
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'long', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(now);
+  const part = (type: string) => parts.find(p => p.type === type)?.value ?? '';
+  const day = DAY_NAMES.findIndex(name => name === part('weekday'));
+  const minute = Number(part('hour')) * 60 + Number(part('minute'));
   const today = forDay(day);
   if (today) {
     const opens = toMinutes(today.opens), closes = toMinutes(today.closes);

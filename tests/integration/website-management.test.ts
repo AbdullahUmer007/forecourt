@@ -63,4 +63,36 @@ describe('website management', () => {
     expect((await saveWebsiteSettings({ ...editor, tenantId: randomUUID() }, data)).ok).toBe(false);
     expect((await saveWebsiteSettings({ ...editor, scope: 'my_sites', siteIds: [randomUUID()] }, data)).ok).toBe(false);
   });
+  it('saves all seven days, removes closed days and preserves non-hours settings', async () => {
+    const data = await form(); data.set('hoursMode', 'weekly');
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    for (const day of days) {
+      data.set(`${day}Status`, day === 'Wednesday' ? 'closed' : 'open');
+      data.set(`${day}Open`, day === 'Sunday' ? '12:00' : '09:30');
+      data.set(`${day}Close`, day === 'Sunday' ? '15:00' : '17:30');
+    }
+    expect(await saveWebsiteSettings(editor, data)).toEqual({ ok: true });
+    const settings = await loadWebsiteSettings(editor);
+    expect(settings?.weeklyHours).toHaveLength(7);
+    expect(settings?.weeklyHours.find(h => h.day === 'Wednesday')?.open).toBe(false);
+    expect(settings?.weeklyHours.find(h => h.day === 'Sunday')).toMatchObject({ open: true, opens: '12:00', closes: '15:00' });
+    expect(settings?.line1).toBe('Updated address');
+    const [site] = await sql`SELECT opening_hours FROM sites WHERE id=${T.site}::uuid`;
+    expect(JSON.stringify(site?.['opening_hours'])).not.toContain('Wednesday');
+    const html = await renderTenantHome(T.tenant, '');
+    expect(html).toContain('12:00');
+    for (const day of days) data.set(`${day}Status`, 'closed');
+    expect(await saveWebsiteSettings(editor, data)).toEqual({ ok: true });
+    expect((await loadWebsiteSettings(editor))?.weeklyHours.every(h => !h.open)).toBe(true);
+    expect(await renderTenantHome(T.tenant, '')).not.toContain('Opens 10am');
+  });
+  it('rejects incomplete weekly schedules and invalid open periods atomically', async () => {
+    const data = await form(); data.set('hoursMode', 'weekly');
+    expect((await saveWebsiteSettings(editor, data)).ok).toBe(false);
+    for (const day of ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']) data.set(`${day}Status`, 'closed');
+    data.set('SundayStatus', 'open'); data.set('SundayOpen', '17:00'); data.set('SundayClose', '09:00');
+    expect((await saveWebsiteSettings(editor, data)).ok).toBe(false);
+    expect((await loadWebsiteSettings(editor))?.weeklyHours.every(h => !h.open)).toBe(true);
+  });
+
 });

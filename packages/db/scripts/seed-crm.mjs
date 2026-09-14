@@ -51,7 +51,7 @@ const step = async (label, fn) => {
  */
 const EXEC_PERMISSIONS = [
   'vehicle.read', 'vehicle.update', 'contact.read', 'contact.create', 'contact.update',
-  'lead.read', 'lead.create', 'lead.update', 'deal.read', 'deal.update', 'appraisal.read',
+  'lead.read', 'lead.create', 'lead.update', 'deal.read', 'deal.create', 'deal.update', 'appraisal.read',
   'appraisal.update',
 ];
 

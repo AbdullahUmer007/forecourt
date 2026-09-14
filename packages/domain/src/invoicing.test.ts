@@ -320,3 +320,16 @@ describe('a registration as a human reads it', () => {
     expect(formatRegistration('  wd21kxr ')).toBe('WD21 KXR');
   });
 });
+
+describe('VAT-inclusive vehicle cash prices',()=>{
+ it('preserves every agreed penny with rate-driven qualifying VAT',()=>{
+  fc.assert(fc.property(fc.bigInt({min:1n,max:99999999999n}),fc.integer({min:0,max:3000}),(gross,rate)=>{
+   const i=buildInvoice({vatScheme:'qualifying',buyerName:'Test',vatRule:{...RULE,standardRateBps:rate},lines:[{description:'Car',unitPrice:money(gross,'GBP'),unitPriceIncludesVat:true}]});
+   expect(i.grossTotal.amount).toBe(gross);expect(i.netTotal.amount+i.vatTotal.amount).toBe(gross);expect(i.lines[0]!.unitPrice.amount).toBe(i.netTotal.amount);
+  }));
+ });
+ it('adds no VAT to margin or non-qualifying cash prices',()=>{
+  for(const scheme of ['margin','non_qualifying'] as const){const i=buildInvoice({vatScheme:scheme,vatRule:RULE,lines:[{description:'Car',unitPrice:money(1234567n,'GBP'),unitPriceIncludesVat:true}]});expect(i.grossTotal.amount).toBe(1234567n);expect(i.vatTotal.amount).toBe(0n);}
+ });
+ it('refuses unsupported multi-quantity inclusive lines',()=>{expect(()=>buildInvoice({vatScheme:'qualifying',vatRule:RULE,lines:[{description:'Cars',quantity:2,unitPrice:money(100n,'GBP'),unitPriceIncludesVat:true}]})).toThrow('quantity one');});
+});

@@ -1,0 +1,9 @@
+# Weekly website hours
+
+Let website editors set each day Monday–Sunday to open or closed with valid same-day 24-hour times. Preserve current grouped schedules when loading; save through the existing tenant/site-scoped website transaction and audit. Keep the legacy weekday/Saturday submission compatible. Public opening status must use Europe/London including daylight saving, regardless of server timezone. No holiday exceptions or overnight/split shifts in this slice; explain this in the editor. No migration or Railway deployment. Acceptance: seven-day round trip, closures, invalid and incomplete submissions refused, existing permission/isolation checks, UK summer/winter/day-boundary status and responsive UI. Rollback the editor changes; retained hours use the existing public JSON format.
+
+
+## Delivered and verified
+Seven-day editor with retained form values, disabled time fields for closed days, same-day validation and audited persistence through existing website controls. Legacy submissions retain Sunday. Public contact now lists all seven days and closures; removed invented default hours from the public loader. Opening status uses UK wall time and DST. No schema migration.
+
+Website integration and opening-status/public-contact tests pass. Browser saved and reloaded Wednesday closed and Sunday 12:00–16:00 on the local demo only. Editor passed automated WCAG A/AA checks at 375 and 1440 widths, with no page overflow; mobile light/dark checked. Final CRM/site Linux production builds passed. Browser verified the production public contact page at localhost:3100 shows Wednesday Closed and Sunday 12pm–4pm, including a phone-width visual check with no page overflow. Previous public container retained as forecourt-codex-site-before-weekly-hours. Holiday exceptions, split/overnight opening periods and multi-branch website editing remain.

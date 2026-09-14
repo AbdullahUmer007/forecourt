@@ -1,3 +1,5 @@
+import { draftPriceEditor } from '@/data/deal-builder';
+import { DraftPriceForm } from '@/components/deal-builder-form';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { requireSession } from '@/auth/session';
@@ -75,6 +77,13 @@ const fieldLabel = (s: string): string =>
     .replace(/^./, (c) => c.toUpperCase()).toLowerCase()
     .replace(/^./, (c) => c.toUpperCase());
 
+function evidenceFields(payload: Record<string, unknown>): [string, unknown][] {
+  const pounds = (v: unknown) => { if(typeof v!=='string'||!/^\d+$/.test(v))return 'Not set';const n=BigInt(v);return `£${(n/100n).toLocaleString('en-GB')}.${(n%100n).toString().padStart(2,'0')}`; };
+  if(payload['event']==='draft_created')return [['Action','Draft created'],['Cash price',pounds(payload['vehiclePricePence'])]];
+  if(payload['event']==='draft_price_changed')return [['Action','Draft price changed'],['Previous price',pounds(payload['beforePence'])],['New price',pounds(payload['afterPence'])]];
+  return Object.entries(payload);
+}
+
 const date = (d: Date | null): string =>
   d === null ? '—' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -99,6 +108,7 @@ export default async function DealPage(
   const detail = await loadDeal(session, id, canSeeCost);
   if (!detail) notFound();
 
+  const editor = await draftPriceEditor(session,id);
   const { deal, margin, clocks } = detail;
   const state = STATE_PRESENTATION[deal.state];
   const now = new Date();
@@ -144,6 +154,10 @@ export default async function DealPage(
             </p>
           )}
         </Card>
+
+        {editor && <Card title="Review draft price"><DraftPriceForm id={id} price={editor.price} revision={editor.revision}/></Card>}
+
+        {holds(session,'invoice.create') && holds(session,'invoice.read') && <Card title="Invoice"><Link href={`/deals/${id}/invoice`} className="inline-flex min-h-11 items-center rounded-md border border-edge-strong px-4 text-link">Prepare or view invoice →</Link></Card>}
 
         {/* THE tamper check. Shown before anything else it could undermine. */}
         {!detail.chain.valid && (
@@ -304,7 +318,7 @@ export default async function DealPage(
                   <div className="font-medium">{EVIDENCE_LABELS[e.kind] ?? label(e.kind)}</div>
                   {Object.keys(e.payload).length > 0 && (
                     <dl className="text-[13px] leading-[18px] text-ink-muted">
-                      {Object.entries(e.payload).map(([k, v]) => (
+                      {evidenceFields(e.payload).map(([k, v]) => (
                         <div key={k} className="flex gap-2">
                           <dt className="text-ink-subtle">{fieldLabel(k)}:</dt>
                           <dd>{typeof v === 'string' ? v : JSON.stringify(v)}</dd>

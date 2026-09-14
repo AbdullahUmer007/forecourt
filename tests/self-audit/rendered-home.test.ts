@@ -41,7 +41,7 @@ const input: HomeInput = {
   browseByBody: [{ label: 'SUV', href: '/used-cars?body=suv', count: 34 }],
   browseByMake: [{ label: 'Tesla', href: '/used-cars/tesla', count: 6 }],
   // A Wednesday at 11:00, inside opening hours.
-  now: new Date('2026-08-05T11:00:00'),
+  now: new Date('2026-08-05T11:00:00+01:00'),
 };
 
 const HTML = renderHomePage(input);
@@ -139,17 +139,17 @@ describe('the rendered home page', () => {
 
 describe('the masthead opening status', () => {
   it('says when the dealer shuts, while they are open', () => {
-    const s = openingStatus(dealer.openingHours, new Date('2026-08-05T11:00:00'));
+    const s = openingStatus(dealer.openingHours, new Date('2026-08-05T11:00:00+01:00'));
     expect(s).toEqual({ open: true, label: 'Open until 6pm' });
   });
 
   it('says when they next open, before opening time', () => {
-    const s = openingStatus(dealer.openingHours, new Date('2026-08-05T08:30:00'));
+    const s = openingStatus(dealer.openingHours, new Date('2026-08-05T08:30:00+01:00'));
     expect(s).toEqual({ open: false, label: 'Opens 10am' });
   });
 
   it('rolls to the next day once they have shut', () => {
-    const s = openingStatus(dealer.openingHours, new Date('2026-08-05T19:00:00'));
+    const s = openingStatus(dealer.openingHours, new Date('2026-08-05T19:00:00+01:00'));
     expect(s).toEqual({ open: false, label: 'Opens 10am tomorrow' });
   });
 
@@ -168,5 +168,18 @@ describe('the masthead opening status', () => {
   it('pairs the status dot with words, never colour alone', () => {
     // Design system rule 2: a colour never carries meaning on its own.
     expect(HTML).toContain('Open until 6pm');
+  });
+});
+
+
+describe('UK opening status across server timezones', () => {
+  const hours = [{ days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '09:00', closes: '17:00' }];
+  it('uses BST in summer and GMT in winter', () => {
+    expect(openingStatus(hours, new Date('2026-08-05T08:30:00Z'))?.open).toBe(true);
+    expect(openingStatus(hours, new Date('2026-01-05T08:30:00Z'))?.open).toBe(false);
+  });
+  it('uses the UK day after midnight and skips closed days', () => {
+    expect(openingStatus(hours, new Date('2026-08-09T23:30:00Z'))?.label).toBe('Opens 9am');
+    expect(openingStatus(hours, new Date('2026-08-08T12:00:00Z'))?.label).toBe('Opens 9am Monday');
   });
 });

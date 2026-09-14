@@ -1,3 +1,19 @@
+## 2026-09-14 — draft deals, invoice preparation and weekly hours (local)
+
+Delivered draft deal creation from stock/enquiries or searchable customer/car lists, exact cash pricing, safe repricing, audit/evidence history, stale-edit and competing-deal protection. Agreed simple cash deals can now review server-derived customer/vehicle details and create an unnumbered invoice draft; VAT-inclusive totals preserve the agreed price. Complex PX/finance/add-on/deposit deals are explicitly blocked from this simplified drafting path. Weekly website hours now support every day and closures, and public status uses Europe/London. Contact pages display all seven days; closed schedules no longer invent default openings.
+
+Verification checkpoint: fresh local database, all 33 migrations, 1,838 tests across 66 files; follow-up public-hours tests pass after the final contact-page fix. Policy gate protects all 103 expected tables. Typecheck/lint and final CRM/site Linux production builds passed. Local port 3100 runs the final weekly-hours image; CRM development preview remains on 3101. Browser created and repriced a local draft, agreed it, caught missing invoice prerequisites, and generated the expected £5,990.50 invoice draft. Browser saved/reloaded Wednesday closed and Sunday noon opening. Phone-width checks found no overflow or automated WCAG A/AA violations on the draft builder, invoice document and weekly editor; editor desktop check also passed. No Railway changes or real invoice issue.
+
+See `reports/module-deal-builder-2026-09-14.md`, `reports/module-invoice-drafting-2026-09-14.md`, and `reports/module-weekly-hours-2026-09-14.md`. Keep these implemented slices distinct from complete sales/accounting modules.
+
+### Remaining work queue
+1. Sales: quote/order versions, discount approvals, full part-exchange/finance/add-on/deposit reconciliation, contract/handover workflow and stock lifecycle synchronization.
+2. Accounting readiness: review margin purchase-price provenance (legacy draft code reads total vehicle cost), real stock-book completeness, payment/refund integration and specialist tax/compliance review before production issue.
+3. Communications: real email/SMS delivery, reminders, saved-search alerts, retries and delivery status. Provider configuration is not present; do not label stored events as delivered.
+4. Website: holiday exceptions, split/overnight hours, unsaved draft preview, deployed shared logo/photo storage and custom-domain verification.
+5. Customers: merge/import and verified contact-destination changes. Platform: full onboarding, branch/staff permissions UX, billing/support flows. Prep/appraisals/reporting need their own completion checks.
+6. Production: cross-service media/storage verification, operational monitoring/backups, deployment validation and end-to-end release checks.
+
 ## 2026-09-14 — saved searches (local)
 
 Added private browser saved searches with complete filters/sort, current stock counts, reopen, rename and removal. Replaced the unimplemented notify-me form with working Save this search forms; no emails or consent changes. Migration 0033 adds retained removal and visitor-restrictive RLS. Verified 1,819 tests on a fresh local database, all 33 migrations from scratch, policy gate, lint/typecheck, site Docker build and mobile/light/dark accessibility. Local port 3100 runs the new image; Railway unchanged. Automatic alerts/delivery, cross-device identity and buyer-interest analytics remain. See `reports/module-saved-searches-2026-09-14.md`.

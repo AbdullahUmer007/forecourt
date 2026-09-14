@@ -58,3 +58,13 @@ describe('public enquiry HTTP boundary', () => {
     expect(html).toContain('content="noindex"');
   });
 });
+
+
+it('shows the full saved weekly schedule, including closed days', () => {
+  const page = renderStaticPage({ id: 'contact', origin: 'https://dealer.test', dealer: {
+    name: 'Test Motors', telephone: null, locality: null,
+    openingHours: [{ days: ['Sunday'], opens: '12:00', closes: '16:00' }],
+  } });
+  expect(page).toContain('<dt>Wednesday</dt><dd>Closed</dd>');
+  expect(page).toContain('<dt>Sunday</dt><dd>12pm – 4pm</dd>');
+});

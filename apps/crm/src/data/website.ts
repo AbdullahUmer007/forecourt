@@ -1,11 +1,38 @@
-import { authorize, parseSiteTheme, defaultSiteTheme, brandColourOk, darkenHex, mediaUrlPath,
-  type SiteThemeId, type FontPairing, type ThemeRadius, type CardStyle } from '@forecourt/domain';
+import {
+  authorize,
+  parseSiteTheme,
+  defaultSiteTheme,
+  brandColourOk,
+  darkenHex,
+  mediaUrlPath,
+  type SiteThemeId,
+  type FontPairing,
+  type ThemeRadius,
+  type CardStyle,
+} from '@forecourt/domain';
 import { storeBrandLogo } from '@/media/store';
 import { writeAudit } from './audit';
 import { withSession } from './db';
 import type { Session } from '@/auth/session';
 
+export const WEEK_DAYS = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+] as const;
+export interface DayHours {
+  day: string;
+  open: boolean;
+  opens: string;
+  closes: string;
+}
+
 export interface WebsiteSettings {
+  weeklyHours: DayHours[];
   brandId: string;
   siteId: string;
   themeId: SiteThemeId;
@@ -33,7 +60,9 @@ export interface WebsiteSettings {
 
 export type WebsiteOutcome = { ok: true } | { ok: false; error: string };
 
-export async function loadWebsiteSettings(session: Session): Promise<WebsiteSettings | null> {
+export async function loadWebsiteSettings(
+  session: Session,
+): Promise<WebsiteSettings | null> {
   return withSession(session, async (tx) => {
     const [row] = await tx`
       SELECT b.id AS brand_id, b.theme, b.logo_light_key,
@@ -48,12 +77,29 @@ export async function loadWebsiteSettings(session: Session): Promise<WebsiteSett
     if (!row) return null;
     const theme = parseSiteTheme(row['theme']);
     const address = (row['address'] as Record<string, string> | null) ?? {};
-    const hours = (row['opening_hours'] as { days?: string[]; opens?: string; closes?: string }[] | null) ?? [];
+    const hours =
+      (row['opening_hours'] as
+        { days?: string[]; opens?: string; closes?: string }[] | null) ?? [];
     const week = hours.find((h) => (h.days ?? []).includes('Monday'));
-    const sat = hours.find((h) => (h.days ?? []).includes('Saturday') && !(h.days ?? []).includes('Monday'));
-    const logoKey = row['logo_light_key'] === null || row['logo_light_key'] === undefined
-      ? null : String(row['logo_light_key']);
+    const sat = hours.find(
+      (h) =>
+        (h.days ?? []).includes('Saturday') &&
+        !(h.days ?? []).includes('Monday'),
+    );
+    const logoKey =
+      row['logo_light_key'] === null || row['logo_light_key'] === undefined
+        ? null
+        : String(row['logo_light_key']);
     return {
+      weeklyHours: WEEK_DAYS.map((day) => {
+        const entry = hours.find((h) => h.days?.includes(day));
+        return {
+          day,
+          open: !!entry,
+          opens: entry?.opens ?? '09:00',
+          closes: entry?.closes ?? '17:00',
+        };
+      }),
       brandId: String(row['brand_id']),
       siteId: String(row['site_id'] ?? ''),
       themeId: theme.id,
@@ -85,24 +131,78 @@ export async function saveWebsiteSettings(
   session: Session,
   form: FormData,
 ): Promise<WebsiteOutcome> {
-  const decision = authorize({
-    userId: session.userId, tenantId: session.tenantId, roleKey: session.roleKey,
-    permissions: session.permissions, scope: session.scope, siteIds: session.siteIds,
-    stepUpSatisfiedAt: session.stepUpSatisfiedAt, mfaSatisfiedAt: session.mfaSatisfiedAt,
-  }, 'website.update');
+  const decision = authorize(
+    {
+      userId: session.userId,
+      tenantId: session.tenantId,
+      roleKey: session.roleKey,
+      permissions: session.permissions,
+      scope: session.scope,
+      siteIds: session.siteIds,
+      stepUpSatisfiedAt: session.stepUpSatisfiedAt,
+      mfaSatisfiedAt: session.mfaSatisfiedAt,
+    },
+    'website.update',
+  );
   if (!decision.allowed) return { ok: false, error: decision.reason };
 
-  const limits: Record<string, number> = { phone: 40, email: 254, line1: 200, city: 100, county: 100, postcode: 12,
-    homeHeadline: 160, homeLead: 600, about: 10000, contactBlurb: 2000, footerLegal: 4000 };
+  const limits: Record<string, number> = {
+    phone: 40,
+    email: 254,
+    line1: 200,
+    city: 100,
+    county: 100,
+    postcode: 12,
+    homeHeadline: 160,
+    homeLead: 600,
+    about: 10000,
+    contactBlurb: 2000,
+    footerLegal: 4000,
+  };
   for (const [field, max] of Object.entries(limits)) {
-    if (String(form.get(field) ?? '').length > max) return { ok: false, error: `The ${field} field must be ${max} characters or fewer.` };
+    if (String(form.get(field) ?? '').length > max)
+      return {
+        ok: false,
+        error: `The ${field} field must be ${max} characters or fewer.`,
+      };
   }
   const email = String(form.get('email') ?? '').trim();
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: 'Enter a valid contact email address.' };
-  for (const [label, open, close] of [['Weekday', 'weekdayOpen', 'weekdayClose'], ['Saturday', 'saturdayOpen', 'saturdayClose']] as const) {
-    const from = String(form.get(open) ?? ''), to = String(form.get(close) ?? '');
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(from) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(to) || from >= to) {
-      return { ok: false, error: `${label} closing time must be after opening time. Use 24-hour times such as 09:00.` };
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    return { ok: false, error: 'Enter a valid contact email address.' };
+  const weekly = form.get('hoursMode') === 'weekly';
+  const hours: { days: string[]; opens: string; closes: string }[] = [];
+  const timeOk = (from: string, to: string) =>
+    /^([01]\d|2[0-3]):[0-5]\d$/.test(from) &&
+    /^([01]\d|2[0-3]):[0-5]\d$/.test(to) &&
+    from < to;
+  if (weekly) {
+    for (const day of WEEK_DAYS) {
+      const status = form.get(`${day}Status`);
+      if (status !== 'open' && status !== 'closed')
+        return { ok: false, error: `Choose open or closed for ${day}.` };
+      if (status === 'closed') continue;
+      const opens = String(form.get(`${day}Open`) ?? ''),
+        closes = String(form.get(`${day}Close`) ?? '');
+      if (!timeOk(opens, closes))
+        return {
+          ok: false,
+          error: `${day} closing time must be after opening time. Use 24-hour times such as 09:00.`,
+        };
+      hours.push({ days: [day], opens, closes });
+    }
+  } else {
+    for (const [label, open, close, days] of [
+      ['Weekday', 'weekdayOpen', 'weekdayClose', WEEK_DAYS.slice(0, 5)],
+      ['Saturday', 'saturdayOpen', 'saturdayClose', ['Saturday']],
+    ] as const) {
+      const opens = String(form.get(open) ?? ''),
+        closes = String(form.get(close) ?? '');
+      if (!timeOk(opens, closes))
+        return {
+          ok: false,
+          error: `${label} closing time must be after opening time. Use 24-hour times such as 09:00.`,
+        };
+      hours.push({ days: [...days], opens, closes });
     }
   }
   const themeId = String(form.get('themeId') ?? 'classic');
@@ -110,19 +210,32 @@ export async function saveWebsiteSettings(
     return { ok: false, error: 'Pick Classic, Studio or Compact.' };
   }
   const preset = defaultSiteTheme(themeId);
-  const brandPrimary = String(form.get('brandPrimary') ?? preset.brandPrimary).trim();
+  const brandPrimary = String(
+    form.get('brandPrimary') ?? preset.brandPrimary,
+  ).trim();
   const colour = brandColourOk(brandPrimary);
   if (!colour.ok) return { ok: false, error: colour.reason };
 
-  const fonts: FontPairing[] = ['inter', 'source_sans', 'ibm_plex', 'noto_sans', 'nunito_sans', 'work_sans'];
+  const fonts: FontPairing[] = [
+    'inter',
+    'source_sans',
+    'ibm_plex',
+    'noto_sans',
+    'nunito_sans',
+    'work_sans',
+  ];
   const font = fonts.includes(String(form.get('fontPairing')) as FontPairing)
-    ? String(form.get('fontPairing')) as FontPairing
+    ? (String(form.get('fontPairing')) as FontPairing)
     : preset.fontPairing;
-  const radius = (['sharp', 'soft', 'rounded'] as const).includes(String(form.get('radius')) as ThemeRadius)
-    ? String(form.get('radius')) as ThemeRadius
+  const radius = (['sharp', 'soft', 'rounded'] as const).includes(
+    String(form.get('radius')) as ThemeRadius,
+  )
+    ? (String(form.get('radius')) as ThemeRadius)
     : preset.radius;
-  const cardStyle = (['bordered', 'elevated', 'flat'] as const).includes(String(form.get('cardStyle')) as CardStyle)
-    ? String(form.get('cardStyle')) as CardStyle
+  const cardStyle = (['bordered', 'elevated', 'flat'] as const).includes(
+    String(form.get('cardStyle')) as CardStyle,
+  )
+    ? (String(form.get('cardStyle')) as CardStyle)
     : preset.cardStyle;
 
   const theme = {
@@ -141,14 +254,6 @@ export async function saveWebsiteSettings(
     },
   };
 
-  const hours = [
-    { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-      opens: String(form.get('weekdayOpen') ?? '10:00'),
-      closes: String(form.get('weekdayClose') ?? '18:00') },
-    { days: ['Saturday'],
-      opens: String(form.get('saturdayOpen') ?? '10:00'),
-      closes: String(form.get('saturdayClose') ?? '16:00') },
-  ];
   const address = {
     line1: String(form.get('line1') ?? ''),
     city: String(form.get('city') ?? ''),
@@ -157,8 +262,20 @@ export async function saveWebsiteSettings(
   };
 
   const current = await loadWebsiteSettings(session);
-  if (!current?.siteId) return { ok: false, error: 'This dealership needs a brand and main site before its website can be edited.' };
-  if (session.scope !== 'all_sites' && !session.siteIds.includes(current.siteId)) return { ok: false, error: 'You need access to the main dealership site to edit its website.' };
+  if (!current?.siteId)
+    return {
+      ok: false,
+      error:
+        'This dealership needs a brand and main site before its website can be edited.',
+    };
+  if (
+    session.scope !== 'all_sites' &&
+    !session.siteIds.includes(current.siteId)
+  )
+    return {
+      ok: false,
+      error: 'You need access to the main dealership site to edit its website.',
+    };
 
   const logo = form.get('logo');
   let logoKey: string | null = null;
@@ -173,13 +290,30 @@ export async function saveWebsiteSettings(
       const [brand] = await tx`
         SELECT id, theme, logo_light_key FROM brands ORDER BY is_default DESC, created_at LIMIT 1 FOR UPDATE`;
       if (!brand) throw new Error('This dealership has no brand record yet.');
-      const [site] = await tx`SELECT id, address, opening_hours, phone, email FROM sites ORDER BY created_at LIMIT 1 FOR UPDATE`;
+      const [site] =
+        await tx`SELECT id, address, opening_hours, phone, email FROM sites ORDER BY created_at LIMIT 1 FOR UPDATE`;
       if (!site) throw new Error('This dealership has no site record yet.');
-      if (session.scope !== 'all_sites' && !session.siteIds.includes(String(site['id']))) throw new Error('You need access to the main dealership site to edit its website.');
-      const originalAddress = (site['address'] as Record<string, unknown> | null) ?? {};
-      const originalHours = (site['opening_hours'] as { days: string[]; opens: string; closes: string }[] | null) ?? [];
-      const editedDays = new Set(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
-      const preservedHours = originalHours.map(h => ({ ...h, days: h.days.filter(day => !editedDays.has(day)) })).filter(h => h.days.length > 0);
+      if (
+        session.scope !== 'all_sites' &&
+        !session.siteIds.includes(String(site['id']))
+      )
+        throw new Error(
+          'You need access to the main dealership site to edit its website.',
+        );
+      const originalAddress =
+        (site['address'] as Record<string, unknown> | null) ?? {};
+      const originalHours =
+        (site['opening_hours'] as
+          { days: string[]; opens: string; closes: string }[] | null) ?? [];
+      const editedDays = new Set<string>(
+        weekly ? WEEK_DAYS : WEEK_DAYS.slice(0, 6),
+      );
+      const preservedHours = originalHours
+        .map((h) => ({
+          ...h,
+          days: h.days.filter((day) => !editedDays.has(day)),
+        }))
+        .filter((h) => h.days.length > 0);
       const nextAddress = { ...originalAddress, ...address };
       const nextHours = [...hours, ...preservedHours];
       await tx`
@@ -200,12 +334,37 @@ export async function saveWebsiteSettings(
            WHERE id = ${String(site['id'])}::uuid`;
       }
 
-      await writeAudit({ tx, session, resourceType: 'brand', resourceId: String(brand['id']), action: 'website_updated',
-        before: { theme: brand['theme'], logoKey: brand['logo_light_key'], address: originalAddress, hours: originalHours, phone: site['phone'], email: site['email'] },
-        after: { theme, logoKey: logoKey ?? brand['logo_light_key'], address: nextAddress, hours: nextHours, phone: String(form.get('phone') ?? '') || null, email: email || null }, siteId: String(site['id']) });
+      await writeAudit({
+        tx,
+        session,
+        resourceType: 'brand',
+        resourceId: String(brand['id']),
+        action: 'website_updated',
+        before: {
+          theme: brand['theme'],
+          logoKey: brand['logo_light_key'],
+          address: originalAddress,
+          hours: originalHours,
+          phone: site['phone'],
+          email: site['email'],
+        },
+        after: {
+          theme,
+          logoKey: logoKey ?? brand['logo_light_key'],
+          address: nextAddress,
+          hours: nextHours,
+          phone: String(form.get('phone') ?? '') || null,
+          email: email || null,
+        },
+        siteId: String(site['id']),
+      });
     });
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : 'The website could not be saved.' };
+    return {
+      ok: false,
+      error:
+        err instanceof Error ? err.message : 'The website could not be saved.',
+    };
   }
   return { ok: true };
 }

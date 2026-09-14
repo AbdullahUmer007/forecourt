@@ -17,7 +17,7 @@ import type { Session } from '@/auth/session';
 import { writeAudit } from './audit';
 import { vatRule, amlRule } from './rules';
 import {
-  money, zero, add, format,
+  authorize, money, zero, add, format,
   buildInvoice, issueInvoice, creditNoteFor, invoiceBalance,
   calculateVat, assessCashPayment, validateRefund, validateOverride,
   type Invoice, type InvoiceLine, type InvoiceSequence, type InvoiceStatus,
@@ -160,7 +160,7 @@ export interface DraftInput {
   buyerName: string;
   buyerAddress: string;
   vatScheme: string;
-  lines: { description: string; unitPricePence: string; quantity?: number }[];
+  lines: { description: string; unitPricePence: string; quantity?: number; unitPriceIncludesVat?: boolean }[];
 }
 
 /**
@@ -176,6 +176,10 @@ export async function applyCreateDraft(
   session: Session,
   input: DraftInput,
 ): Promise<InvoiceOutcome> {
+  if (!authorize(session,'invoice.create').allowed) return {ok:false,error:'You do not have permission to prepare invoices.'};
+  const validId=(v:string)=>/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v);
+  if (![input.dealId,input.vehicleId,input.contactId].every(validId))return {ok:false,error:'Choose a valid deal, vehicle and customer.'};
+  if(!['margin','qualifying','non_qualifying'].includes(input.vatScheme))return {ok:false,error:'Choose the vehicle’s recorded VAT scheme.'};
   if (input.lines.length === 0) {
     return { ok: false, error: 'An invoice needs at least one line.' };
   }
@@ -186,8 +190,12 @@ export async function applyCreateDraft(
     };
   }
 
-  const [deal] = await tx`SELECT * FROM deals WHERE id = ${input.dealId}::uuid`;
+  const [deal] = await tx`SELECT * FROM deals WHERE id = ${input.dealId}::uuid FOR UPDATE`;
   if (!deal) return { ok: false, error: 'That deal no longer exists.' };
+  if(deal['vehicle_id']!==input.vehicleId||deal['contact_id']!==input.contactId)return {ok:false,error:'The customer and vehicle must match the linked deal.'};
+  const [linkedVehicle]=await tx`SELECT vat_scheme FROM vehicles WHERE id=${input.vehicleId}::uuid AND deleted_at IS NULL`;
+  const [linkedContact]=await tx`SELECT id FROM contacts WHERE id=${input.contactId}::uuid AND erased_at IS NULL AND merged_into_id IS NULL`;
+  if(!linkedVehicle||!linkedContact||linkedVehicle['vat_scheme']!==input.vatScheme)return {ok:false,error:'Check the linked customer and vehicle VAT scheme before preparing this invoice.'};
 
   const [existing] = await tx`
     SELECT id FROM invoices WHERE id = ${deal['invoice_id']}::uuid`;
@@ -214,6 +222,7 @@ export async function applyCreateDraft(
       description: l.description,
       unitPrice: money(BigInt(l.unitPricePence), 'GBP'),
       ...(l.quantity ? { quantity: l.quantity } : {}),
+      ...(l.unitPriceIncludesVat ? {unitPriceIncludesVat:true} : {}),
     })),
     vatRule: rule,
     ...(purchasePrice ? { purchasePrice } : {}),

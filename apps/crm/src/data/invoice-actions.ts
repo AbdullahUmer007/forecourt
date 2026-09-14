@@ -154,3 +154,11 @@ export async function recordPaymentAction(
   if (result.ok) { revalidatePath('/invoices'); revalidatePath(`/invoices/${invoiceId}`); }
   return result;
 }
+
+export async function draftInvoiceFromDeal(formData:FormData):Promise<InvoiceOutcome> {
+ const guarded=await guard('invoice.create');if(!guarded.ok)return {ok:false,error:guarded.error};
+ const {applyDealInvoice}=await import('./deal-invoice');
+ const result=await withSession(guarded.session,tx=>applyDealInvoice(tx,guarded.session,String(formData.get('dealId')??''),String(formData.get('revision')??'')));
+ if(result.ok){revalidatePath('/invoices');revalidatePath('/deals');revalidatePath(`/deals/${String(formData.get('dealId')??'')}`);}
+ return result;
+}

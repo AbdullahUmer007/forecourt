@@ -1,5 +1,12 @@
 # Changelog
 
+## 14 September 2026 — deals, invoice drafts and weekly hours (local preview)
+
+- Start a draft deal from a customer, car or enquiry; review and revise the cash price with retained history.
+- Prepare a simple cash invoice from the agreed deal, with required customer/address/VAT details and a review step. Drafting allocates no invoice number.
+- Set separate opening hours or closure for each day, including Sunday. Public contact pages show the full schedule and opening status follows UK time.
+- Added tenant/branch/permission, stale-edit, concurrency, exact-money and daylight-saving checks. Full settlement, quotes, handover and provider delivery remain unfinished.
+
 ## 14 September 2026 — saved searches (local preview)
 
 - Save stock filters and return to current matching cars without setting them again.

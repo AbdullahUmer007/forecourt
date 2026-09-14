@@ -69,6 +69,7 @@ export default async function DealsPage(
 
   return (
     <>
+      {holds(session, 'deal.create') && <Link href="/deals/new" className="mb-4 inline-flex min-h-11 items-center rounded-md bg-brand-600 px-4 font-medium text-white">New deal</Link>}
       <PageHeader
         title="Deals"
         meta={(

@@ -35,7 +35,7 @@ const isFormation = (v: string): v is ContractFormation =>
 const currencyOf = (v: unknown): Currency => (v === 'EUR' ? 'EUR' : 'GBP');
 
 async function readDeal(tx: Tx, id: string): Promise<Deal | null> {
-  const [row] = await tx`SELECT * FROM deals WHERE id = ${id}::uuid`;
+  const [row] = await tx`SELECT * FROM deals WHERE id = ${id}::uuid FOR UPDATE`;
   if (!row) return null;
 
   // The CURRENT position of each product — the latest row per product code.
@@ -110,6 +110,8 @@ export async function appendToLedger(
   dealId: string,
   input: Omit<EvidenceInput, 'dealId' | 'actorId'>,
 ): Promise<EvidenceEntry> {
+  // Serialise every writer before reading the evidence tip.
+  await tx`SELECT id FROM deals WHERE id=${dealId}::uuid FOR UPDATE`;
   const chain = await readChain(tx, dealId);
   const entry = appendEvidence(chain, {
     ...input,

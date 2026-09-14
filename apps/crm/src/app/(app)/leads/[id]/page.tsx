@@ -95,6 +95,7 @@ export default async function LeadPage(
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
       <div className="grid gap-4">
+        {holds(session, 'deal.create') && <Link href={`/deals/new?lead=${id}`} className="inline-flex min-h-11 items-center rounded-md border border-edge-strong px-4 text-link">Start a deal</Link>}
         <Card>
           <Link href="/leads" className="text-[13px] leading-[18px] text-link hover:underline">
             ← Sales inbox

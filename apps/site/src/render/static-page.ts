@@ -4,7 +4,7 @@
 
 import { html, raw, esc } from './html.js';
 import { criticalCss, DEFAULT_THEME, type BrandTheme } from './theme.js';
-import { masthead, siteFooter, type ChromeDealer } from './chrome.js';
+import { masthead, siteFooter, clockLabel, type ChromeDealer } from './chrome.js';
 import { renderFinanceUnavailable } from './finance.js';
 import { canonicalUrl } from '../../../../packages/domain/src/seo.js';
 import { enquiryForm, enquiryFormCss } from './enquiry-form.js';
@@ -51,6 +51,16 @@ function paragraphs(text: string, fallback: string): string {
   return body.split(/\n{2,}/).map((p) => `<p>${esc(p)}</p>`).join('');
 }
 
+function weeklyHours(dealer: StaticPageDealer): string {
+  if (!dealer.openingHours) return '';
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  return html`<section class="opening-hours" aria-labelledby="opening-hours-title"><h2 id="opening-hours-title">Opening hours</h2><p>UK local time</p><dl>${raw(days.map(day => {
+    const periods = dealer.openingHours!.filter(h => h.days.includes(day));
+    const label = periods.length ? periods.map(h => `${clockLabel(h.opens)} – ${clockLabel(h.closes)}`).join(', ') : 'Closed';
+    return html`<div><dt>${day}</dt><dd>${label}</dd></div>`;
+  }).join(''))}</dl></section>`;
+}
+
 function body(input: StaticPageInput): string {
   const d = input.dealer;
   const name = d.name;
@@ -69,7 +79,7 @@ function body(input: StaticPageInput): string {
           ${raw(d.telephone ? `<li>Phone: <a href="tel:${esc(d.telephone)}">${esc(d.telephone)}</a></li>` : '')}
           ${raw(d.email ? `<li>Email: <a href="mailto:${esc(d.email)}">${esc(d.email)}</a></li>` : '')}
           ${raw(addr ? `<li>${esc(addr)}</li>` : '')}
-        </ul><a href="/used-cars">Browse our current stock →</a></aside><section class="contact-form" aria-labelledby="enquiry-title">
+        </ul>${raw(weeklyHours(d))}<a href="/used-cars">Browse our current stock →</a></aside><section class="contact-form" aria-labelledby="enquiry-title">
         ${raw(input.formOk
           ? '<div role="status"><h2 id="enquiry-title">Thank you for your enquiry</h2><p>Your message has been sent to the dealership. The team will reply using the details you provided.</p><a href="/used-cars">Continue browsing cars →</a></div>'
           : `<h2 id="enquiry-title">${input.formValues?.vehicle ? `Enquire about ${esc(input.formValues.vehicle)}` : 'Send us a message'}</h2><p>Ask a question, arrange a viewing or request a video walkaround.</p>${input.formError ? `<div class="form-error" role="alert"><strong>Please check your enquiry</strong><p>${esc(input.formError)}</p><a href="/contact">Start a general enquiry</a></div>` : ''}${enquiryForm(input.formValues)}`)}
@@ -153,7 +163,7 @@ main p,main li{color:var(--ink-muted);margin:0 0 12px}
 .px-form input{min-height:44px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-md);font:inherit}
 .px-form button{min-height:44px;border:0;border-radius:var(--radius-md);background:var(--brand);color:var(--on-brand);font:inherit;font-weight:600}
 ${input.id === 'contact' ? `${enquiryFormCss}
-main{max-width:1120px;padding-top:56px}.contact-intro{max-width:640px;margin-bottom:32px}.eyebrow{font-size:12px;letter-spacing:.12em;font-weight:600}.contact-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.7fr);gap:32px;align-items:start}.contact-details,.contact-form{border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;background:var(--surface-1)}.contact-details{background:var(--surface-3)}.contact-layout h2{font-size:22px;margin:0 0 12px}.contact-layout li{overflow-wrap:anywhere}.contact-form>.enq-form{margin-top:24px}.form-error{padding:16px;border-left:3px solid var(--critical);background:var(--surface-2);margin:16px 0}.form-error p{margin:8px 0}.contact-details a{display:inline-block;min-height:44px;padding:10px 0}@media(max-width:700px){main{padding-top:28px}.contact-layout{grid-template-columns:1fr;gap:20px}.contact-details,.contact-form{padding:20px}}` : ''}
+.opening-hours{margin-top:24px}.opening-hours dl{margin:12px 0}.opening-hours dl>div{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}.opening-hours dd{margin:0}.opening-hours p{font-size:13px}main{max-width:1120px;padding-top:56px}.contact-intro{max-width:640px;margin-bottom:32px}.eyebrow{font-size:12px;letter-spacing:.12em;font-weight:600}.contact-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.7fr);gap:32px;align-items:start}.contact-details,.contact-form{border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;background:var(--surface-1)}.contact-details{background:var(--surface-3)}.contact-layout h2{font-size:22px;margin:0 0 12px}.contact-layout li{overflow-wrap:anywhere}.contact-form>.enq-form{margin-top:24px}.form-error{padding:16px;border-left:3px solid var(--critical);background:var(--surface-2);margin:16px 0}.form-error p{margin:8px 0}.contact-details a{display:inline-block;min-height:44px;padding:10px 0}@media(max-width:700px){main{padding-top:28px}.contact-layout{grid-template-columns:1fr;gap:20px}.contact-details,.contact-form{padding:20px}}` : ''}
 </style>
 </head>
 <body>

@@ -109,6 +109,7 @@ export default async function VehiclePage(
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="grid min-w-0 gap-5">
+        {holds(session, 'deal.create') && <Link href={`/deals/new?vehicle=${id}`} className="inline-flex min-h-11 items-center rounded-md border border-edge-strong px-4 text-link">Start a deal</Link>}
         <div className="overflow-hidden rounded-lg border border-edge"><StockPhoto url={photos.find(p => p.isHero)?.url ?? photos[0]?.url ?? null} description={description || vehicle.registration} /></div>
         <Card>
           <Link href="/stock" className="text-[13px] leading-[18px] text-link hover:underline">

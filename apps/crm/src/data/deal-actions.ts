@@ -86,3 +86,20 @@ export async function recordRepair(
   if (result.ok) { revalidatePath('/deals'); revalidatePath(`/deals/${dealId}`); }
   return result;
 }
+
+export async function createDraftDeal(formData: FormData): Promise<import('./deal-builder').DraftDealOutcome> {
+  const session = await requireSession();
+  const { applyDraftDeal } = await import('./deal-builder');
+  const result = await withSession(session, tx => applyDraftDeal(tx,session,{
+    contactId:String(formData.get('contactId') ?? ''),vehicleId:String(formData.get('vehicleId') ?? ''),leadId:String(formData.get('leadId') ?? ''),price:String(formData.get('price') ?? '')
+  }));
+  if (result.ok) { revalidatePath('/deals'); revalidatePath(`/deals/${result.id}`); }
+  return result;
+}
+
+export async function updateDraftPrice(formData: FormData): Promise<import('./deal-builder').DraftDealOutcome> {
+  const session=await requireSession();const {applyDraftPrice}=await import('./deal-builder');
+  const result=await withSession(session,tx=>applyDraftPrice(tx,session,{id:String(formData.get('id')??''),revision:String(formData.get('revision')??''),price:String(formData.get('price')??'')}));
+  if(result.ok){revalidatePath('/deals');revalidatePath(`/deals/${result.id}`);}
+  return result;
+}

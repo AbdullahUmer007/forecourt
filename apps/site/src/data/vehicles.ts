@@ -269,7 +269,7 @@ export async function loadDealer(tenantId: string, origin: string): Promise<Load
       country: 'GB',
       latitude: r['lat'] === null || r['lat'] === undefined ? null : Number(r['lat']),
       longitude: r['lng'] === null || r['lng'] === undefined ? null : Number(r['lng']),
-      openingHours: hours.length > 0 ? hours : [{ days: ['Monday', 'Saturday'], opens: '10:00', closes: '18:00' }],
+      openingHours: hours,
       // Omitted rather than invented: an aggregateRating with no reviews behind
       // it is a structured-data violation that can earn a manual penalty.
       ratingValue: null,

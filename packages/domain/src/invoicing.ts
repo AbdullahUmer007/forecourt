@@ -23,7 +23,7 @@ import {
   type Money, money, add, subtract, sum, zero, isNegative, format,
 } from './money.js';
 import {
-  calculateVat, assertInvoiceVatPresentation,
+  calculateVat, calculateQualifying, assertInvoiceVatPresentation,
   type VatScheme, type VatRule, type VatCalculation,
 } from './vat.js';
 
@@ -90,6 +90,8 @@ export interface InvoiceLineInput {
   description: string;
   quantity?: number;
   unitPrice: Money;
+  /** A single vehicle cash price already includes any VAT. */
+  unitPriceIncludesVat?: boolean;
   /**
    * The VAT rate for THIS line, in basis points. Ignored entirely on a
    * margin-scheme invoice — see `buildInvoice`.
@@ -154,19 +156,21 @@ export function buildInvoice(input: BuildInvoiceInput): Invoice {
 
   const lines: InvoiceLine[] = input.lines.map((l, i) => {
     const quantity = l.quantity ?? 1;
-    const net = money(l.unitPrice.amount * BigInt(quantity), l.unitPrice.currency);
-
-    // The margin-scheme rule, as construction rather than validation.
-    const vatRateBps = isMargin ? 0 : (l.vatRateBps ?? input.vatRule.standardRateBps);
-    const vatAmount = isMargin
-      ? zero(net.currency)
-      : money((net.amount * BigInt(vatRateBps) + 5000n) / 10000n, net.currency);
+    if (l.unitPriceIncludesVat && quantity !== 1) throw new Error('VAT-inclusive vehicle lines must have quantity one.');
+    const taxable = input.vatScheme === 'qualifying';
+    const vatRateBps = taxable ? (l.vatRateBps ?? input.vatRule.standardRateBps) : 0;
+    const inclusive = l.unitPriceIncludesVat && taxable
+      ? calculateQualifying(l.unitPrice, {...input.vatRule, standardRateBps:vatRateBps}) : null;
+    const net = inclusive?.net ?? money(l.unitPrice.amount * BigInt(quantity), l.unitPrice.currency);
+    const vatAmount = inclusive?.vatDue ?? (taxable
+      ? money((net.amount * BigInt(vatRateBps) + 5000n) / 10000n, net.currency)
+      : zero(net.currency));
 
     return {
       position: i + 1,
       description: l.description,
       quantity,
-      unitPrice: l.unitPrice,
+      unitPrice: inclusive?.net ?? l.unitPrice,
       net,
       vatAmount,
       vatRateBps,
