@@ -1,3 +1,5 @@
+import { countVehicles, facetCounts } from '../../apps/site/src/data/search';
+import { parseSearchQuery } from '../../packages/domain/src/search';
 import { beforeAll, afterAll, describe, it, expect } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { sql } from '@/data/db';
@@ -33,6 +35,22 @@ afterAll(async () => {
   await sql`DELETE FROM brands WHERE id = ${brand}::uuid`;
 });
 describe('website management', () => {
+  it('previews distinct presets without changing saved settings or exposing private stock', async () => {
+    const before = await loadWebsiteSettings(editor);
+    const pages = await Promise.all((['classic','studio','compact'] as const).map(theme => renderTenantHome(T.tenant, '', theme)));
+    expect(new Set(pages).size).toBe(3);
+    for(const page of pages){expect(page).toContain('PublicPreviewCar');expect(page).not.toContain('PrivatePreviewCar');}
+    expect(await loadWebsiteSettings(editor)).toEqual(before);
+  });
+  it('filters punctuation-heavy catalogue derivatives with matching facet counts', async () => {
+    await sql`UPDATE vehicles SET derivative='FOCUS IV (HN) 1.2018 · 1.0 EcoBoost · 125 HP' WHERE id=${live}::uuid`;
+    const query=parseSearchQuery({}, ['publicpreviewcar','test']).query;
+    const facets=await facetCounts(T.tenant,query);
+    expect(facets.variant).toHaveLength(1);
+    const selected={...query,filters:{...query.filters,variant:[facets.variant![0]!.value]}};
+    expect(await countVehicles(T.tenant,selected)).toBe(1);
+    expect(await countVehicles(T.tenant,{...selected,filters:{...selected.filters,variant:['missing-variant']}})).toBe(0);
+  });
   it('uses public stock for preview and excludes private and other-tenant stock', async () => {
     const html = await renderTenantHome(T.tenant, '');
     expect(html).toContain('PublicPreviewCar'); expect(html).not.toContain('PrivatePreviewCar');

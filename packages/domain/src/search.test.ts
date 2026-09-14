@@ -486,3 +486,11 @@ describe('invariants that must hold for every query', () => {
     }));
   });
 });
+
+ it('retains variant filters in URLs and resets them when make or model changes', () => {
+  const query=parseSearchQuery({variant:'1-0-ecoboost'},['ford','focus']).query;
+  expect(searchUrlPath(query)).toContain('variant=1-0-ecoboost');
+  expect(toggleFilter(query,'make','audi').filters.variant).toEqual([]);
+  expect(toggleFilter(query,'model','fiesta').filters.variant).toEqual([]);
+  expect(buildFacets(query,{variant:[{value:'1-0-ecoboost',label:'1.0 EcoBoost',count:1}]}).some(f=>f.dimension==='variant')).toBe(true);
+ });

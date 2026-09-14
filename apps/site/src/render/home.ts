@@ -161,6 +161,8 @@ ${masthead(dealer, input.now ? { now: input.now } : {})}
        mind; a stock photograph of a car they cannot buy wastes the fold. -->
   <section class="home-hero">
     <div class="wrap">
+      <div class="hero-copy">
+      <p class="hero-kicker">Your next chapter starts here</p>
       <h1>${esc(headline || `Used cars${place ? ` in ${place}` : ''}, sold straight.`)}</h1>
       <p>${esc(lead || 'Every car history checked before it goes on sale, the full MOT record published, and any mark on the paintwork photographed and named — so nothing is a surprise when you get here.')}</p>
 
@@ -180,6 +182,8 @@ ${masthead(dealer, input.now ? { now: input.now } : {})}
         ${rated ? `<p class="home-stat"><b>${esc(String(dealer.ratingValue))}</b><span>from ${esc(String(dealer.reviewCount))} reviews</span></p>` : ''}
         ${dealer.yearsTrading ? `<p class="home-stat"><b>${dealer.yearsTrading}</b><span>years on this forecourt</span></p>` : ''}
       </div>
+      </div>
+      ${justArrived.find(v => v.thumbUrl) ? (() => { const car = justArrived.find(v => v.thumbUrl)!; return `<figure class="hero-feature"><a href="${esc(car.href)}"><img src="${esc(car.thumbUrl!)}" alt="${esc(car.thumbAlt || car.name)}" width="800" height="600" fetchpriority="high"><figcaption><div><span>Explore the forecourt</span><strong>${esc(car.name)}</strong></div><div><span>Cash price</span><strong>${esc(fmtPrice(car.pricePence))} ↗</strong></div></figcaption></a></figure>`; })() : '<figure class="hero-feature"><img src="/themes/showroom.webp" alt="Illustration of a car outside a modern showroom" width="1200" height="800" fetchpriority="high"><figcaption><div><span>Showroom inspiration · AI illustration</span><strong>Find a car that feels like you.</strong></div></figcaption></figure>'}
     </div>
   </section>
 

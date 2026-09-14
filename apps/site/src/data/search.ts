@@ -35,11 +35,12 @@ function predicates(q: SearchQuery): { sql: string; params: Param[] } {
   const inList = (column: string, values: readonly string[], normalise = (s: string) => slugify(s)) => {
     if (values.length === 0) return;
     void normalise;
-    clauses.push(`lower(regexp_replace(coalesce(${column}, ''), '[^a-zA-Z0-9]+', '-', 'g')) = ANY(${bind(values)})`);
+    clauses.push(`trim(both '-' from lower(regexp_replace(coalesce(${column}, ''), '[^a-zA-Z0-9]+', '-', 'g'))) = ANY(${bind(values)})`);
   };
 
   inList('v.make', q.filters.make);
   inList('v.model', q.filters.model);
+  inList('v.derivative', q.filters.variant);
   inList('v.fuel_type', q.filters.fuel);
   inList('v.transmission', q.filters.transmission);
   inList('v.body_style', q.filters.body);
@@ -197,6 +198,7 @@ export async function facetCounts(
       group('transmission', 'v.transmission'),
       group('body', 'v.body_style'),
       ...(q.filters.make.length === 1 ? [group('model', 'v.model')] : []),
+      ...(q.filters.make.length === 1 && q.filters.model.length === 1 ? [group('variant', 'v.derivative')] : []),
     ]);
 
     // Colour is folded to base colours in application code rather than SQL:

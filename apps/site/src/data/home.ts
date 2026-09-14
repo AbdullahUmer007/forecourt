@@ -1,10 +1,11 @@
+import { defaultSiteTheme, brandThemeTokens, type SiteThemeId } from '../../../../packages/domain/src/site-theme.js';
 import { renderHomePage, type BrowseEntry, type HomeVehicleCard } from '../render/home.js';
 import { loadDealer } from './vehicles.js';
 import { searchVehicles, countVehicles, facetCounts } from './search.js';
 import { EMPTY_QUERY } from '../../../../packages/domain/src/search.js';
 import { vehicleUrlPath } from '../../../../packages/domain/src/seo.js';
 
-export async function renderTenantHome(tenantId: string, origin: string): Promise<string> {
+export async function renderTenantHome(tenantId: string, origin: string, previewTheme?: SiteThemeId): Promise<string> {
   const [dealer, stockCount, arrivals, cheapest, facets] = await Promise.all([
     loadDealer(tenantId, origin),
     countVehicles(tenantId, EMPTY_QUERY),
@@ -37,7 +38,7 @@ export async function renderTenantHome(tenantId: string, origin: string): Promis
 
   const html = renderHomePage({
     dealer,
-    theme: dealer.theme,
+    theme: previewTheme ? brandThemeTokens(defaultSiteTheme(previewTheme)) : dealer.theme,
     headline: dealer.siteTheme.copy.homeHeadline,
     lead: dealer.siteTheme.copy.homeLead,
     stockCount,

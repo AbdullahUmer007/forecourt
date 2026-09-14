@@ -3,17 +3,14 @@
 import { useState, type FormEvent } from 'react';
 import {
   defaultSiteTheme,
+  THEME_PRESETS,
   type SiteThemeId,
 } from '@forecourt/domain/site-theme';
 import { updateWebsite } from '@/data/website-actions';
 import type { WebsiteSettings } from '@/data/website';
 import { LABEL_CLASS, INPUT_CLASS, BUTTON_CLASS } from '@/components/styles';
 
-const THEMES = [
-  ['classic', 'Classic — traditional and trustworthy'],
-  ['studio', 'Studio — editorial, photography-led'],
-  ['compact', 'Compact — dense listings, value-focused'],
-] as const;
+const THEMES = ['classic', 'studio', 'compact'] as const;
 
 const FONTS = [
   ['inter', 'Inter'],
@@ -24,7 +21,8 @@ const FONTS = [
   ['work_sans', 'Work Sans'],
 ] as const;
 
-export function WebsiteForm({ settings }: { settings: WebsiteSettings }) {
+export function WebsiteForm({ settings, previews }: { settings: WebsiteSettings; previews: string[] }) {
+  const [themeId, setThemeId] = useState<SiteThemeId>(settings.themeId);
   const [weeklyHours, setWeeklyHours] = useState(settings.weeklyHours);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -95,42 +93,32 @@ export function WebsiteForm({ settings }: { settings: WebsiteSettings }) {
         className="grid scroll-mt-6 gap-4 rounded-lg border border-edge p-5 sm:grid-cols-2"
       >
         <legend className="mb-1 font-medium">Appearance</legend>
-        <label className="grid gap-1 sm:col-span-2">
-          <span className={LABEL_CLASS}>Theme</span>
-          <select
-            className={INPUT_CLASS}
-            name="themeId"
-            defaultValue={settings.themeId}
-            onChange={(event) => {
-              const preset = defaultSiteTheme(
-                event.currentTarget.value as SiteThemeId,
-              );
-              for (const key of [
-                'brandPrimary',
-                'fontPairing',
-                'radius',
-                'cardStyle',
-              ] as const) {
-                const field = event.currentTarget.form?.elements.namedItem(key);
-                if (
-                  field instanceof HTMLInputElement ||
-                  field instanceof HTMLSelectElement
-                )
-                  field.value = preset[key];
-              }
-            }}
-          >
-            {THEMES.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <span className="text-xs text-ink-subtle">
-            Choosing a theme applies its colours, typography, corners and cards.
-            You can customise them below.
-          </span>
-        </label>
+        <div className="sm:col-span-2">
+          <h2 className="text-xl font-semibold tracking-tight">Find your showroom’s style</h2>
+          <p className="mt-2 max-w-2xl text-sm text-ink-muted">Three complete designs, shown with your current cars and website copy. Preview a layout, choose your favourite, then save your website.</p>
+          <input type="hidden" name="themeId" value={themeId} />
+          <div className="mt-6 grid gap-5 xl:grid-cols-3">
+            {THEMES.map((id, index) => <article key={id} className={`min-w-0 overflow-hidden rounded-lg border ${themeId === id ? 'border-brand-600 ring-1 ring-brand-600' : 'border-edge'} bg-surface-1`}>
+              <div aria-hidden="true" className="pointer-events-none relative h-52 overflow-hidden border-b border-edge bg-surface-3">
+                <iframe title={`${THEME_PRESETS[id].label} thumbnail`} tabIndex={-1} loading="lazy" sandbox="" srcDoc={previews[index]?.replace(/<body(?=[ >])/, '<body inert')} style={{width:'357.143%',height:760,transform:'scale(.28)',transformOrigin:'top left',border:0}} />
+              </div>
+              <div className="grid gap-3 p-5">
+                <div className="flex items-center justify-between gap-2"><h3 className="text-lg font-semibold">{THEME_PRESETS[id].label}</h3>{themeId === id && <span className="text-xs font-medium text-link">✓ Selected</span>}</div>
+                <p className="min-h-16 text-sm text-ink-muted">{THEME_PRESETS[id].description}</p>
+                <a href={`/settings/website/preview?theme=${id}`} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center rounded-md border border-edge-strong px-3 text-sm font-medium">Preview full website ↗</a>
+                <button type="button" aria-pressed={themeId === id} className="inline-flex min-h-11 items-center justify-center rounded-md bg-brand-600 px-3 text-sm font-medium text-white hover:bg-brand-700" onClick={event => {
+                  setThemeId(id); setSaved(false);
+                  const preset = defaultSiteTheme(id);
+                  for (const key of ['brandPrimary', 'fontPairing', 'radius', 'cardStyle'] as const) {
+                    const field = event.currentTarget.form?.elements.namedItem(key);
+                    if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) field.value = preset[key];
+                  }
+                }}>{themeId === id ? 'Theme selected' : 'Use this theme'}</button>
+              </div>
+            </article>)}
+          </div>
+          <p className="mt-5 text-sm text-ink-muted">Personalise the selected theme below. Your contact details, page copy and cars stay with you when you switch.</p>
+        </div>
         <label className="grid gap-1">
           <span className={LABEL_CLASS}>Brand colour</span>
           <input
@@ -374,7 +362,7 @@ export function WebsiteForm({ settings }: { settings: WebsiteSettings }) {
       </fieldset>
 
       <div className="sticky bottom-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-edge-strong bg-surface-1 p-4 shadow-sm">
-        <p className="text-sm text-ink-muted">
+        <p className="hidden text-sm text-ink-muted sm:block">
           Changes apply to your public website when saved.
         </p>
         <button

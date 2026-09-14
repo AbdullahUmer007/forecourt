@@ -50,8 +50,8 @@ export const THEME_PRESETS: Record<SiteThemeId, {
   brandPrimaryHover: string;
 }> = {
   classic: {
-    label: 'Classic',
-    description: 'Traditional and trustworthy. The right default for a family independent.',
+    label: 'Showroom',
+    description: 'A bright, spacious showroom. Split photography, confident type and room for every car.',
     radius: 'soft',
     cardStyle: 'bordered',
     fontPairing: 'inter',
@@ -60,7 +60,7 @@ export const THEME_PRESETS: Record<SiteThemeId, {
   },
   studio: {
     label: 'Studio',
-    description: 'Editorial and photography-led. Suits prestige stock.',
+    description: 'A dramatic, dark editorial layout with large photography. Made for prestige and specialist stock.',
     radius: 'sharp',
     cardStyle: 'flat',
     fontPairing: 'ibm_plex',
@@ -68,8 +68,8 @@ export const THEME_PRESETS: Record<SiteThemeId, {
     brandPrimaryHover: colours.studio.hover,
   },
   compact: {
-    label: 'Compact',
-    description: 'Dense listings, value-focused. Suits a high-volume forecourt.',
+    label: 'Motor Market',
+    description: 'A welcoming, search-first layout with rounded cards. Ideal for a busy everyday forecourt.',
     radius: 'rounded',
     cardStyle: 'elevated',
     fontPairing: 'source_sans',
@@ -181,6 +181,7 @@ export function parseSiteTheme(raw: unknown): SiteThemeConfig {
 }
 
 export function brandThemeTokens(config: SiteThemeConfig): {
+  layout: SiteThemeId;
   brandPrimary: string;
   brandPrimaryHover: string;
   radius: ThemeRadius;
@@ -188,6 +189,7 @@ export function brandThemeTokens(config: SiteThemeConfig): {
   fontStack: string;
 } {
   return {
+    layout: config.id,
     brandPrimary: config.brandPrimary,
     brandPrimaryHover: config.brandPrimaryHover,
     radius: config.radius,

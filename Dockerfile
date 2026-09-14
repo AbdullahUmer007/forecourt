@@ -62,6 +62,7 @@ ENV DATABASE_URL=postgres://build:build@127.0.0.1:5432/build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+RUN mkdir -p apps/${APP}/public
 RUN pnpm --filter "@forecourt/${APP}" build
 
 # ----------------------------------------------------------------- run
@@ -88,6 +89,7 @@ RUN groupadd --system --gid 1001 nodejs \
 # node_modules, the client chunks, and the public assets.
 COPY --from=build --chown=nextjs:nodejs /repo/apps/${APP}/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /repo/apps/${APP}/.next/static ./apps/${APP}/.next/static
+COPY --from=build --chown=nextjs:nodejs /repo/apps/${APP}/public ./apps/${APP}/public
 
 # A fixed entrypoint path, with the app name BAKED IN at build time.
 #

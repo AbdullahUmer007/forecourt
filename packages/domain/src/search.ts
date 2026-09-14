@@ -49,7 +49,7 @@ export const PER_PAGE = 24;
  * always produce the same URL, the same canonical tag and the same cache key.
  */
 export const MULTI_DIMENSIONS = [
-  'make', 'model', 'fuel', 'transmission', 'body', 'colour', 'doors', 'seats',
+  'make', 'model', 'variant', 'fuel', 'transmission', 'body', 'colour', 'doors', 'seats',
 ] as const;
 export type MultiDimension = (typeof MULTI_DIMENSIONS)[number];
 
@@ -66,7 +66,7 @@ export interface SearchQuery {
 }
 
 export const EMPTY_QUERY: SearchQuery = {
-  filters: { make: [], model: [], fuel: [], transmission: [], body: [], colour: [], doors: [], seats: [] },
+  filters: { make: [], model: [], variant: [], fuel: [], transmission: [], body: [], colour: [], doors: [], seats: [] },
   minPricePence: null, maxPricePence: null, minYear: null, maxMileage: null,
   keyword: null, siteSlug: null, sort: DEFAULT_SORT, page: 1,
 };
@@ -158,7 +158,7 @@ export function parseSearchQuery(
   const ignored = Object.keys(raw).filter((k) => !known.has(k) && raw[k] !== undefined).sort();
 
   const filters: Record<MultiDimension, string[]> = {
-    make: [], model: [], fuel: [], transmission: [], body: [], colour: [], doors: [], seats: [],
+    make: [], model: [], variant: [], fuel: [], transmission: [], body: [], colour: [], doors: [], seats: [],
   };
   for (const d of MULTI_DIMENSIONS) {
     // Sorted and de-duplicated: `?make=bmw&make=audi` and `?make=audi&make=bmw`
@@ -395,7 +395,7 @@ export interface FacetGroup {
 }
 
 export const FACET_LABELS: Readonly<Record<MultiDimension, string>> = {
-  make: 'Make', model: 'Model', fuel: 'Fuel', transmission: 'Gearbox',
+  make: 'Make', model: 'Model', variant: 'Variant', fuel: 'Fuel', transmission: 'Gearbox',
   body: 'Body style', colour: 'Colour', doors: 'Doors', seats: 'Seats',
 };
 
@@ -406,6 +406,7 @@ export function toggleFilter(q: SearchQuery, dimension: MultiDimension, value: s
   const filters = { ...q.filters, [dimension]: next };
   // Changing the make invalidates any model chosen under the old one.
   if (dimension === 'make') filters.model = [];
+  if (dimension === 'make' || dimension === 'model') filters.variant = [];
   // Page 1: a filter change makes the old page number meaningless, and landing
   // a buyer on "page 4 of 2" is the most common filtering bug there is.
   return { ...q, filters, page: 1 };
@@ -436,6 +437,7 @@ export function buildFacets(
     if (!available || available.length === 0) continue;
     // Model is meaningless until a make is chosen — 400 models is not a filter.
     if (dimension === 'model' && q.filters.make.length !== 1) continue;
+    if (dimension === 'variant' && (q.filters.make.length !== 1 || q.filters.model.length !== 1)) continue;
 
     const options = available.map((c): FacetOption => {
       const selected = q.filters[dimension].includes(c.value);
@@ -597,7 +599,7 @@ export function relaxationLadder(q: SearchQuery): Relaxation[] {
     steps.push({ query: cur, explanation: 'with any fuel type' });
   }
   if (cur.filters.model.length > 0) {
-    cur = { ...cur, filters: { ...cur.filters, model: [] } };
+    cur = { ...cur, filters: { ...cur.filters, model: [], variant: [] } };
     steps.push({ query: cur, explanation: 'across the whole range' });
   }
   if (cur.keyword) {

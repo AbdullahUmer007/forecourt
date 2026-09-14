@@ -1,5 +1,13 @@
 # Changelog
 
+## 14 September 2026 — website theme gallery
+
+- Choose Showroom, Studio or Motor Market from visual previews of your own dealership in CRM.
+- Preview a theme before saving, with desktop and phone views.
+- Refresh public layouts, mobile navigation and photo placeholders; ship image assets in production containers.
+- Filter stock by variant after selecting make/model; reset dependent choices correctly.
+- Refresh local and Railway Kennington demo stock from explicit catalogue variants, retaining old records and audit history. Theme code awaits Railway deployment.
+
 ## 14 September 2026 — production invoice safeguards (local)
 
 - Require reviewed server-derived deal details for the legacy invoice draft action.

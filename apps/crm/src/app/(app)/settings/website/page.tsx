@@ -1,3 +1,4 @@
+import { renderWebsitePreview } from '@/data/website-preview';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireSession } from '@/auth/session';
@@ -26,6 +27,7 @@ export default async function WebsiteSettingsPage() {
     );
   }
 
+  const previews = await Promise.all((["classic", "studio", "compact"] as const).map(id => renderWebsitePreview(session.tenantId, id)));
   return (
     <>
       <PageHeader
@@ -41,7 +43,7 @@ export default async function WebsiteSettingsPage() {
         }
       />
       <Card>
-        <WebsiteForm settings={settings} />
+        <WebsiteForm settings={settings} previews={previews} />
       </Card>
     </>
   );

@@ -1,3 +1,9 @@
+## 2026-09-14 — website theme gallery and catalogue demo stock
+
+Added Showroom, Studio and Motor Market layouts, real tenant preview thumbnails, unsaved preset previews and explicit theme selection/save in CRM. Shared public pages now receive layout identity; added labelled showroom illustration and production public-asset copying. Variant filtering is available after make/model selection and clears when either changes. 1,856 tests / 69 files pass; builds and browser save/reload/filter checks completed. See `reports/module-theme-gallery-2026-09-14.md` for QA and scope.
+
+User explicitly authorized local AND Railway demo stock refresh: archived 14 local / 15 Railway active old demo cars, retained history, and added eight catalogue-linked demo cars per database. Verified all eight matches in both. Theme/filter CODE is local only until deployment; Railway DATA is already updated. Real car photos remain to be added. Local public port 3100 runs the redesign.
+
 ## 2026-09-14 — production invoice safeguards (local)
 
 Closed the legacy browser-posted invoice pricing path: drafts require the reviewed deal revision and server-derived values. Added low-level issue/credit/payment permissions and scope checks, sale/deal total and discount checks before numbering, invoice locks for competing mutations, and customer locks for cross-invoice cash aggregation. Cancelled invoices reject new receipts; payments stay on original sale invoices. Verified on a fresh local DB: all 33 migrations, 1,853 tests / 69 files, typecheck/lint, 103-table policy gate and CRM Linux production build `forecourt-crm-codex:invoice-safeguards`. No Railway changes. See `reports/production-sales-safeguards-2026-09-14.md`.
