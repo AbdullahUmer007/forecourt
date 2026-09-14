@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { requireSession } from '@/auth/session';
 import { holds } from '@forecourt/domain';
 import { listAssignableRoles, listStaff } from '@/data/staff';
-import { changeStaffStatus } from '@/data/staff-actions';
+import { StaffStatusForm } from '@/components/staff-status-form';
 import { PageHeader, Card, StatusBadge } from '@/components/ui';
 import { InviteForm } from './invite-form';
 import { StaffRemove } from '@/components/staff-remove';
@@ -52,20 +52,10 @@ export default async function StaffPage() {
                   label={m.status}
                 />
                 {m.status === 'active' && !m.isLastOwner && holds(principal, 'user.update') && (
-                  <form action={async (formData) => { await changeStaffStatus(formData); }}>
-                    <input type="hidden" name="membershipId" value={m.membershipId} />
-                    <button name="status" value="suspended" className="min-h-11 px-3 text-ink-muted hover:text-ink">
-                      Suspend
-                    </button>
-                  </form>
+                  <StaffStatusForm membershipId={m.membershipId} status="suspended" />
                 )}
                 {m.status === 'suspended' && holds(principal, 'user.update') && (
-                  <form action={async (formData) => { await changeStaffStatus(formData); }}>
-                    <input type="hidden" name="membershipId" value={m.membershipId} />
-                    <button name="status" value="active" className="min-h-11 px-3 text-ink-muted hover:text-ink">
-                      Restore
-                    </button>
-                  </form>
+                  <StaffStatusForm membershipId={m.membershipId} status="active" />
                 )}
                 {m.status !== 'removed' && !m.isLastOwner && holds(principal, 'user.remove') && (
                   <StaffRemove membershipId={m.membershipId} />
