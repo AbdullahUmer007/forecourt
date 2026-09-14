@@ -1,3 +1,4 @@
+import { approvedDiscount } from './discount-approvals';
 import { authorize, holds } from '@forecourt/domain';
 import type { Session } from '@/auth/session';
 import { withSession, type Tx } from './db';
@@ -15,7 +16,7 @@ async function source(tx: Tx, id: string) {
   const [r] =
     await tx`SELECT d.id,d.state,d.invoice_id,d.vehicle_price_pence,concat_ws(':',d.updated_at::text,c.updated_at::text,v.updated_at::text) AS revision,d.contact_id,d.vehicle_id,d.part_exchange_pence,d.part_exchange_settlement_pence,d.finance_amount_pence,d.addons_total_pence,d.deposit_pence,
    concat_ws(' ',c.first_name,c.last_name,c.company_name) AS buyer_name,concat_ws(', ',nullif(c.address_line1,''),nullif(c.address_line2,''),nullif(c.locality,''),nullif(c.postcode,'')) AS buyer_address,c.address_line1,c.postcode,
-   v.registration,v.make,v.model,v.vat_scheme
+   v.registration,v.make,v.model,v.vat_scheme,v.retail_price_pence
    FROM deals d JOIN contacts c ON c.id=d.contact_id AND c.erased_at IS NULL AND c.merged_into_id IS NULL
    JOIN vehicles v ON v.id=d.vehicle_id AND v.deleted_at IS NULL WHERE d.id=${id}::uuid`;
   return r;
@@ -76,7 +77,14 @@ export async function invoiceDraftReview(session: Session, id: string) {
         .filter(Boolean)
         .join(' · '),
       price: `£${(n / 100n).toLocaleString('en-GB')}.${(n % 100n).toString().padStart(2, '0')}`,
-      problem: problem(r),
+      problem:
+        problem(r) ??
+        (r['retail_price_pence'] != null &&
+        n < BigInt(r['retail_price_pence'] as string) &&
+        !r['invoice_id'] &&
+        !(await approvedDiscount(tx, id))
+          ? 'Discount approval is needed before preparing this invoice.'
+          : null),
     };
   });
 }
@@ -101,6 +109,16 @@ export async function applyDealInvoice(
       ok: true,
       invoiceId: String(r['invoice_id']),
       message: 'The existing invoice is ready to review.',
+    };
+  if (
+    r['retail_price_pence'] != null &&
+    BigInt(r['vehicle_price_pence'] as string) <
+      BigInt(r['retail_price_pence'] as string) &&
+    !(await approvedDiscount(tx, id))
+  )
+    return {
+      ok: false,
+      error: 'Discount approval is needed before preparing this invoice.',
     };
   if (r['revision'] !== revision)
     return {

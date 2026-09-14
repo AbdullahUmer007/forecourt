@@ -251,7 +251,7 @@ export async function loadDealer(tenantId: string, origin: string): Promise<Load
     // WhatsApp is a TENANT setting, not a site one — it is the number the
     // dealer answers, and it does not change per branch.
     const settings = (r['tenant_settings'] as Record<string, string> | null) ?? {};
-    const hours = (r['opening_hours'] as VdpInput['dealer']['openingHours'] | null) ?? [];
+    const hours = (Array.isArray(r['opening_hours']) ? r['opening_hours'] : []) as NonNullable<VdpInput['dealer']['openingHours']>;
     const siteTheme = parseSiteTheme(r['brand_theme']);
     const logoKey = r['logo_light_key'] === null || r['logo_light_key'] === undefined
       ? null : String(r['logo_light_key']);

@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { withSession } from './db';
 import { requireSession } from '@/auth/session';
 import {
-  applyCreateDraft, applyIssue, applyCreditNote, applyPayment,
+  applyIssue, applyCreditNote, applyPayment,
   type InvoiceOutcome,
 } from './invoice-apply';
 import { authorize } from '@forecourt/domain';
@@ -45,41 +45,12 @@ export async function createDraftInvoice(
   _previous: InvoiceOutcome | null,
   formData: FormData,
 ): Promise<InvoiceOutcome> {
-  const guarded = await guard('invoice.create');
-  if (!guarded.ok) return { ok: false, error: guarded.error };
-
-  const price = await toPenceString(String(formData.get('vehiclePrice') ?? ''));
-  if (price === null) {
-    return { ok: false, error: 'Enter the price in pounds and pence, for example 12995.00.' };
+  // Legacy callers must use the same reviewed, server-derived deal source.
+  // Posted prices, buyer details, VAT scheme and extra lines are never accepted here.
+  if (!String(formData.get('revision') ?? '').trim()) {
+    return { ok: false, error: 'Open Prepare invoice on the deal and review its current details before creating a draft.' };
   }
-
-  const lines = [{
-    description: String(formData.get('description') ?? 'Motor vehicle'),
-    unitPricePence: price,
-  }];
-
-  const extraDescription = String(formData.get('extraDescription') ?? '').trim();
-  if (extraDescription) {
-    const extra = await toPenceString(String(formData.get('extraPrice') ?? ''));
-    if (extra === null) {
-      return { ok: false, error: 'Enter the second line’s price in pounds and pence.' };
-    }
-    lines.push({ description: extraDescription, unitPricePence: extra });
-  }
-
-  const result = await withSession(guarded.session, (tx) =>
-    applyCreateDraft(tx, guarded.session, {
-      dealId: String(formData.get('dealId') ?? ''),
-      vehicleId: String(formData.get('vehicleId') ?? ''),
-      contactId: String(formData.get('contactId') ?? ''),
-      buyerName: String(formData.get('buyerName') ?? ''),
-      buyerAddress: String(formData.get('buyerAddress') ?? ''),
-      vatScheme: String(formData.get('vatScheme') ?? 'margin'),
-      lines,
-    }));
-
-  if (result.ok) { revalidatePath('/invoices'); revalidatePath('/deals'); }
-  return result;
+  return draftInvoiceFromDeal(formData);
 }
 
 export async function issueInvoiceAction(

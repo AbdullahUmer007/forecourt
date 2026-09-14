@@ -11,6 +11,7 @@
  * what "gapless" costs.
  */
 
+import { approvedDiscount } from './discount-approvals';
 import type { Tx } from './db';
 import { toDate, toPence } from './db';
 import type { Session } from '@/auth/session';
@@ -33,6 +34,8 @@ export interface InvoiceOutcome {
   aml?: { outcome: string; reason: string; overridable: boolean };
   invoiceId?: string;
 }
+
+const validInvoiceId = (v: string) => /^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v);
 
 const currencyOf = (v: unknown): Currency => (v === 'EUR' ? 'EUR' : 'GBP');
 
@@ -89,7 +92,8 @@ async function saveSequence(tx: Tx, session: Session, seq: InvoiceSequence): Pro
 async function readInvoice(tx: Tx, id: string): Promise<
   { invoice: Invoice; row: Record<string, unknown>; payments: Payment[] } | null
 > {
-  const [row] = await tx`SELECT * FROM invoices WHERE id = ${id}::uuid`;
+  if (!validInvoiceId(id)) return null;
+  const [row] = await tx`SELECT * FROM invoices WHERE id = ${id}::uuid FOR UPDATE`;
   if (!row) return null;
 
   const currency = currencyOf(row['currency']);
@@ -268,10 +272,21 @@ export async function applyIssue(
   session: Session,
   invoiceId: string,
 ): Promise<InvoiceOutcome> {
+  if (!authorize(session, 'invoice.create').allowed) return {ok:false,error:'You do not have permission to issue invoices.'};
   const loaded = await readInvoice(tx, invoiceId);
   if (!loaded) return { ok: false, error: 'That invoice no longer exists.' };
   if (loaded.invoice.status !== 'draft') {
     return { ok: false, error: `Invoice ${loaded.invoice.reference} has already been issued.` };
+  }
+
+  if (!authorize(session,'invoice.create',{siteId:String(loaded.row['site_id']),ownerId:loaded.row['created_by'] as string}).allowed) return {ok:false,error:'You do not have permission to issue this invoice.'};
+  if (loaded.invoice.kind === 'sale') {
+    const [deal] = await tx`SELECT d.*,v.retail_price_pence,v.vat_scheme AS recorded_scheme FROM deals d JOIN vehicles v ON v.id=d.vehicle_id AND v.deleted_at IS NULL WHERE d.invoice_id=${invoiceId}::uuid FOR UPDATE OF d`;
+    if (!deal || !['agreed','contracted'].includes(String(deal['state']))) return {ok:false,error:'An agreed or contracted deal must be linked before issuing this invoice.'};
+    if (deal['vehicle_id']!==loaded.row['vehicle_id'] || deal['contact_id']!==loaded.row['contact_id'] || deal['currency']!==loaded.row['currency'] || deal['recorded_scheme']!==loaded.row['vat_scheme']) return {ok:false,error:'The invoice no longer matches its deal and vehicle. Review the draft before issuing.'};
+    if (['part_exchange_pence','part_exchange_settlement_pence','finance_amount_pence','addons_total_pence','deposit_pence'].some(k=>BigInt(deal[k] as string)!==0n)) return {ok:false,error:'This deal needs the full settlement workflow before invoice issue.'};
+    if (deal['vehicle_price_pence']==null || BigInt(deal['vehicle_price_pence'] as string)!==loaded.invoice.grossTotal.amount) return {ok:false,error:'The invoice total does not match the reviewed deal cash price.'};
+    if (deal['retail_price_pence']!=null && loaded.invoice.grossTotal.amount<BigInt(deal['retail_price_pence'] as string) && !await approvedDiscount(tx,String(deal['id']))) return {ok:false,error:'A current discount approval is required before invoice issue.'};
   }
 
   const at = new Date();
@@ -383,8 +398,11 @@ export async function applyCreditNote(
   invoiceId: string,
   reason: string,
 ): Promise<InvoiceOutcome> {
+  if (!authorize(session, 'invoice.void').allowed) return {ok:false,error:'You do not have permission to credit invoices.'};
   const loaded = await readInvoice(tx, invoiceId);
   if (!loaded) return { ok: false, error: 'That invoice no longer exists.' };
+  if (!authorize(session,'invoice.void',{siteId:String(loaded.row['site_id']),ownerId:loaded.row['created_by'] as string}).allowed) return {ok:false,error:'You cannot credit this invoice.'};
+  if (loaded.invoice.kind !== 'sale') return {ok:false,error:'Only a sale invoice can be credited here.'};
   if (loaded.invoice.status === 'draft') {
     return { ok: false, error: 'A draft has no number to credit — discard it instead.' };
   }
@@ -465,8 +483,14 @@ export async function applyPayment(
   session: Session,
   input: PaymentInput,
 ): Promise<InvoiceOutcome> {
+  if (!['in','out'].includes(input.direction)) return {ok:false,error:'Choose payment received or refund.'};
+  const permission = input.direction === 'out' ? 'payment.refund' : 'payment.create';
+  if (!authorize(session,permission).allowed) return {ok:false,error:'You do not have permission to record this payment or refund.'};
   const loaded = await readInvoice(tx, input.invoiceId);
   if (!loaded) return { ok: false, error: 'That invoice no longer exists.' };
+  if (!authorize(session,permission,{siteId:String(loaded.row['site_id']),ownerId:loaded.row['created_by'] as string}).allowed) return {ok:false,error:'You cannot record a payment on this invoice.'};
+  if (loaded.invoice.kind !== 'sale') return {ok:false,error:'Record payments and refunds against the original sale invoice.'};
+  if (loaded.invoice.status === 'cancelled' && input.direction === 'in') return {ok:false,error:'This invoice is cancelled. Only refunds can be recorded against it.'};
   if (loaded.invoice.status === 'draft') {
     return { ok: false, error: 'Issue the invoice before recording a payment against it.' };
   }
@@ -499,6 +523,8 @@ export async function applyPayment(
   let assessment: AmlAssessment | null = null;
 
   if (input.method === 'cash' && direction === 'in') {
+    // Different invoices for the same customer must not assess the same old cash total.
+    if (contactId) await tx`SELECT id FROM contacts WHERE id=${contactId}::uuid FOR UPDATE`;
     const rule = await amlRule(at);
 
     // `tenants.hvd_registered` — a real column, not a settings key. The first

@@ -78,7 +78,7 @@ export async function loadWebsiteSettings(
     const theme = parseSiteTheme(row['theme']);
     const address = (row['address'] as Record<string, string> | null) ?? {};
     const hours =
-      (row['opening_hours'] as
+      ((Array.isArray(row['opening_hours']) ? row['opening_hours'] : []) as
         { days?: string[]; opens?: string; closes?: string }[] | null) ?? [];
     const week = hours.find((h) => (h.days ?? []).includes('Monday'));
     const sat = hours.find(
@@ -303,7 +303,7 @@ export async function saveWebsiteSettings(
       const originalAddress =
         (site['address'] as Record<string, unknown> | null) ?? {};
       const originalHours =
-        (site['opening_hours'] as
+        ((Array.isArray(site['opening_hours']) ? site['opening_hours'] : []) as
           { days: string[]; opens: string; closes: string }[] | null) ?? [];
       const editedDays = new Set<string>(
         weekly ? WEEK_DAYS : WEEK_DAYS.slice(0, 6),

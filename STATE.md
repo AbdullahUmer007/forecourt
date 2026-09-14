@@ -1,3 +1,19 @@
+## 2026-09-14 — production invoice safeguards (local)
+
+Closed the legacy browser-posted invoice pricing path: drafts require the reviewed deal revision and server-derived values. Added low-level issue/credit/payment permissions and scope checks, sale/deal total and discount checks before numbering, invoice locks for competing mutations, and customer locks for cross-invoice cash aggregation. Cancelled invoices reject new receipts; payments stay on original sale invoices. Verified on a fresh local DB: all 33 migrations, 1,853 tests / 69 files, typecheck/lint, 103-table policy gate and CRM Linux production build `forecourt-crm-codex:invoice-safeguards`. No Railway changes. See `reports/production-sales-safeguards-2026-09-14.md`.
+
+Next: stock-book completeness and purchase-price provenance; independent cash-override authorization; full settlement and contract/handover synchronization. Provider delivery, production media, restore/monitoring and deployed release checks remain. This checkpoint does not make the full system production-ready.
+
+## 2026-09-14 — deal discount approvals (local)
+
+Added per-deal request, approve/decline and retained evidence/audit history. Requests bind to the reviewed deal revision and advertised price; edits invalidate approval. Another reviewer must decide within the role limit read from their active database membership. Discounted saved cash quotations and the simple invoice-preparation workflow now require approval. Verified 1,847 tests / 68 files, final CRM production build, typecheck/lint, RLS policy gate and a local two-user browser request/approval; responsive light/dark and desktop accessibility passed. No migration or Railway changes. See `reports/module-discount-approvals-2026-09-14.md`.
+
+Remaining: full settlement/order documents, approval inbox and notifications, role-limit management UI, and enforcement review of older generic invoice/lifecycle APIs. Core per-deal discount approval is implemented; do not label all sales/accounting paths complete.
+
+## 2026-09-14 — saved cash quotations (local)
+
+Added quotation review, immutable saved versions, history and print styling to deal records. Saves use the existing evidence ledger and audit, with stale/concurrent/tenant/branch/permission checks. Only pre-contract simple GBP cash deals at or above advertised price are supported; finance/PX/deposit/add-on and discounted quotes remain gated pending their full workflows. Saving does not record customer presentation or change deal/stock state. Also repaired the previous hours loader regression for legacy empty-object schedules. Full suite passes 1,843 tests / 67 files; browser saved and reopened a local quote. See `reports/module-cash-quotes-2026-09-14.md`. Final CRM/site production builds, typecheck, lint and 103-table policy gate passed. Mobile light/dark and desktop axe checks found no violations or page overflow. Local public preview includes the hours compatibility fix. No Railway change.
+
 ## 2026-09-14 — draft deals, invoice preparation and weekly hours (local)
 
 Delivered draft deal creation from stock/enquiries or searchable customer/car lists, exact cash pricing, safe repricing, audit/evidence history, stale-edit and competing-deal protection. Agreed simple cash deals can now review server-derived customer/vehicle details and create an unnumbered invoice draft; VAT-inclusive totals preserve the agreed price. Complex PX/finance/add-on/deposit deals are explicitly blocked from this simplified drafting path. Weekly website hours now support every day and closures, and public status uses Europe/London. Contact pages display all seven days; closed schedules no longer invent default openings.
@@ -7,7 +23,7 @@ Verification checkpoint: fresh local database, all 33 migrations, 1,838 tests ac
 See `reports/module-deal-builder-2026-09-14.md`, `reports/module-invoice-drafting-2026-09-14.md`, and `reports/module-weekly-hours-2026-09-14.md`. Keep these implemented slices distinct from complete sales/accounting modules.
 
 ### Remaining work queue
-1. Sales: quote/order versions, discount approvals, full part-exchange/finance/add-on/deposit reconciliation, contract/handover workflow and stock lifecycle synchronization.
+1. Sales: full settlement quotations/order versions, approval inbox/role-limit editing, full part-exchange/finance/add-on/deposit reconciliation, contract/handover workflow and stock lifecycle synchronization.
 2. Accounting readiness: review margin purchase-price provenance (legacy draft code reads total vehicle cost), real stock-book completeness, payment/refund integration and specialist tax/compliance review before production issue.
 3. Communications: real email/SMS delivery, reminders, saved-search alerts, retries and delivery status. Provider configuration is not present; do not label stored events as delivered.
 4. Website: holiday exceptions, split/overnight hours, unsaved draft preview, deployed shared logo/photo storage and custom-domain verification.

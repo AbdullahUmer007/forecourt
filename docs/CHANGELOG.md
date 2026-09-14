@@ -1,5 +1,25 @@
 # Changelog
 
+## 14 September 2026 — production invoice safeguards (local)
+
+- Require reviewed server-derived deal details for the legacy invoice draft action.
+- Enforce permissions, current deal totals and discount approval before invoice issue.
+- Serialize competing invoice issue, credit, refund and customer cash checks.
+- Refuse credit-note payments and new receipts on cancelled invoices.
+
+## 14 September 2026 — deal discount approvals (local preview)
+
+- Request a discount with a reason and retain an independent reviewer’s approval or decline.
+- Enforce saved role limits, prevent self-approval and require fresh review after deal/price changes.
+- Link approved discounts to saved cash quotations and simple invoice preparation.
+
+## 14 September 2026 — saved cash quotations (local preview)
+
+- Review and save cash quotation versions from a deal, retaining the original customer/car/price details.
+- Reopen previous versions and use a clean print layout.
+- Guard stale saves, duplicate requests and unsupported discount/settlement scenarios.
+- Fixed public pages failing on legacy empty-object opening hours.
+
 ## 14 September 2026 — deals, invoice drafts and weekly hours (local preview)
 
 - Start a draft deal from a customer, car or enquiry; review and revise the cash price with retained history.

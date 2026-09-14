@@ -55,7 +55,7 @@ export default async function PrepareInvoice({
             role="alert"
             className="space-y-3 rounded-md border border-edge-strong p-4"
           >
-            <p>{review.problem}</p>
+            <p>{review.problem}</p>{review.problem.startsWith('Discount') && <Link className="inline-flex min-h-11 items-center text-link" href={`/deals/${id}/discount`}>Review discount approval →</Link>}
             <div className="flex flex-wrap gap-4">
               <Link
                 href={`/customers/${review.customerId}`}
