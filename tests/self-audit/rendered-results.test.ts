@@ -267,16 +267,16 @@ describe('when nothing matches', () => {
     expect(EMPTY).toContain('class="grid"');   // the fallback cars are actually rendered
   });
 
-  it('offers to tell them when one arrives, with consent as a record', () => {
-    // Consent is channel + basis + source + timestamp + WORDING VERSION, and
-    // the version has to travel with the form or it cannot be recorded.
+  it('saves preferences without promising unimplemented email delivery', () => {
     expect(EMPTY).toContain('action="/saved-searches"');
-    expect(EMPTY).toContain('name="consent_version" value="notify-me-v1"');
-    expect(EMPTY).toMatch(/<input type="checkbox" name="consent"[^>]*required/);
-    expect(EMPTY).toContain('one-click unsubscribe');
+    expect(EMPTY).toContain('name="action" value="save"');
+    expect(EMPTY).toContain('Save this search');
+    expect(EMPTY).not.toContain('name="email"');
+    expect(EMPTY).not.toContain('name="consent"');
+    expect(EMPTY).not.toContain('one-click unsubscribe');
   });
 
-  it('carries the normalised search, not the raw URL, into the notify form', () => {
+  it('carries the complete normalised filters into the save form', () => {
     expect(EMPTY).toContain('name="search" value="/used-cars/vw/golf?colour=red"');
   });
 

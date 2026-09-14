@@ -1,5 +1,20 @@
 # Changelog
 
+## 14 September 2026 — saved searches (local preview)
+
+- Save stock filters and return to current matching cars without setting them again.
+- Rename or remove up to 20 private searches in a responsive light/dark page.
+- Saved cars and searches now link together; empty stock results can save preferences too.
+- Removed the nonfunctional email-alert promise. Saving does not subscribe or send messages.
+
+## 14 September 2026 — saved cars (local preview)
+
+- Save cars from stock listings and vehicle pages, then return to a private browser shortlist.
+- Remove or re-save a choice and compare two or three currently listed vehicles.
+- Unavailable cars stay in the list with a clear explanation.
+- The reservation link now opens the vehicle enquiry form.
+- Buyer lists are isolated by visitor and dealership; no messages or reservations are created by saving.
+
 ## 14 September 2026 — customers and appointments (local preview)
 
 - Find, create and update customer profiles with linked enquiries and appointment history.

@@ -50,6 +50,7 @@ export async function GET(request: Request, { params }: Params): Promise<Respons
 
   const html = renderVehiclePage({
     vehicle,
+    vehicleId: vehicle.id,
     dealer,
     theme: dealer.theme,
     media: vehicle.media,

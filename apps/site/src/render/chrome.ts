@@ -102,6 +102,7 @@ export interface NavItem { label: string; href: string }
 
 export const DEFAULT_NAV: readonly NavItem[] = [
   { label: 'All stock', href: '/used-cars' },
+  { label: 'Saved cars', href: '/saved-cars' },
   { label: 'Finance', href: '/finance' },
   { label: 'Part-exchange', href: '/part-exchange' },
   { label: 'About us', href: '/about' },
@@ -160,7 +161,7 @@ export function siteFooter(dealer: ChromeDealer): string {
         <ul>
           <li><a href="/used-cars">All used cars</a></li>
             <li><a href="/used-cars?sort=newest">Just arrived</a></li>
-          <li><a href="/saved">Saved cars</a></li>
+          <li><a href="/saved-searches">Saved searches</a><a href="/saved-cars">Saved cars</a></li>
         </ul>
       </div>
       <div>

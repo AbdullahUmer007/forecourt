@@ -1,7 +1,8 @@
 /**
  * The public site's database access.
  *
- * READ-ONLY, and scoped to one tenant per query. Two things make that true
+ * Public stock reads and narrowly granted writes, scoped to one tenant per query.
+ * Anonymous shortlist writes also require a visitor-token context. Two things make that true
  * rather than merely intended:
  *
  *   1. Every query runs inside `withTenant`, which opens a transaction and
@@ -9,7 +10,8 @@
  *      — the site could ask for every vehicle in the platform and get back
  *      only this dealer's.
  *   2. The connection uses the `app_public` role, which is NOBYPASSRLS. It can
- *      SELECT the public-readable tables and INSERT only on `search_events`
+ *      SELECT public stock and visitor-scoped shortlists, update only those
+ *      visitor-scoped lists, and INSERT on `search_events`
  *      plus the part-exchange write path (contact, lead, draft appraisal).
  *      Everything else is a privilege the connection does not hold.
  *

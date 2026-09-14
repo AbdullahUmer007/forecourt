@@ -134,7 +134,7 @@ export async function searchVehicles(tenantId: string, q: SearchQuery, perPage: 
 
 type Variant = { width: number; format: string; url: string };
 
-function toResultVehicle(r: Row): ResultVehicle {
+export function toResultVehicle(r: Row): ResultVehicle {
   const variants = ((r['hero_variants'] as Variant[] | null) ?? []).filter((v) => v.format === 'jpeg');
   const largest = variants.at(-1) ?? ((r['hero_variants'] as Variant[] | null) ?? []).at(-1);
   return {

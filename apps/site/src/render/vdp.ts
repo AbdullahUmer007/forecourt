@@ -101,6 +101,7 @@ export interface PriceContextView {
 export type FinanceBlock = FinancePromotionInput;
 
 export interface VdpInput {
+  vehicleId?: string;
   vehicle: StructuredVehicle & {
     stockNumber: string;
     keyCount: number | null;
@@ -712,11 +713,12 @@ ${masthead(dealer, input.now ? { now: input.now } : {})}
 
       <div class="cta-row">
         ${dealer.telephone ? `<a class="btn btn-primary" href="tel:${esc(dealer.telephone)}">Call the forecourt</a>` : ''}
-        <a class="btn btn-accent" href="#reserve">Reserve</a>
+        <a class="btn btn-accent" href="#enquire">Ask about reserving</a>
         <a class="btn" href="#enquire">Enquire</a>
         ${dealer.whatsapp ? `<a class="btn" href="https://wa.me/${esc(dealer.whatsapp)}?text=${encodeURIComponent(`Hi, I'm interested in the ${name} (${v.registration})`)}">WhatsApp</a>` : ''}
       </div>
 
+      ${input.vehicleId ? `<form method="post" action="/saved-cars"><input type="hidden" name="vehicle" value="${esc(input.vehicleId)}"><button class="btn" name="action" value="save">Save this car</button></form>` : ''}
       ${reassuranceList(input)}
     </div>
   </section>

@@ -308,7 +308,7 @@ describe.runIf(process.env['DATABASE_URL'])('the public site’s door', () => {
     }
   });
 
-  it('can only append demand signals, enquiries, appraisals and their audit trail', async () => {
+  it('can append public submissions and update only visitor-scoped shortlist tables', async () => {
     // One exception, and it is INSERT only: `search_events` records what
     // buyers looked for and did not find. Append-only evidence of demand.
     const rows = await sql<{ table_name: string; privilege_type: string }[]>`
@@ -317,6 +317,6 @@ describe.runIf(process.env['DATABASE_URL'])('the public site’s door', () => {
       WHERE grantee = 'app_public' AND privilege_type <> 'SELECT'`;
 
     expect(rows.map((r) => `${r.table_name}:${r.privilege_type}`).sort())
-      .toEqual(['appraisals:INSERT', 'audit_events:INSERT', 'contacts:INSERT', 'lead_events:INSERT', 'leads:INSERT', 'search_events:INSERT']);
+      .toEqual(['appraisals:INSERT', 'audit_events:INSERT', 'contacts:INSERT', 'lead_events:INSERT', 'leads:INSERT', 'saved_searches:INSERT', 'saved_searches:UPDATE', 'search_events:INSERT', 'shortlist_items:INSERT', 'shortlist_items:UPDATE', 'shortlists:INSERT', 'shortlists:UPDATE']);
   });
 });

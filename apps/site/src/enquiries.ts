@@ -4,7 +4,7 @@ import { submitEnquiry, type EnquiryInput } from './data/enquiries.js';
 
 const LIMIT = 65_536;
 
-async function readForm(request: Request): Promise<URLSearchParams | null> {
+export async function readForm(request: Request): Promise<URLSearchParams | null> {
   if (!request.headers.get('content-type')?.startsWith('application/x-www-form-urlencoded')) return null;
   const reader = request.body?.getReader();
   if (!reader) return null;

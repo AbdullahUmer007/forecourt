@@ -192,8 +192,7 @@ function sortBar(q: SearchQuery, total: number, from: number, to: number): strin
  * The zero-result page. Never a dead end.
  *
  * It says what we did not have, what we widened, and shows the closest real
- * cars — then offers to tell them when the right one arrives, which is the
- * one moment we know exactly what a buyer wants.
+ * cars — lets them keep their preferences for their next visit.
  */
 function zeroResults(input: ResultsInput, relaxed: (Relaxation & { count: number }) | null): string {
   const heading = resultsHeading(input.query, input.dealer, input.labelFor ?? ((_, v) => titleCase(v)));
@@ -203,21 +202,8 @@ function zeroResults(input: ResultsInput, relaxed: (Relaxation & { count: number
     ${relaxed === null ? '' : raw(`<p class="zero-relaxed">Here ${
       relaxed.count === 1 ? 'is the one car' : `are ${relaxed.count} cars`} we have ${esc(relaxed.explanation)}.
       <a href="${esc(searchUrlPath(relaxed.query))}">See ${relaxed.count === 1 ? 'it' : 'them all'}</a>.</p>`)}
-    <form class="notify" method="post" action="/saved-searches">
-      <input type="hidden" name="search" value="${canonicalSearchPath({ ...input.query, page: 1 })}">
-      <h3>Tell me when one arrives</h3>
-      <p>We buy to order. Leave your email and we'll let you know the day we get one in.</p>
-      <p><label for="notify-email">Email</label><br>
-         <input id="notify-email" name="email" type="email" required autocomplete="email"></p>
-      <!-- Consent is a RECORD, not a tick: channel, basis, source, timestamp
-           and the exact wording version, captured in M9 and re-checked at
-           send time. The wording version travels with the form. -->
-      <p class="consent"><label><input type="checkbox" name="consent" value="yes" required>
-        Email me when a matching car arrives. We won't use your address for anything else,
-        and every email has a one-click unsubscribe.</label></p>
-      <input type="hidden" name="consent_version" value="notify-me-v1">
-      <p><button class="btn btn-primary" type="submit">Notify me</button></p>
-    </form>
+    <p>You can save these filters and check for matches on your next visit.</p>
+    <p><a href="/saved-searches">Your saved searches</a></p>
   </section>`;
 }
 
@@ -291,6 +277,12 @@ ${masthead(dealer, { now })}
         : ''}
   </nav>
   <h1 class="results-title">${esc(heading)}</h1>
+  <form method="post" action="/saved-searches" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:16px 0">
+    <input type="hidden" name="action" value="save">
+    <input type="hidden" name="search" value="${esc(searchUrlPath({ ...q, page: 1 }))}">
+    <button class="btn" type="submit">Save this search</button>
+    <a href="/saved-searches">Your saved searches</a>
+  </form>
   <form class="keyword" method="get" action="/used-cars" role="search">
     <label class="visually-hidden" for="q">Search our stock</label>
     <input id="q" name="q" type="search" placeholder="Reg, make or model" value="${esc(q.keyword ?? '')}">

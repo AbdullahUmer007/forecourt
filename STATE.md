@@ -1,3 +1,11 @@
+## 2026-09-14 — saved searches (local)
+
+Added private browser saved searches with complete filters/sort, current stock counts, reopen, rename and removal. Replaced the unimplemented notify-me form with working Save this search forms; no emails or consent changes. Migration 0033 adds retained removal and visitor-restrictive RLS. Verified 1,819 tests on a fresh local database, all 33 migrations from scratch, policy gate, lint/typecheck, site Docker build and mobile/light/dark accessibility. Local port 3100 runs the new image; Railway unchanged. Automatic alerts/delivery, cross-device identity and buyer-interest analytics remain. See `reports/module-saved-searches-2026-09-14.md`.
+
+## 2026-09-14 — saved cars and comparison (local)
+
+Public stock cards and vehicle pages now save to a private anonymous shortlist with removal/re-save and comparison of two or three available cars. Visitor-token RLS, hashed credentials, safe cookie/origin/cache handling and audited concurrent writes use the existing tables. Migration 0032 updates policy generation. Fixed saved-car navigation/footer links and the dead reservation anchor. Verified 1,810 tests, policy gate, lint/typecheck, production site build and browser/accessibility flows. Local public preview at port 3100 now runs the new image; Railway unchanged. Saved searches/alerts, cross-device identity and CRM interest analytics remain. See `reports/module-saved-cars-2026-09-14.md`.
+
 ## 2026-09-14 — customers and appointments (local)
 
 Added a searchable customer directory, create/edit profiles, enquiry/history links and a responsive appointment diary. Staff can book, reschedule and close customer visits with retained outcomes. UK time conversion handles DST; stale edits and tenant/site/permission violations are rejected. Migrations 0030/0031 add appointments and database-enforced overlap protection across sites. Verified 1,798 tests, policy gate, lint/typecheck, CRM Docker build and local browser workflows; new page types passed automated axe checks. No Railway changes. See `reports/module-customers-appointments-2026-09-14.md` for limits and rollback. Reminders/calendar sync, customer merging/import, verified contact-destination changes and other backlog modules remain.

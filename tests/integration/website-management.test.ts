@@ -24,6 +24,8 @@ beforeAll(async () => {
     await sql`INSERT INTO vehicles (id, tenant_id, site_id, stock_sequence, stock_number, registration, make, model, state, retail_price_pence)
       VALUES (${id!}::uuid, ${T.tenant}::uuid, ${T.site}::uuid, ${id === live ? 991001 : 991002}, ${id!}, ${id === live ? 'WP26PUB' : 'WP26PRI'}, ${make!}, 'Test', ${state!}::vehicle_state, 1234500)`;
   }
+  // The preview shows six newest arrivals; this fixture must be a dated arrival.
+  await sql`UPDATE vehicles SET live_at=now() WHERE id=${live}::uuid`;
 });
 afterAll(async () => {
   await sql`UPDATE sites SET address = ${sql.json(original['address'] as never)}, opening_hours = ${sql.json(original['opening_hours'] as never)}, phone = ${original['phone'] as string | null}, email = ${original['email'] as string | null} WHERE id = ${T.site}::uuid`;
